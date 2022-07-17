@@ -1,0 +1,2 @@
+ContentGameplayAbilitiesEnvironmentGroundTiles*.uasset filter=lfs diff=lfs merge=lfs -text
+ContentGameplayAbilitiesEnvironmentRocks*.uasset filter=lfs diff=lfs merge=lfs -text

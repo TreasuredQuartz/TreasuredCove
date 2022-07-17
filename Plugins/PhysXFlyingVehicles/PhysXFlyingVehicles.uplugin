@@ -1,0 +1,30 @@
+{
+	"FileVersion" : 3,
+	"Version" : 1,
+	"VersionName" : "0.1",
+	"FriendlyName" : "PhysX Vehicles",
+	"Description" : "PhysX Vehicle Integration",
+	"Category" : "Physics",
+	"CreatedBy" : "Treausred Quartz",
+	"CreatedByURL" : "",
+	"DocsURL" : "",
+	"MarketplaceURL" : "",
+	"SupportURL" : "",
+	"EnabledByDefault" : true,
+	"CanContainContent" : false,
+	"IsBetaVersion" : true,
+	"Installed" : false,
+	"Modules" :
+	[
+		{
+			"Name" : "PhysXFlyingVehicles",
+			"Type" : "Runtime",
+			"LoadingPhase" : "PreDefault"
+		},
+		{
+			"Name" : "PhysXFlyingVehiclesEditor",
+			"Type" : "DeveloperTool",
+			"LoadingPhase" : "PreDefault"
+		}
+	]
+}

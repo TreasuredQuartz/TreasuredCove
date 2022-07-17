@@ -1,0 +1,131 @@
+DialogueVersion 7
+DialogueName "Judge_Dialogue"
+DialogueGuid {  A 1810398775 B 1253741737 C -766141047 D 1561962570 }
+Node_Speech StartNode
+{
+	Text ""
+	SpeakerState "None"
+	bIsVirtualParent False
+	OwnerName "None"
+	bCheckChildrenOnEvaluation False
+	VoiceSoundWave ""
+	VoiceDialogueWave ""
+	Children
+	{
+		{  TargetIndex 0 Text "" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True }
+		{  TargetIndex 1 Text "" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True }
+	}
+}
+DialogueParticipantClasses
+{
+	{  ParticipantName "Judge" ParticipantClass "/Game/GameplayAbilitiesBP/Blueprint/Actors/Characters/Treasured/Judge.Judge_C" }
+	{  ParticipantName "Player" ParticipantClass "/Game/GameplayAbilitiesBP/Blueprint/Actors/Characters/PlayerCharacter.PlayerCharacter_C" }
+}
+Node Nodes
+{
+	// 0
+	Node_Speech 
+	{
+		Text "..."
+		SpeakerState "None"
+		bIsVirtualParent True
+		OwnerName "Judge"
+		bCheckChildrenOnEvaluation False
+		VoiceSoundWave ""
+		VoiceDialogueWave ""
+		EnterConditions { {  Strength "EDialogueConditionStrength::DialogueConditionStrengthStrong" ConditionType "EDialogueConditionType::DialogueConditionNodeVisited" ParticipantName "None" CallbackName "None" Operation "EDialogueOperation::DialogueEqual" CompareType "EDialogueCompareType::DialogueCompareToConst" OtherParticipantName "None" OtherVariableName "None" IntValue 0 FloatValue 0.0 NameValue "None" bBoolValue False bLongTermMemory True } }
+		Children { {  TargetIndex 2 Text "Next" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True } }
+	}
+	// 1
+	Node_Speech 
+	{
+		Text "Why hello again."
+		SpeakerState "None"
+		bIsVirtualParent True
+		OwnerName "Judge"
+		bCheckChildrenOnEvaluation False
+		VoiceSoundWave ""
+		VoiceDialogueWave ""
+		Children { {  TargetIndex 2 Text "Next" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True } }
+	}
+	// 2
+	Node_Speech 
+	{
+		Text ""
+		SpeakerState "None"
+		bIsVirtualParent False
+		OwnerName "Judge"
+		bCheckChildrenOnEvaluation False
+		VoiceSoundWave ""
+		VoiceDialogueWave ""
+		Children
+		{
+			{  TargetIndex 3 Text "Next" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True }
+			{  TargetIndex 4 Text "" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True }
+			{  TargetIndex 5 Text "" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True }
+		}
+	}
+	// 3
+	Node_Speech 
+	{
+		Text "Who are you?"
+		SpeakerState "None"
+		bIsVirtualParent False
+		OwnerName "Player"
+		bCheckChildrenOnEvaluation False
+		VoiceSoundWave ""
+		VoiceDialogueWave ""
+		EnterConditions { {  Strength "EDialogueConditionStrength::DialogueConditionStrengthStrong" ConditionType "EDialogueConditionType::DialogueConditionNodeVisited" ParticipantName "None" CallbackName "None" Operation "EDialogueOperation::DialogueEqual" CompareType "EDialogueCompareType::DialogueCompareToConst" OtherParticipantName "None" OtherVariableName "None" IntValue 3 FloatValue 0.0 NameValue "None" bBoolValue False bLongTermMemory True } }
+		Children { {  TargetIndex 6 Text "Next" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True } }
+	}
+	// 4
+	Node_Speech 
+	{
+		Text "Where am I?"
+		SpeakerState "None"
+		bIsVirtualParent False
+		OwnerName "Player"
+		bCheckChildrenOnEvaluation False
+		VoiceSoundWave ""
+		VoiceDialogueWave ""
+		Children { {  TargetIndex 7 Text "Finish" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True } }
+	}
+	// 5
+	Node_Speech 
+	{
+		Text ".."
+		SpeakerState "None"
+		bIsVirtualParent False
+		OwnerName "Player"
+		bCheckChildrenOnEvaluation False
+		VoiceSoundWave ""
+		VoiceDialogueWave ""
+		Children { {  TargetIndex 8 Text "Finish" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True } }
+	}
+	// 6
+	Node_Selector 
+	{
+		SelectorType "EDialogueNodeSelectorType::DialogueNodeSelectorFirst"
+		OwnerName "Judge"
+		bCheckChildrenOnEvaluation True
+		Children { {  TargetIndex 9 Text "Finish" SpeakerState "None" bIncludeInAllOptionListIfUnsatisfied True } }
+	}
+	// 7
+	Node_End 
+	{
+		OwnerName "Judge"
+		bCheckChildrenOnEvaluation False
+	}
+	// 8
+	Node_End 
+	{
+		OwnerName "Judge"
+		bCheckChildrenOnEvaluation False
+	}
+	// 9
+	Node_End 
+	{
+		OwnerName "Judge"
+		bCheckChildrenOnEvaluation False
+	}
+}
