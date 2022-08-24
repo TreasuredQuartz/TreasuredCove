@@ -14,7 +14,8 @@
 				"GameplayAbilities",
 				"UMG",
 				"GameplayTowns",
-				"ProceduralMeshComponent"
+				"ProceduralMeshComponent",
+				"Water"
 			]
 		}
 	],
