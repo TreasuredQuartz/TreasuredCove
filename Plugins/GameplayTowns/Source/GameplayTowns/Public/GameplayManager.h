@@ -24,6 +24,7 @@ public:
 
 	// Called in editor and on begin play
 	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void OnConstruction_DoOnce();
 
 	// Called in editor when a uproperty changes
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -46,6 +47,7 @@ public:
 	bool bIsActive;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	bool bUsePlayerPosition = false;
+	bool bConstructionDoOnce = false;
 
 public:
 	UPROPERTY(Editanywhere, BlueprintReadWrite)
@@ -79,10 +81,11 @@ public:
 	// Automatically adds new actor to chunks array
 	// if successful.
 	UFUNCTION(BlueprintCallable, Category = "Gameplay|Manager")
-	void AddVoxelActor(FVector VoxelSpawnLocation, FIntVector inVoxelIndex);
+	void AddVoxelActor(FVector VoxelSpawnLocation, FIntVector inVoxelIndex, int32 CurrentLOD);
 	UFUNCTION(BlueprintCallable, Category="Gameplay|Manager")
-	void AddChunk();
+	virtual void AddChunk();
 	void RemoveChunk();
+	void ClearChunks();
 
 	UFUNCTION(BlueprintCallable, Category="Gameplay|Manager")
 	void UpdatePlayerCoordinate();

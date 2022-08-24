@@ -52,7 +52,11 @@ void UFloatingTextComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	if (ViewportScale <= 0.0f)
 		return;
 
-	const FVector CameraLocation = GetOwner<APawn>()->GetController<APlayerController>()->PlayerCameraManager->GetCameraLocation();
+	const auto* PlayerCameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
+	if (!PlayerCameraManager)
+		return;
+
+	const FVector CameraLocation = PlayerCameraManager->GetCameraLocation();
 
 	// Adjust active text actors' locations based on viewport size, scale, and current DPI scaling.
 	for (int32 i = 1; i < ActiveTextActors.Num(); ++i)

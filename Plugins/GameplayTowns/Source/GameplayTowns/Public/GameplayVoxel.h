@@ -52,9 +52,19 @@ protected:
 	int32 VoxelSizeQuarter;
 	UPROPERTY(BlueprintReadOnly)
 	int32 VoxelSizeBit;
+	UPROPERTY(BlueprintReadOnly)
+	int32 CurrentLOD;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gameplay|Voxel", Meta = (ExposeOnSpawn = true))
 	AGameplayManager* ManagerRef;
+public:
+	// Mutators //
+	void SetRandomSeed(int32);
+	void SetVoxelSize(int32);
+	void SetChunkZElements(int32);
+	void SetChunkLineElements(int32);
+	void SetChunkIndex(const FIntVector&);
+	void SetCurrentLOD(int32);
 
 public:	
 	void GenerateChunk();
@@ -69,7 +79,7 @@ public:
 	// Executes right before 3-Dimensional loop. Override in child classes.
 	virtual void BeforeChunkGenerated();
 	// Executes during 3-Dimensional loop. (Can become Very expensive because of this!!!) Override in child classes.
-	virtual void ChunkGenerating(FIntVector CurrentLocation, int32 Index);
+	virtual void ChunkGenerating(const FIntVector& CurrentLocation, int32 Index);
 	// Executes right after 3-Dimensional loop. Override in child classes.
 	virtual void AfterChunkGenerated();
 };

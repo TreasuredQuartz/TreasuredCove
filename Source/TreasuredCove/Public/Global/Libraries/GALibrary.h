@@ -5,7 +5,41 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilityInfoStruct.h"
+#include "ProceduralMeshSectionStruct.h"
 #include "GALibrary.generated.h"
+
+class UGameplayTileData;
+
+USTRUCT(BlueprintType)
+struct TREASUREDCOVE_API FVoxelFaceData
+{
+	GENERATED_BODY()
+
+public:
+	const UGameplayTileData* TileData;
+	FVector Origin;
+	int32 Size;
+	int32 Scale;
+	int32 Index;
+	int32 TriangleNum;
+
+public:
+	FVoxelFaceData()
+		: TileData(nullptr)
+		, Origin(FVector::ZeroVector)
+		, Size(1)
+		, Scale(1)
+		, Index(-1)
+		, TriangleNum(0) {};
+
+	FVoxelFaceData(const UGameplayTileData* InTileData, const FVector& InLocation, int32 InIndex, int32 CurTriangleNum, int32 InVoxelSize, int32 InScale)
+		: TileData(InTileData)
+		, Origin(FVector(InLocation))
+		, Size(InVoxelSize)
+		, Scale(InScale)
+		, Index(InIndex)
+		, TriangleNum(CurTriangleNum) {};
+};
 
 /**
  * 
@@ -30,4 +64,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	static float GetAttributeCurrentValue(class UAbilitySystemComponent* InAbilitySystem, FString InAttributeName, bool& OutDidSucceed);
+
+	UFUNCTION(BlueprintCallable, Category = "Voxel")
+	/*static int32 CreateFace(FProceduralMeshSection& MeshSection, const FVoxelFaceData& VoxelData);
+	UFUNCTION(BlueprintCallable, Category = "Voxel")*/
+	static int32 CreateFace(FProceduralMeshSection& MeshSection, const UGameplayTileData* InTileData, const FVector& InLocation, int32 InIndex, int32 CurTriangleNum, int32 InVoxelSize, int32 InScale);
 };

@@ -9,7 +9,8 @@ AGameplayVoxel::AGameplayVoxel() :
 	VoxelSize(50),
 	ChunkLineElements(32),
 	ChunkZElements(32),
-	ChunkIndex(FIntVector())
+	ChunkIndex(FIntVector()),
+	CurrentLOD(1)
 {
 	RootComponent = CreateDefaultSubobject<USceneComponent>(FName("Root"));
 
@@ -18,7 +19,7 @@ AGameplayVoxel::AGameplayVoxel() :
 	ChunkLineElementsP2 = ChunkLineElements * ChunkLineElements;
 	ChunkLineElementsP2Ext = ChunkLineElementsExt * ChunkLineElementsExt;
 
-	ChunkTotalElements = ChunkLineElementsExt * ChunkLineElementsExt * ChunkZElements;
+	ChunkTotalElements = ChunkLineElementsP2Ext * ChunkZElements;
 	ChunkHalfElements = ChunkTotalElements / 2;
 
 	VoxelSizeHalf = VoxelSize / 2;
@@ -38,7 +39,7 @@ void AGameplayVoxel::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inC
 	ChunkLineElementsP2 = ChunkLineElements * ChunkLineElements;
 	ChunkLineElementsP2Ext = ChunkLineElementsExt * ChunkLineElementsExt;
 
-	ChunkTotalElements = ChunkLineElementsExt * ChunkLineElementsExt * ChunkZElements;
+	ChunkTotalElements = ChunkLineElementsP2Ext * ChunkZElements;
 	ChunkHalfElements = ChunkTotalElements / 2;
 
 	VoxelSizeHalf = VoxelSize / 2;
@@ -46,17 +47,48 @@ void AGameplayVoxel::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inC
 	VoxelSizeBit = VoxelSize / 8;
 }
 
+// Mutators //
+void AGameplayVoxel::SetRandomSeed(int32 InRandomSeed)
+{
+	RandomSeed = InRandomSeed;
+}
+
+void AGameplayVoxel::SetVoxelSize(int32 InVoxelSize)
+{
+	VoxelSize = InVoxelSize;
+}
+
+void AGameplayVoxel::SetChunkZElements(int32 InChunkZElements)
+{
+	ChunkZElements = InChunkZElements;
+}
+
+void AGameplayVoxel::SetChunkLineElements(int32 InChunkLineElements)
+{
+	ChunkLineElements = InChunkLineElements;
+}
+
+void AGameplayVoxel::SetChunkIndex(const FIntVector& InChunkIndex)
+{
+	ChunkIndex = InChunkIndex;
+}
+
+void AGameplayVoxel::SetCurrentLOD(int32 inCurrentLOD)
+{
+	CurrentLOD = FMath::Clamp<int32>(inCurrentLOD, 1, inCurrentLOD);
+}
+
+
 void AGameplayVoxel::GenerateChunk()
 {
 	BeforeChunkGenerated();
 
-	int32 Index = 0;
+	int32 Index = -1;
 	for (int32 z = 0; z < ChunkZElements; ++z)
 	for (int32 y = 0; y < ChunkLineElementsExt; ++y)
 	for (int32 x = 0; x < ChunkLineElementsExt; ++x)
 	{
-		ChunkGenerating(FIntVector(x, y, z), Index);
-		++Index;
+		ChunkGenerating(FIntVector(x, y, z), ++Index);
 	}
 
 	AfterChunkGenerated();
@@ -78,7 +110,7 @@ void AGameplayVoxel::BeforeChunkGenerated()
 
 }
 
-void AGameplayVoxel::ChunkGenerating(FIntVector CurrentLocation, int32 Index)
+void AGameplayVoxel::ChunkGenerating(const FIntVector& CurrentLocation, int32 Index)
 {
 
 }

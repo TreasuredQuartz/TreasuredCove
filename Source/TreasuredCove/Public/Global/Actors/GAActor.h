@@ -13,6 +13,7 @@
 #include "GAActor.generated.h"
 
 class UGASystemComponent;
+class UAbilitySet;
 class UGameplayAbilityBase;
 
 /** This Class serves a dual purpose:
@@ -35,13 +36,23 @@ private:
 	// These are the handles to the actual abilities 
 	// that will be given to us by the ability system
 	TArray< FGameplayAbilitySpecHandle > CurrentActiveAbilityHandles;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAActor|Animation", meta = (MakeEditWidget = true, AllowPrivateAccess = true))
+	FVector DominantHandOffset;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAActor|Animation", meta = (MakeEditWidget = true, AllowPrivateAccess = true))
+	FVector SupportingHandOffset;
 public:	
 	// Sets default values for this actor's properties
 	AGAActor();
 
 	// Override function from ability system interface
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-protected:
+
+	// For animation blueprint dominant hand offset from default animation
+	virtual FVector GetHeldHandOffset() const;
+
+	// For animation blueprint off hand offset from default animation
+	virtual FVector GetSupportingHandOffset() const;
+public:
 	/**	Begin UObject Interface	*/
 
 	// Called when the game starts or when spawned
@@ -61,12 +72,24 @@ protected:
 	void InitializeAttributeSet(UAttributeSet* Set);
 	// Called to grant an ability to our ability system
 	void AquireAbility(TSubclassOf<UGameplayAbility> InAbility, FGameplayAbilitySpecHandle& OutHandle);
+	// Array version of AquireAbility
+	void AquireAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities, TArray<FGameplayAbilitySpecHandle>& OutHandles);
 
 	/** End AGActor Interface	*/
+
+
+	/**	Begin IControlInput Interface */
+
+	void UsePrimary_Implementation() override;
+	void UseSecondary_Implementation() override;
+	void UseThrow_Implementation() override;
+	void UseMelee_Implementation() override;
+
+	/** End IControlInput Interface	*/
 protected:
 	// The array of abilities that we currently can use
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
-	TArray<TSubclassOf<UGameplayAbilityBase>> CurrentActiveAbilities;
+	UAbilitySet* InitialActiveAbilities;
 
 	// The Datatable to initialize our attribute sets from
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")

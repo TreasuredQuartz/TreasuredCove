@@ -56,10 +56,13 @@ AGAAIController::AGAAIController(const FObjectInitializer& ObjectInitializer)
 
 void AGAAIController::BeginPlay()
 {
+	Super::BeginPlay();
 }
 
 void AGAAIController::OnPossess(APawn* PossessedPawn)
 {
+	Super::OnPossess(PossessedPawn);
+
 	CharacterRef = Cast<AGACharacter>(PossessedPawn);
 }
 

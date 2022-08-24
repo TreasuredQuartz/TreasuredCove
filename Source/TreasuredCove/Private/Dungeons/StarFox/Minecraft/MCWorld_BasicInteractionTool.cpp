@@ -20,9 +20,9 @@
 AMCWorld_BasicInteractionTool::AMCWorld_BasicInteractionTool()
 	: AGAWeapon()
 {
-	CurrentActiveAbilities.SetNumUninitialized(2);
-	CurrentActiveAbilities[0] = UGA_MCWorld_RemoveVoxel::StaticClass();
-	CurrentActiveAbilities[1] = UGA_MCWorld_PlaceVoxel::StaticClass();
+	// Need to move these into an AbilitySet
+	/*CurrentActiveAbilities[0] = UGA_MCWorld_RemoveVoxel::StaticClass();
+	CurrentActiveAbilities[1] = UGA_MCWorld_PlaceVoxel::StaticClass();*/
 
 	QuickVoxelInventory.SetNumUninitialized(MaxColumns);
 	StowedVoxelInventory.SetNumUninitialized(MaxColumns * (MaxRows - 1));

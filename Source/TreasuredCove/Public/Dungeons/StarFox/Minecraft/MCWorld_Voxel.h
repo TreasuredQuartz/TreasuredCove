@@ -5,27 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameplayVoxel.h"
 
-#include "ProceduralMeshComponent.h"
 #include "DTMCBlockInfoStruct.h"
+#include "ProceduralMeshSectionStruct.h"
 #include "MCWorld_Voxel.generated.h"
 
 class UInstancedStaticMeshComponent;
-
-struct FProceduralMeshSection
-{
-	TArray<FVector> Vertices;
-	TArray<int32> Triangles;
-	TArray<FVector> Normals;
-	TArray<FVector2D> UVs;
-	TArray<FProcMeshTangent> Tangents;
-	TArray<FColor> VertexColors;
-	UMaterialInterface* Material;
-
-	bool bEnableCollision = false;
-	uint32 ElementID = 0;
-	uint32 NumTriangles = 0;
-	uint32 MaterialIndex = 0;
-};
+class UGameplayTileData;
+class UWaterBodyProceduralActor;
 
 struct FMCWorld_Building
 {
@@ -46,6 +32,9 @@ public:
 	}
 };
 
+/** Unreal Tefel designed a system like this 
+ * on stream as a 24hr challenge.
+ */
 UCLASS()
 class TREASUREDCOVE_API AMCWorld_Voxel : 
 	public AGameplayVoxel
@@ -84,14 +73,16 @@ public:
 	TArray<FMCWorld_ChunkFieldData> BlockData;*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
 	UDataTable* BlockDataTable;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
+	TArray<UGameplayTileData*> BlockTypes;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UStaticMeshComponent* SelectionMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
 	TArray<class UInstancedStaticMeshComponent*> CustomMeshInstances;
 
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<UMaterialInterface*> Materials;*/
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float XMult = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -114,6 +105,7 @@ public:
 	TArray< int32 > ChunkFields;
 	UPROPERTY()
 	UProceduralMeshComponent* PMesh;
+	UWaterBodyProceduralActor* WaterMesh;
 
 	UFUNCTION(BlueprintNativeEvent)
 	TArray<int32> CalcNoise();
@@ -155,7 +147,7 @@ public:
 private:
 	// Begin AGameplayVoxel Interface //
 	virtual void BeforeChunkGenerated() override;
-	virtual void ChunkGenerating(FIntVector CurrentLocation, int32 Index) override;
+	virtual void ChunkGenerating(const FIntVector& CurrentLocation, int32 Index) override;
 	virtual void AfterChunkGenerated() override;
 	// End AGameplayVoxel Interface //
 
@@ -182,10 +174,7 @@ private:
 	void UpdateExtras();
 
 	// Convenience
-	void CreateCubeMesh(FProceduralMeshSection& MeshSection, const int32& InIndex, const int32& x, const int32& y, const int32& z, int32& Triangle_Num);
-	void CreateStairMesh(FProceduralMeshSection& MeshSection, const int32& InIndex, const int32& x, const int32& y, const int32& z, int32& Triangle_Num);
-	void CreateSlabMesh(FProceduralMeshSection& MeshSection, const int32& InIndex, const int32& x, const int32& y, const int32& z, int32& Triangle_Num);
-	void CreatePostMesh(FProceduralMeshSection& MeshSection, const int32& InIndex, const int32& x, const int32& y, const int32& z, int32& Triangle_Num);
+	void CreateMeshFace(FProceduralMeshSection& MeshSection, int32 InIndex, const FIntVector& InLocation, int32& Triangle_Num);
 
 	bool InRange(int32 Value, int32 Range);
 };

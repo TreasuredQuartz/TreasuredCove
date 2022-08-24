@@ -14,6 +14,11 @@ class TREASUREDCOVE_API AZombie_Manager
 {
 	GENERATED_BODY()
 	
+private:
+	FRandomStream RandomStream;
+	FTimerHandle SpawnTimerHandle;
+	FTimerHandle StartWaveTimerHandle;
+
 public:	
 	// Sets default values for this actor's properties
 	AZombie_Manager(const FObjectInitializer& ObjectInitializer);
@@ -39,6 +44,10 @@ public:
 	uint8 MaxEnemiesAtOnce = 24;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
 	uint8 MaxEnemiesPerPlayer = 6;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
+	float TimeBetweenSpawns = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
+	float TimeBetweenWaves = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
 	TArray<AZombie_Spawner*> Spawners;
@@ -47,11 +56,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
 	void SpawnEnemies();
 	void SpawnedEnemyRemoved(AActor* RemovedActor, AActor* ResponsibleActor);
+
 	uint32 WaveCount;
 	uint32 TotalEnemiesToSpawn;
-
 	uint32 CurrentSpawnedEnemies;
 	uint32 TotalSpawnedEnemies;
 public:

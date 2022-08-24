@@ -3,6 +3,7 @@
 #include "GALibrary.h"
 
 #include "AbilitySystemComponent.h"
+#include "GameplayTileData.h"
 
 #include "Editor.h"
 #include "EditorViewportClient.h"
@@ -25,7 +26,7 @@ void UGALibrary::ApplyGESpecHandleToTargetDataSpecsHandle(const FGameplayEffectS
 {
 	for(TSharedPtr<FGameplayAbilityTargetData> Data : TargetDataHandle.Data)
 	{
-		Data->ApplyGameplayEffectSpec(*GESpecHandle.Data.Get());
+		if (Data) Data->ApplyGameplayEffectSpec(*GESpecHandle.Data.Get());
 
 		// GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Red, "We applyed an effect!");
 	}
@@ -309,4 +310,64 @@ float UGALibrary::GetAttributeCurrentValue(UAbilitySystemComponent* InAbilitySys
 
 	OutDidSucceed = bSucceeded;
 	return CurrentAmount;
+}
+
+//// Modifies mesh section, and returns previous triangle index num + added triangle index num (Current Triangle_Num is returned)
+//int32 UGALibrary::CreateFace(FProceduralMeshSection& MeshSection, const FVoxelFaceData& VoxelData)
+//{
+//	const int32 Triangle_Num = VoxelData.TriangleNum;
+//	const int32 InIndex = VoxelData.Index;
+//	const auto& Faces = VoxelData.TileData->StaticFaces;
+//	if (InIndex < 0 || InIndex > 5 || Faces[InIndex].Triangles.IsEmpty()) return Triangle_Num;
+//	return Triangle_Num;
+//
+//	const int32 VoxelSize = VoxelData.Size;
+//	const int32 Scale = FMath::Clamp<int32>(VoxelData.Scale, 1, VoxelData.Scale);
+//	const FVector& InLocation = VoxelData.Origin;
+//
+//	// Each triangle this face has, add the vertex indices to the mesh section
+//	for (const auto& Triangle : Faces[InIndex].Triangles)
+//		for (int32 Index = 0; Index < 3; ++Index)
+//			MeshSection.Triangles.Add(Triangle.VertIndices[Index] + Triangle_Num + MeshSection.ElementID);
+//
+//	// in Index represents each face of the new voxel we are generating
+//	for (const auto& VertexData : Faces[InIndex].VerticesData)
+//	{
+//		MeshSection.Vertices.Add((VertexData.Position * VoxelSize * Scale * 0.5) + (InLocation * VoxelSize * Scale));
+//		MeshSection.UVs.Add(VertexData.UVPosition * Scale);
+//		MeshSection.VertexColors.Add(VertexData.Color);
+//		MeshSection.Normals.Add(VertexData.Normal);
+//		// Tangents.Add(VertexData.Tangent);
+//	}
+//
+//	// Return Current Triangle Index count + The triangle indices we just added
+//	return Triangle_Num + Faces[InIndex].VerticesData.Num();
+//}
+
+int32 UGALibrary::CreateFace(FProceduralMeshSection& MeshSection, const UGameplayTileData* InTileData, const FVector& InLocation, int32 InIndex, int32 CurTriangleNum, int32 InVoxelSize, int32 InScale)
+{
+	if (InIndex < 0 || InIndex > 5 || !InTileData) return CurTriangleNum;
+	const auto& Faces = InTileData->StaticFaces;
+	if (Faces[InIndex].Triangles.IsEmpty()) return CurTriangleNum;
+	// return CurTriangleNum;
+
+	// const int32 Scale = FMath::Clamp<int32>(InScale, 1, InScale);
+
+	// Each triangle this face has, add the vertex indices to the mesh section
+	for (const auto& Triangle : Faces[InIndex].Triangles)
+		for (int32 Index = 0; Index < 3; ++Index)
+			MeshSection.Triangles.Add(Triangle.VertIndices[Index] + CurTriangleNum + MeshSection.ElementID);
+
+	// in Index represents each face of the new voxel we are generating
+	for (const auto& VertexData : Faces[InIndex].VerticesData)
+	{
+		MeshSection.Vertices.Add((VertexData.Position * InVoxelSize * InScale * 0.5) + (InLocation * InVoxelSize));
+		MeshSection.UVs.Add(VertexData.UVPosition * InScale);
+		MeshSection.VertexColors.Add(VertexData.Color);
+		MeshSection.Normals.Add(VertexData.Normal);
+		// Tangents.Add(VertexData.Tangent);
+	}
+
+	// Return Current Triangle Index count + The triangle indices we just added
+	return CurTriangleNum + Faces[InIndex].VerticesData.Num();
 }

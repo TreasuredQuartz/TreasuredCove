@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
-#include "MCWorld_Voxel.h"
+#include "ProceduralMeshSectionStruct.h"
 #include "ProceduralMiniMap.generated.h"
 
 class UProceduralMeshComponent;
@@ -77,9 +77,9 @@ public:
 		return Section.bEnableCollision;
 	}
 
-	uint32 GetMaterialIndex()
+	UMaterialInterface* GetMaterial()
 	{
-		return Section.MaterialIndex;
+		return Section.Material;
 	}
 };
 

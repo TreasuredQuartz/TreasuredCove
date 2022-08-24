@@ -43,6 +43,6 @@ public:
 	virtual void ExitVoxel() override;
 
 	virtual void BeforeChunkGenerated() override;
-	virtual void ChunkGenerating(FIntVector CurrentLocation, int32 Index) override;
+	virtual void ChunkGenerating(const FIntVector& CurrentLocation, int32 Index) override;
 	virtual void AfterChunkGenerated() override;
 };

@@ -26,8 +26,6 @@ public:
 	FPlanetMaterialGenerator MaterialGenerator;
 private:
 	bool bIsValid;
-	bool bShouldUpdateLOD;
-	TArray<int> skipIndices;
 	FVector playerLocation;
 	FVector playerDirection;
 
@@ -49,6 +47,7 @@ public:
 	void OnMaterialSettingsUpdated();
 
 	void checkCurrentView();
+	void CheckLOD();
 	bool LODLineTrace();
 
 public:	

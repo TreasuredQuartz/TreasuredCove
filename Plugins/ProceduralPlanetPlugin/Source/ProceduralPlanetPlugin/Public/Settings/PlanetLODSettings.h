@@ -17,23 +17,23 @@ public:
 	{
 		LevelsOfDetail = {
 			(INFINITY),
-			(1.f),
-			(0.95f),
-			(0.9f),
-			(0.8f),
-			(0.7f),
-			(0.6f),
-			(0.5f),
-			(0.4f),
-			(0.3f),
-			(0.2f),
-			(0.1f)
+			(1000000.f),
+			(10000.f),
+			(1000.f),
+			(100.f),
+			(50.f),
+			(25.f),
+			(20.f),
+			(15.f),
+			(10.f),
+			(5.f),
+			(1.f)
 		};
 	};
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings | Level Of Detail")
-	TArray<float> LevelsOfDetail;
+	TArray<double> LevelsOfDetail;
 	
 public:
 	static bool isMemberName(FName Name)

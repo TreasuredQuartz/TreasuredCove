@@ -34,7 +34,7 @@ void AAtmosphereVoxel::BeforeChunkGenerated()
 	TArray<int32> Temperature = CalcNoise();
 }
 
-void AAtmosphereVoxel::ChunkGenerating(FIntVector CurrentLocation, int32 Index) 
+void AAtmosphereVoxel::ChunkGenerating(const FIntVector& CurrentLocation, int32 Index) 
 {
 
 }

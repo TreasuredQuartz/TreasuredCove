@@ -1,7 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-//#include "MeshExtensionLibrary.h"
+#include "MeshExtensionLibrary.h"
+#include "ProceduralMeshComponent.h"
+#include "KismetProceduralMeshLibrary.h"
 //#include "SkeletalMeshMerge.h"
 //#include "Engine/SkeletalMeshSocket.h"
 //#include "Engine/SkeletalMesh.h"
@@ -9,7 +11,59 @@
 //#include "Engine/Engine.h"
 //#include "Math/Range.h"
 //#include "MeshExtension/Delaunauy.h"
-//
+
+//UKismetProceduralMeshLibrary::CopyProceduralMeshFromStaticMeshComponent();
+void UMeshExtensionLibrary::CopyProceduralMeshFromStaticMesh(UStaticMesh* StaticMesh, int32 LODIndex, UProceduralMeshComponent* ProcMeshComponent, bool bCreateCollision)
+{
+	//// MESH DATA
+
+	int32 NumSections = StaticMesh->GetNumSections(LODIndex);
+	for (int32 SectionIndex = 0; SectionIndex < NumSections; SectionIndex++)
+	{
+		// Buffers for copying geom data
+		TArray<FVector> Vertices;
+		TArray<int32> Triangles;
+		TArray<FVector> Normals;
+		TArray<FVector2D> UVs;
+		TArray<FVector2D> UVs1;
+		TArray<FVector2D> UVs2;
+		TArray<FVector2D> UVs3;
+		TArray<FProcMeshTangent> Tangents;
+
+		// Get geom data from static mesh
+		UKismetProceduralMeshLibrary::GetSectionFromStaticMesh(StaticMesh, LODIndex, SectionIndex, Vertices, Triangles, Normals, UVs, Tangents);
+
+		// Create section using data
+		TArray<FLinearColor> DummyColors;
+		ProcMeshComponent->CreateMeshSection_LinearColor(SectionIndex, Vertices, Triangles, Normals, UVs, UVs1, UVs2, UVs3, DummyColors, Tangents, bCreateCollision);
+	}
+
+	//// SIMPLE COLLISION
+
+	// Clear any existing collision hulls
+	ProcMeshComponent->ClearCollisionConvexMeshes();
+
+	if (StaticMesh->GetBodySetup() != nullptr)
+	{
+		// Iterate over all convex hulls on static mesh..
+		const int32 NumConvex = StaticMesh->GetBodySetup()->AggGeom.ConvexElems.Num();
+		for (int ConvexIndex = 0; ConvexIndex < NumConvex; ConvexIndex++)
+		{
+			// Copy convex verts to ProcMesh
+			FKConvexElem& MeshConvex = StaticMesh->GetBodySetup()->AggGeom.ConvexElems[ConvexIndex];
+			ProcMeshComponent->AddCollisionConvexMesh(MeshConvex.VertexData);
+		}
+	}
+
+	//// MATERIALS
+
+	for (int32 MatIndex = 0; MatIndex < StaticMesh->GetStaticMaterials().Num(); MatIndex++)
+	{
+		ProcMeshComponent->SetMaterial(MatIndex, StaticMesh->GetMaterial(MatIndex));
+	}
+}
+
+
 //static void ToMergeParams(const TArray<FSkeleMeshMergeSectionMapping_BP>& InSectionMappings, TArray<FSkelMeshMergeSectionMapping>& OutSectionMappings)
 //{
 //	if (InSectionMappings.Num() > 0)

@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "ASHealth.h"
 #include "ASWeaponStats.h"
+#include "GAProjectile.h"
 #include "Engine/Engine.h"
 
 struct FAdvancedDamageStatics
@@ -64,6 +65,9 @@ void UAdvancedDEC::Execute_Implementation(const FGameplayEffectCustomExecutionPa
 
 	AActor* SourceActor = ExecutionParams.GetSourceAbilitySystemComponent()->GetOwner();
 	AActor* TargetActor = ExecutionParams.GetTargetAbilitySystemComponent()->GetOwner();
+
+	AGAProjectile* Proj = Cast<AGAProjectile>(ExecutionParams.GetOwningSpec().GetContext().GetEffectCauser());
+	if (Proj) UE_LOG(LogTemp, Warning, TEXT("Effect Causer is projectile!"))
 
 	FVector Distance = TargetActor->GetActorLocation() - SourceActor->GetActorLocation();
 	float DistanceTraveled = Distance.Size();

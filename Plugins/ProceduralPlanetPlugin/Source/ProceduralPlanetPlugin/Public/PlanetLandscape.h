@@ -10,7 +10,7 @@
 #include "PlanetLandscape.generated.h"
 
 // 100,000
-constexpr int PlanetSize = 100000;
+// constexpr int PlanetSize = 100000;
 
 class UProceduralMeshComponent;
 class UPlanetQuadTree;
@@ -47,6 +47,7 @@ public:
 public:
 	void Initialize(FPlanetShapeGenerator inGenerator, FPlanetMeshSettings inMeshSettings, 
 		UProceduralMeshComponent& inMesh, FVector inLocalUp);
-	void ConstructMesh(FVector inPlayerPosition);
+	void ConstructMesh(const FVector& NewLocation);
 	void CalculateNoise();
+	void OnCameraLocationUpdated(const FVector& NewLocation);
 };

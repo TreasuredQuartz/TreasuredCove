@@ -37,21 +37,36 @@ AGameplayManager::AGameplayManager()
 	VoxelClass = AGameplayVoxel::StaticClass();
 }
 
+void AGameplayManager::OnConstruction_DoOnce()
+{
+	if (!bConstructionDoOnce)
+	{
+		bConstructionDoOnce = true;
+		// UE_LOG(LogTemp, Warning, TEXT("Construction script..."));
+
+		ChunkSize = ChunkLineElements * VoxelSize;
+		ChunkSizeHalf = ChunkSize * 0.5;
+		int32 RRCubed = RenderRange * RenderRange * RenderRange;
+
+		Chunks.Reserve(RRCubed);
+		ChunkCoords.Reserve(RRCubed);
+
+		if (bIsActive)
+		{
+			RemoveChunk();
+			AddChunk();
+		}
+	}
+}
+
 // Called in editor and on begin play
 void AGameplayManager::OnConstruction(const FTransform& Transform)
 {
-	Super::OnConstruction(Transform);
-
-	ChunkSize = ChunkLineElements * VoxelSize;
-	ChunkSizeHalf = ChunkSize * 0.5;
-	int32 RRCubed = RenderRange * RenderRange * RenderRange;
-
-	Chunks.Reserve(RRCubed);
-	ChunkCoords.Reserve(RRCubed);
-
 	ActiveChunkCoords = FIntVector(Transform.GetLocation() / ChunkSize);
-	/*if(bIsActive)*/
-	// UpdatePlayerCoordinate();
+	OnConstruction_DoOnce();
+	
+
+	Super::OnConstruction(Transform);
 }
 
 // Called in editor when a uproperty changes
@@ -68,27 +83,16 @@ void AGameplayManager::PostEditChangeProperty(FPropertyChangedEvent& PropertyCha
 		)
 	{
 		ChunkSize = ChunkLineElements * VoxelSize;
-		if (ChunkCoords.Num() > 0)
+		if (ChunkCoords.Num() > 0 || Chunks.Num() > 0)
 		{
-			for (int32 i = 0; i < ChunkCoords.Num(); i++)
-			{
-				ChunkCoords.RemoveAt(i);
-			}
+			ClearChunks();
 		}
+	}
 
-		if (Chunks.Num() > 0)
-		{
-			for (int32 i = 0; i < Chunks.Num(); i++)
-			{
-				if (Chunks.IsValidIndex(i))
-				{
-					Chunks.RemoveAt(i);
-				}
-			}
-		}
-
-		// if (bIsActive)
-			// UpdatePlayerCoordinate();
+	if (bIsActive)
+	{
+		RemoveChunk();
+		AddChunk();
 	}
 
 	Super::PostEditChangeProperty(PropertyChangedEvent);
@@ -104,70 +108,92 @@ void AGameplayManager::BeginPlay()
 	FTimerHandle PlayerCoordHandle;
 	GetWorldTimerManager().SetTimer(PlayerCoordHandle, PlayerCoordDel, 1.0f, true);
 
-	AddChunk();
+	// AddChunk();
+
+	Super::BeginPlay();
 }
 
-void AGameplayManager::AddVoxelActor(FVector VoxelSpawnLocation, FIntVector VoxelIndex)
+void AGameplayManager::AddVoxelActor(FVector VoxelSpawnLocation, FIntVector VoxelIndex, int32 CurrentLOD)
 {
-	AGameplayVoxel* NewVoxel = NewObject<AGameplayVoxel>(this);
-	if (NewVoxel)
+	if (GetWorld())
 	{
-		GEngine->AddOnScreenDebugMessage(3, 10.f, FColor::Red, "Adding Voxel Actor!");
-		NewVoxel->AttachToComponent(GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-		Chunks.Add(NewVoxel);
-		ChunkCoords.Add(FIntVector(VoxelSpawnLocation));
-		return;
+		if (AGameplayVoxel* NewVoxel = GetWorld()->SpawnActorDeferred<AGameplayVoxel>(VoxelClass, FTransform(VoxelSpawnLocation)))
+		{
+			// UE_LOG(LogTemp, Warning, TEXT("Adding Voxel Actor: %s"), *VoxelSpawnLocation.ToString());
+			Chunks.Add(NewVoxel);
+			ChunkCoords.Add(VoxelIndex);
+			NewVoxel->SetRandomSeed(RandomSeed);
+			NewVoxel->SetVoxelSize(VoxelSize);
+			NewVoxel->SetChunkZElements(ChunkZElements);
+			NewVoxel->SetChunkLineElements(ChunkLineElements);
+			NewVoxel->SetChunkIndex(VoxelIndex);
+			NewVoxel->SetCurrentLOD(CurrentLOD);
+			NewVoxel->GetRootComponent()->AttachToComponent(GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
+			// NewVoxel->GetRootComponent()->RegisterComponent();
+			// NewVoxel->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
+			// Register
+			UGameplayStatics::FinishSpawningActor(NewVoxel, FTransform(VoxelSpawnLocation));
+		}
 	}
-
-	GEngine->AddOnScreenDebugMessage(3, 10.f, FColor::Red, "Voxel Actor Not Spawned!");
 }
+
+static int32 LODDistances[4] = {
+	1,
+	3,
+	5,
+	6,
+};
 
 void AGameplayManager::AddChunk()
 {
-	GEngine->AddOnScreenDebugMessage(3, 10.f, FColor::Red, "Adding Chunk!");
+	// UE_LOG(LogTemp, Warning, TEXT("Adding Chunk!"));
 
 	// Z
-	for (int32 z = -RenderRange; z <= RenderRange; z++)
+	int32 z = 0;
+	int32 LocZ = z + ActiveChunkCoords.Z;
+	int32 ZScaled = LocZ * ChunkSize;
+	int32 ZCenter = ZScaled + ChunkSizeHalf;
+
+	// Y
+	for (int32 y = -RenderRange; y <= RenderRange; ++y)
 	{
-		int32 LocZ = z + ActiveChunkCoords.Z;
-		int32 ZScaled = LocZ * ChunkSize;
-		int32 ZCenter = ZScaled + ChunkSizeHalf;
+		int32 LocY = y + ActiveChunkCoords.Y;
+		int32 YScaled = LocY * ChunkSize;
+		int32 YCenter = YScaled + ChunkSizeHalf;
 
-		// Y
-		for (int32 y = -RenderRange; y <= RenderRange; y++)
+		// X
+		for (int32 x = -RenderRange; x <= RenderRange; ++x)
 		{
-			int32 LocY = y + ActiveChunkCoords.Y;
-			int32 YScaled = LocY * ChunkSize;
-			int32 YCenter = YScaled + ChunkSizeHalf;
+			int32 LocX = x + ActiveChunkCoords.X;
+			int32 XScaled = LocX * ChunkSize;
+			int32 XCenter = XScaled + ChunkSizeHalf;
 
-			// X
-			for (int32 x = -RenderRange; x <= RenderRange; x++)
+			FIntVector LocVector = FIntVector(LocX, LocY, LocZ);
+
+			// if chunk is outside play area, don't spawn
+			//if (!InPlayArea(XCenter, YCenter)) {
+			//	continue;
+			//}
+
+			// if Chunk is in player radius space...
+			if (CHECK_RADIUS(XCenter, YCenter, ZCenter))
 			{
-				int32 LocX = x + ActiveChunkCoords.X;
-				int32 XScaled = LocX * ChunkSize;
-				int32 XCenter = XScaled + ChunkSizeHalf;
-
-				FIntVector LocVector = FIntVector(LocX, LocY, LocZ);
-
-				// if chunk is outside play area, don't spawn
-				//if (!InPlayArea(XCenter, YCenter)) {
-				//	continue;
-				//}
-
-				// if Chunk is in player radius space...
-				if (CHECK_RADIUS(XCenter, YCenter, ZCenter))
+				// And if Chunk does not exist in coords...
+				if (!ChunkCoords.Contains(LocVector))
 				{
-					// And if Chunk does not exist in coords...
-					if (!ChunkCoords.Contains(LocVector))
-					{
-						FVector Location = FVector(XScaled, YScaled, ZScaled);
+					FVector Location = FVector(XCenter, YCenter, ZCenter);
 
-						AddVoxelActor(Location, LocVector);
-					}
-					else {
-						GEngine->AddOnScreenDebugMessage(3, 10.f, FColor::Red, "Chunk updated!");
-						Chunks[ChunkCoords.IndexOfByKey(LocVector)]->UpdateChunk(LocVector);
-					}
+					// UE_LOG(LogTemp, Warning, TEXT("Should Add Voxel Actor!"));
+					int32 Distance = FMath::Abs(x) + FMath::Abs(y);
+					int32 LOD = 0;
+					if (Distance <= 1) LOD = 1;
+					else if (Distance <= 3) LOD = 2;
+					else LOD = 4;
+					AddVoxelActor(Location, LocVector, 1);
+				}
+				else {
+					GEngine->AddOnScreenDebugMessage(3, 10.f, FColor::Red, "Chunk updated!");
+					Chunks[ChunkCoords.IndexOfByKey(LocVector)]->UpdateChunk(LocVector);
 				}
 			}
 		}
@@ -176,9 +202,9 @@ void AGameplayManager::AddChunk()
 
 void AGameplayManager::RemoveChunk()
 {
-	for (int32 i = 0; i < ChunkCoords.Num(); i++)
+	for (int32 i = 0; i < ChunkCoords.Num(); ++i)
 	{
-		FIntVector Coord = FIntVector( 
+		const FIntVector Coord = FIntVector( 
 			((ChunkSize * ChunkCoords[i].X) + ChunkSizeHalf), 
 			((ChunkSize * ChunkCoords[i].Y) + ChunkSizeHalf), 
 			((ChunkSize * ChunkCoords[i].Z) + ChunkSizeHalf) 
@@ -187,11 +213,21 @@ void AGameplayManager::RemoveChunk()
 
 		if (!bLocBool)
 		{
-			// Chunks[i]->Destroy();
-			ChunkCoords.RemoveAt(i);
-			Chunks.RemoveAt(i);
+			Chunks[i]->Destroy();
+			ChunkCoords.RemoveAtSwap(i);
+			Chunks.RemoveAtSwap(i);
 		}
 	}
+}
+
+void AGameplayManager::ClearChunks()
+{
+	for (int32 i = 0; i < ChunkCoords.Num(); ++i)
+	{
+		Chunks[i]->Destroy();
+	}
+	Chunks.Empty();
+	ChunkCoords.Empty();
 }
 
 void AGameplayManager::AddUser(APawn* InPawn)
@@ -211,19 +247,25 @@ void AGameplayManager::AddUser(APlayerState* InPlayerState)
 
 void AGameplayManager::UpdatePlayerCoordinate()
 {
-	GEngine->AddOnScreenDebugMessage(3, 1.f, FColor::Green, "Updating Player Coordinate!");
+	if (ChunkSize == 0) 
+	{
+		// UE_LOG(LogTemp, Warning, TEXT("ChunkSize is 0?"));
+		return;
+	}
 
-	APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0);
 	FVector Location = GetActorLocation();
 
-	if (bUsePlayerPosition && Pawn) Location = Pawn->GetActorLocation();
+	if (bUsePlayerPosition)
+		if(APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0)) 
+			Location = Pawn->GetActorLocation();
 
 	PlayerCoords = FIntVector(Location);
 	FIntVector PlayerChunkCoords = PlayerCoords / ChunkSize;
 
 	if (ActiveChunkCoords != PlayerChunkCoords)
 	{
-		GEngine->AddOnScreenDebugMessage(3, 15.f, FColor::Green, "Hello???");
+		// UE_LOG(LogTemp, Warning, TEXT("Updating Player Coordinate!"));
+
 		if(GetActiveVoxel()) GetActiveVoxel()->ExitVoxel();
 		ActiveChunkCoords = PlayerChunkCoords;
 		if(GetActiveVoxel()) GetActiveVoxel()->EnterVoxel();

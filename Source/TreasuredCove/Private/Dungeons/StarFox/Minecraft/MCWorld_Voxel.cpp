@@ -4,25 +4,20 @@
 #include "MCWorld_Voxel.h"
 #include "MCWorld_VoxelItem.h"
 #include "MCWorld_Instance.h"
+#include "WaterBodyProceduralActor.h"
+#include "GameplayTileData.h"
 #include "SimplexNoiseBPLibrary.h"
 #include "MCWorld_BuildingHelperMacros.h"
 
+#include "Engine/AssetManager.h"
 #include "Engine/Engine.h"
 #include "Engine/Selection.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "GALibrary.h"
 
-const int32 VoxelTriangles[] = {2, 1, 0, 0, 3, 2};
-const FVector2D VoxelUVs[] = { FVector2D(0.00000, 0.00000), FVector2D(0.00000, 1.00000), FVector2D(1.00000, 1.00000), FVector2D(1.00000, 0.00000) };
-const FVector VoxelNormals0[] = { FVector(0, 0, 1), FVector(0, 0, 1), FVector(0, 0, 1), FVector(0, 0, 1) };
-const FVector VoxelNormals1[] = { FVector(0, 0, -1), FVector(0, 0, -1), FVector(0, 0, -1), FVector(0, 0, -1) };
-const FVector VoxelNormals2[] = { FVector(0, 1, 0), FVector(0, 1, 0), FVector(0, 1, 0), FVector(0, 1, 0) };
-const FVector VoxelNormals3[] = { FVector(0, -1, 0), FVector(0, -1, 0), FVector(0, -1, 0), FVector(0, -1, 0) };
-const FVector VoxelNormals4[] = { FVector(1, 0, 0), FVector(1, 0, 0), FVector(1, 0, 0), FVector(1, 0, 0) };
-const FVector VoxelNormals5[] = { FVector(-1, 0, 0), FVector(-1, 0, 0), FVector(-1, 0, 0), FVector(-1, 0, 0) };
+#pragma region Constants
 const FVector VoxelMask[] = { FVector(0.00000, 0.00000, 1.00000), FVector(0.00000, 0.00000, -1.00000), FVector(0.00000, 1.00000, 0.00000), FVector(0.00000, -1.00000, 0.00000), FVector(1.00000, 0.00000, 0.00000), FVector(-1.00000, 0.00000, 0.00000) };
-
-const FVector VoxelNormalsStairs[] = {FVector()};
 
 CONSTEXPR int GRASSTALL{ -2 };
 CONSTEXPR int GRASSSHORT{ -1 };
@@ -77,6 +72,7 @@ CONSTEXPR int ELMPLANKS{ 34 };
 CONSTEXPR int CHEST{ 35 };
 CONSTEXPR int CRAFTINGTABLE{ 36 };
 CONSTEXPR int FURNACE{ 37 };
+#pragma endregion
 
 // Sets default values
 AMCWorld_Voxel::AMCWorld_Voxel()
@@ -90,7 +86,8 @@ AMCWorld_Voxel::AMCWorld_Voxel()
 	Freq = 1.f;
 	SurfaceHeight = 30;
 	// BlockData.SetNum(BEDROCK);
-
+	SelectionMesh =
+		CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Selected Location"));
 	InitBuildings();
 
 #if WITH_EDITOR
@@ -127,8 +124,11 @@ void AMCWorld_Voxel::OnConstruction_DoOnce()
 void AMCWorld_Voxel::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 {
 	if (e.Property == NULL) return;
+
 	FName MemberPropertyName = e.MemberProperty->GetFName();
 	FName PropertyName = e.Property->GetFName();
+
+	UE_LOG(LogTemp, Warning, TEXT("MC_Voxel: %s"), *PropertyName.ToString());
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Orange, PropertyName.ToString());
 	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Purple, MemberPropertyName.ToString());
@@ -190,7 +190,8 @@ void AMCWorld_Voxel::OnSelected_Editor()
 		{
 			if (Hit.Component == PMesh)
 			{
-				SelectedLocation = Hit.Location;
+				SelectedLocation = Hit.Location / VoxelSize;
+				SelectionMesh->SetWorldLocation(SelectedLocation);
 			}
 		}
 	}
@@ -226,6 +227,11 @@ void AMCWorld_Voxel::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inC
 		SetRootComponent(PMesh);
 		// PMesh->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 	}
+
+	/*if (UAssetManager* AssetManager = UAssetManager::GetIfValid())
+	{
+		AssetManager->LoadPrimaryAssets(FPrimaryAssetId);
+	}*/
 
 	GenerateChunk();
 	UpdateChunkFromData();
@@ -416,9 +422,9 @@ void AMCWorld_Voxel::GenerateOrePockets()
 
 	for (FIntVector IronOrePocketCenter : IronOrePocketCenters)
 	{
-		for (int x = -2; x < 3; x++)
-			for (int y = -2; y < 3; y++)
-				for (int z = -2; z < 3; z++)
+		for (int x = -1; x < 1; ++x)
+			for (int y = -1; y < 1; ++y)
+				for (int z = -1; z < 1; ++z)
 				{
 					if (InRange(x + IronOrePocketCenter.X + 1, ChunkLineElements + 1) && InRange(y + IronOrePocketCenter.Y + 1, ChunkLineElements + 1) && InRange(z + IronOrePocketCenter.Z + 1, ChunkZElements))
 					{
@@ -428,7 +434,7 @@ void AMCWorld_Voxel::GenerateOrePockets()
 							if (RandomStream.FRand() < 0.5 || Radius <= 1.4)
 							{
 								int32 Index = IronOrePocketCenter.X + x + ((IronOrePocketCenter.Y + y) * ChunkLineElementsExt) + ((IronOrePocketCenter.Z + z) * ChunkLineElementsP2);
-								ChunkFields[Index] = IRONORE;
+								if (Index >= 0 && Index < ChunkFields.Num()) ChunkFields[Index] = IRONORE;
 							}
 						}
 					}
@@ -437,9 +443,9 @@ void AMCWorld_Voxel::GenerateOrePockets()
 
 	for (FIntVector DiamondOrePocketCenter : DiamondOrePocketCenters)
 	{
-		for (int x = -2; x < 3; x++)
-			for (int y = -2; y < 3; y++)
-				for (int z = -2; z < 3; z++)
+		for (int x = -1; x < 1; ++x)
+			for (int y = -1; y < 1; ++y)
+				for (int z = -1; z < 1; ++z)
 				{
 					if (InRange(x + DiamondOrePocketCenter.X + 1, ChunkLineElements + 1) && InRange(y + DiamondOrePocketCenter.Y + 1, ChunkLineElements + 1) && InRange(z + DiamondOrePocketCenter.Z + 1, ChunkZElements))
 					{
@@ -449,8 +455,7 @@ void AMCWorld_Voxel::GenerateOrePockets()
 							if (RandomStream.FRand() < 0.5 || Radius <= 1.4)
 							{
 								int32 Index = DiamondOrePocketCenter.X + x + ((DiamondOrePocketCenter.Y + y) * ChunkLineElementsExt) + ((DiamondOrePocketCenter.Z + z) * ChunkLineElementsP2);
-								ChunkFields[Index] = DIAMONDORE;
-
+								if (Index >= 0 && Index < ChunkFields.Num()) ChunkFields[Index] = DIAMONDORE;
 							}
 						}
 					}
@@ -460,7 +465,7 @@ void AMCWorld_Voxel::GenerateOrePockets()
 
 void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHeight, int32 Biome)
 {
-	if (Location.Z == SurfaceHeight + inHeight + 1 && (RandomStream.FRand() * 100) < 80)
+	if (Location.Z == (SurfaceHeight + inHeight + 1) && Location.Z > SeaLevelHeight && (RandomStream.FRand() * 100) < 80)
 	{
 		switch (Biome)
 		{
@@ -468,6 +473,10 @@ void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHe
 			ChunkFields[Index] = (RandomStream.FRand() * 100) < 25 ? GRASSTALL : GRASSSHORT;
 			break;
 		}
+	}
+	else if (Location.Z > SurfaceHeight + inHeight && Location.Z < SeaLevelHeight)
+	{
+		ChunkFields[Index] = WATER;
 	}
 	else if (Location.Z == (SurfaceHeight + inHeight))
 	{
@@ -483,7 +492,7 @@ void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHe
 			break;
 		}
 	}
-	else if ((Location.Z <= SurfaceHeight - 1 + inHeight) && !(Location.Z <= SurfaceHeight - 3 + inHeight))
+	else if ((Location.Z <= SurfaceHeight - 1 + inHeight) && (Location.Z > SurfaceHeight - 3 + inHeight))
 	{
 		switch (Biome)
 		{
@@ -497,7 +506,7 @@ void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHe
 			break;
 		}
 	}
-	else if ((Location.Z <= SurfaceHeight - 3 + inHeight) && !(Location.Z <= SurfaceHeight - 10 + inHeight))
+	else if ((Location.Z <= SurfaceHeight - 3 + inHeight) && Location.Z > 0)
 	{
 		bool bOre = false;
 		if (floor(RandomStream.FRandRange(1, 10000)) < 10)
@@ -514,7 +523,7 @@ void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHe
 			break;
 		}
 	}
-	else if ((Location.Z <= SurfaceHeight - 10 + inHeight) && !(Location.Z <= 0))
+	else if ((Location.Z <= SurfaceHeight - 10 + inHeight) && Location.Z > 0)
 	{
 		bool bOre = false;
 		if ((RandomStream.FRand() * 10000) < 10)
@@ -534,16 +543,13 @@ void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHe
 	{
 		ChunkFields[Index] = BEDROCK;
 	}
-	else if (Location.Z > SurfaceHeight + inHeight && Location.Z < SeaLevelHeight)
-	{
-		ChunkFields[Index] = WATER;
-	}
 	else ChunkFields[Index] = AIR;
 }
 
 void AMCWorld_Voxel::BeforeChunkGenerated()
 {
 	RandomStream = FRandomStream(RandomSeed);
+	USimplexNoiseBPLibrary::setNoiseSeed(RandomSeed);
 
 	ChunkFields.SetNumZeroed(ChunkTotalElements);
 	TreeType.SetNumZeroed(ChunkTotalElements);
@@ -557,13 +563,13 @@ void AMCWorld_Voxel::BeforeChunkGenerated()
 	UE_LOG(LogTemp, Warning, TEXT("%s"), *FormattedText);*/
 }
 
-void AMCWorld_Voxel::ChunkGenerating(FIntVector CurrentLocation, int32 Index)
+void AMCWorld_Voxel::ChunkGenerating(const FIntVector& CurrentLocation, int32 Index)
 {
 	int32 x = CurrentLocation.X;
 	int32 y = CurrentLocation.Y;
 	int32 z = CurrentLocation.Z;
 
-	int32 H = Height.Num() > 0 ? Height[x + (y * ChunkLineElementsExt) + (z * ChunkLineElementsP2Ext)] : 0;
+	int32 H = Height.Num() > 0 ? Height[Index] : 0;
 	int32 T = Temperature.Num() > 0 ? Temperature[x + (y * ChunkLineElementsExt)] : 0;
 	int32 M = Moisture.Num() > 0 ? Moisture[x + (y * ChunkLineElementsExt)] : 0;
 
@@ -639,7 +645,7 @@ void AMCWorld_Voxel::ChunkGenerating(FIntVector CurrentLocation, int32 Index)
 
 	// Tree Centers
 	if ((x > 2 && x < ChunkLineElements - 2) && (y > 2 && y < ChunkLineElements - 2))
-		if ((RandomStream.FRand() * 100) < 1 && z == SurfaceHeight + 1 + H)
+		if ((RandomStream.FRand() * 100) < 1 && z == SurfaceHeight + 1 + H && z > SeaLevelHeight)
 		{
 			TreeCenters.Add(CurrentLocation);
 			TreeType[Index] = B;
@@ -647,7 +653,7 @@ void AMCWorld_Voxel::ChunkGenerating(FIntVector CurrentLocation, int32 Index)
 
 	// Town Centers
 	if((x > 5 && x < ChunkLineElements - 5) && (y > 5 && y < ChunkLineElements - 5)) 
-		if (RandomStream.FRand() < 0.0001 && z == SurfaceHeight + 1 + H)
+		if (RandomStream.FRand() < 0.0001 && z == SurfaceHeight + 1 + H && z > SeaLevelHeight)
 		{
 			TownCenters.Add(CurrentLocation);
 		};
@@ -656,11 +662,14 @@ void AMCWorld_Voxel::ChunkGenerating(FIntVector CurrentLocation, int32 Index)
 
 void AMCWorld_Voxel::AfterChunkGenerated()
 {
+	// Town
+	GenerateTowns();
+
 	// Tree
 	GenerateTrees();
 
-	// Town
-	GenerateTowns();
+	// Ores
+	GenerateOrePockets();
 }
 
 TArray<int32> AMCWorld_Voxel::CalcNoise_Implementation()
@@ -673,13 +682,13 @@ TArray<int32> AMCWorld_Voxel::CalcNoise_Implementation()
 	float LocY = 0;
 	float LocZ = 0;
 
-	for (int z = 0; z < ChunkLineElementsExt; ++z)
+	for (int z = 0; z < ChunkZElements; ++z)
 	for (int y = 0; y < ChunkLineElementsExt; ++y)
 	for (int x = 0; x < ChunkLineElementsExt; ++x)
 	{
 		LocX = (x + (ChunkIndex.X * ChunkLineElements)) * XMult;
 		LocY = (y + (ChunkIndex.Y * ChunkLineElements)) * YMult;
-		LocZ = (z + (ChunkIndex.Z * ChunkLineElements)) * ZMult;
+		LocZ = (z + (ChunkIndex.Z * ChunkZElements)) * ZMult;
 
 		float Noise0 = USimplexNoiseBPLibrary::SimplexNoise3D(LocX * 0.5, LocY * 0.5, LocZ * 0.5);
 		float Noise1 = USimplexNoiseBPLibrary::SimplexNoise3D(LocX * 0.1, LocY * 0.1, LocZ * 0.1);
@@ -714,94 +723,101 @@ bool AMCWorld_Voxel::InRange(int32 Value, int32 Range)
 #pragma endregion
 
 #pragma region CreateMeshes
-
-void AMCWorld_Voxel::CreateCubeMesh(FProceduralMeshSection& MeshSection, const int32& InIndex, const int32& x, const int32& y, const int32& z, int32& Triangle_Num)
+//void AMCWorld_Voxel::CreateMeshFace(FProceduralMeshSection& MeshSection, int32 InIndex, const FIntVector& InLocation, int32& Triangle_Num)
+//{
+//	const auto x = InLocation.X;
+//	const auto y = InLocation.Y;
+//	const auto z = InLocation.Z;
+//
+//	MeshSection.Triangles.Add(VoxelTriangles[0] + Triangle_Num + MeshSection.ElementID);
+//	MeshSection.Triangles.Add(VoxelTriangles[1] + Triangle_Num + MeshSection.ElementID);
+//	MeshSection.Triangles.Add(VoxelTriangles[2] + Triangle_Num + MeshSection.ElementID);
+//
+//	MeshSection.Triangles.Add(VoxelTriangles[3] + Triangle_Num + MeshSection.ElementID);
+//	MeshSection.Triangles.Add(VoxelTriangles[4] + Triangle_Num + MeshSection.ElementID);
+//	MeshSection.Triangles.Add(VoxelTriangles[5] + Triangle_Num + MeshSection.ElementID);
+//
+//	Triangle_Num += 4;
+//
+//	// in Index represents each face of the new voxel we are generating
+//	switch (InIndex)
+//	{
+//	case 0: {
+//		// Top Face
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//
+//		MeshSection.Normals.Append(VoxelNormals0, UE_ARRAY_COUNT(VoxelNormals0));
+//		break;
+//	}
+//	case 1: {
+//		// Bottom Face
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//
+//		MeshSection.Normals.Append(VoxelNormals1, UE_ARRAY_COUNT(VoxelNormals1));
+//		break;
+//	}
+//	case 2: {
+//		// Right Face
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//
+//		MeshSection.Normals.Append(VoxelNormals2, UE_ARRAY_COUNT(VoxelNormals2));
+//		break;
+//	}
+//	case 3: {
+//		// Left Face
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//
+//		MeshSection.Normals.Append(VoxelNormals3, UE_ARRAY_COUNT(VoxelNormals3));
+//		break;
+//	}
+//	case 4: {
+//		// Front Face
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//
+//		MeshSection.Normals.Append(VoxelNormals4, UE_ARRAY_COUNT(VoxelNormals4));
+//		break;
+//	}
+//	case 5: {
+//		// Back Face
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
+//		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
+//
+//		MeshSection.Normals.Append(VoxelNormals5, UE_ARRAY_COUNT(VoxelNormals5));
+//		break;
+//	}
+//	}
+//	MeshSection.UVs.Append(VoxelUVs, UE_ARRAY_COUNT(VoxelUVs));
+//
+//	FColor Color = FColor(255, 255, 255, InIndex);
+//	MeshSection.VertexColors.Add(Color);
+//	MeshSection.VertexColors.Add(Color);
+//	MeshSection.VertexColors.Add(Color);
+//	MeshSection.VertexColors.Add(Color);
+//}
+/*
+void AMCWorld_Voxel::CreateStairMesh(FProceduralMeshSection& MeshSection, int32 InIndex, const FIntVector& InLocation, int32& Triangle_Num)
 {
-	MeshSection.Triangles.Add(VoxelTriangles[0] + Triangle_Num + MeshSection.ElementID);
-	MeshSection.Triangles.Add(VoxelTriangles[1] + Triangle_Num + MeshSection.ElementID);
-	MeshSection.Triangles.Add(VoxelTriangles[2] + Triangle_Num + MeshSection.ElementID);
+	const auto x = InLocation.X;
+	const auto y = InLocation.Y;
+	const auto z = InLocation.Z;
 
-	MeshSection.Triangles.Add(VoxelTriangles[3] + Triangle_Num + MeshSection.ElementID);
-	MeshSection.Triangles.Add(VoxelTriangles[4] + Triangle_Num + MeshSection.ElementID);
-	MeshSection.Triangles.Add(VoxelTriangles[5] + Triangle_Num + MeshSection.ElementID);
-
-	Triangle_Num += 4;
-
-	// in Index represents each face of the new voxel we are generating
-	switch (InIndex)
-	{
-	case 0: {
-		// Top Face
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-
-		MeshSection.Normals.Append(VoxelNormals0, UE_ARRAY_COUNT(VoxelNormals0));
-		break;
-	}
-	case 1: {
-		// Bottom Face
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-
-		MeshSection.Normals.Append(VoxelNormals1, UE_ARRAY_COUNT(VoxelNormals1));
-		break;
-	}
-	case 2: {
-		// Right Face
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-
-		MeshSection.Normals.Append(VoxelNormals2, UE_ARRAY_COUNT(VoxelNormals2));
-		break;
-	}
-	case 3: {
-		// Left Face
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-
-		MeshSection.Normals.Append(VoxelNormals3, UE_ARRAY_COUNT(VoxelNormals3));
-		break;
-	}
-	case 4: {
-		// Front Face
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-
-		MeshSection.Normals.Append(VoxelNormals4, UE_ARRAY_COUNT(VoxelNormals4));
-		break;
-	}
-	case 5: {
-		// Back Face
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), -VoxelSizeHalf + (z * VoxelSize)));
-		MeshSection.Vertices.Add(FVector(-VoxelSizeHalf + (x * VoxelSize), -VoxelSizeHalf + (y * VoxelSize), VoxelSizeHalf + (z * VoxelSize)));
-
-		MeshSection.Normals.Append(VoxelNormals5, UE_ARRAY_COUNT(VoxelNormals5));
-		break;
-	}
-	}
-	MeshSection.UVs.Append(VoxelUVs, UE_ARRAY_COUNT(VoxelUVs));
-
-	FColor Color = FColor(255, 255, 255, InIndex);
-	MeshSection.VertexColors.Add(Color);
-	MeshSection.VertexColors.Add(Color);
-	MeshSection.VertexColors.Add(Color);
-	MeshSection.VertexColors.Add(Color);
-}
-
-void AMCWorld_Voxel::CreateStairMesh(FProceduralMeshSection& MeshSection, const int32& InIndex, const int32& x, const int32& y, const int32& z, int32& Triangle_Num)
-{
 	MeshSection.Triangles.Add(VoxelTriangles[0] + Triangle_Num + MeshSection.ElementID);
 	MeshSection.Triangles.Add(VoxelTriangles[1] + Triangle_Num + MeshSection.ElementID);
 	MeshSection.Triangles.Add(VoxelTriangles[2] + Triangle_Num + MeshSection.ElementID);
@@ -998,10 +1014,14 @@ void AMCWorld_Voxel::CreateStairMesh(FProceduralMeshSection& MeshSection, const 
 	MeshSection.VertexColors.Add(Color);
 	MeshSection.VertexColors.Add(Color);
 	MeshSection.VertexColors.Add(Color);
-}
-
-void AMCWorld_Voxel::CreateSlabMesh(FProceduralMeshSection& MeshSection, const int32& InIndex, const int32& x, const int32& y, const int32& z, int32& Triangle_Num)
+}*/
+/*
+void AMCWorld_Voxel::CreateSlabMesh(FProceduralMeshSection& MeshSection, int32 InIndex, const FIntVector& InLocation, int32& Triangle_Num)
 {
+	const auto x = InLocation.X;
+	const auto y = InLocation.Y;
+	const auto z = InLocation.Z;
+
 	MeshSection.Triangles.Add(VoxelTriangles[0] + Triangle_Num + MeshSection.ElementID);
 	MeshSection.Triangles.Add(VoxelTriangles[1] + Triangle_Num + MeshSection.ElementID);
 	MeshSection.Triangles.Add(VoxelTriangles[2] + Triangle_Num + MeshSection.ElementID);
@@ -1086,8 +1106,12 @@ void AMCWorld_Voxel::CreateSlabMesh(FProceduralMeshSection& MeshSection, const i
 	MeshSection.VertexColors.Add(Color);
 }
 
-void AMCWorld_Voxel::CreatePostMesh(FProceduralMeshSection& MeshSection, const int32& InIndex, const int32& x, const int32& y, const int32& z, int32& Triangle_Num)
+void AMCWorld_Voxel::CreatePostMesh(FProceduralMeshSection& MeshSection, int32 InIndex, const FIntVector& InLocation, int32& Triangle_Num)
 {
+	const auto x = InLocation.X;
+	const auto y = InLocation.Y;
+	const auto z = InLocation.Z;
+
 	MeshSection.Triangles.Add(VoxelTriangles[0] + Triangle_Num + MeshSection.ElementID);
 	MeshSection.Triangles.Add(VoxelTriangles[1] + Triangle_Num + MeshSection.ElementID);
 	MeshSection.Triangles.Add(VoxelTriangles[2] + Triangle_Num + MeshSection.ElementID);
@@ -1169,73 +1193,49 @@ void AMCWorld_Voxel::CreatePostMesh(FProceduralMeshSection& MeshSection, const i
 	MeshSection.VertexColors.Add(Color);
 	MeshSection.VertexColors.Add(Color);
 	MeshSection.VertexColors.Add(Color);
-}
-
+}*/
 #pragma endregion
 
 #pragma region Updating
-
 void AMCWorld_Voxel::UpdateChunkFromData()
 {
+
 }
 
 void AMCWorld_Voxel::UpdateMesh()
 {
 	if (!BlockDataTable) return;
 
-	int32 NumSections = BlockDataTable->GetRowNames().Num();
-	TArray<FProceduralMeshSection> MeshSections;
+	int32 NumSections = 0;
+	//TArray<UMaterialInterface*> Materials;
+	TArray<FDTMCBlockInfo*> BlockData;
 
-	TArray<UMaterialInterface*> Materials;
-
-	//for (FName RowName : BlockDataTable->GetRowNames())
-	//{
-	//	FDTMCBlockInfo* Data = BlockDataTable->FindRow<FDTMCBlockInfo>(RowName, "");
-	//
-	//	if (!Data) return;
-	//	if (Data->Material != nullptr && Data->BlockType >= 0) /* BlockTypes < 0 are static mesh instance and therefore not a part of our mesh. */
-	//	{
-	//		bool bIsNew = true;
-	//		// Make sure this material does not match any pre-existing materials before adding it
-	//		if (Materials.Num() > 0) 
-	//		{
-	//			for (int i = 0; i < Materials.Num(); i++)
-	//			{
-	//				if (Data->Material == Materials[i])
-	//				{
-	//					bIsNew = false;
-	//				}
-	//			}
-	//		}
-	//
-	//		if (bIsNew)
-	//		{
-	//			Materials.Add(Data->Material);
-	//		}
-	//	}
-	//}
-
-	MeshSections.SetNum(NumSections);
-	Materials.SetNum(NumSections);
-
-	for (int32 z = 0; z < ChunkZElements; ++z)
+	BlockDataTable->GetAllRows<FDTMCBlockInfo>("", BlockData);
+	/*Materials.Reserve(BlockData.Num());
+	for (const FDTMCBlockInfo* Block : BlockData)
 	{
-		int zIndex = (ChunkLineElementsP2Ext * z);
-		for (int32 y = 0; y < ChunkLineElements; ++y)
+		if (!Block) continue;
+		if (Materials.IsEmpty()) Materials.Add(Block->Material);
+		if (Materials.Contains(Block->Material)) continue;
+
+		Materials.Add(Block->Material);
+	}
+	NumSections = Materials.Num();*/
+	NumSections = BlockData.Num();
+	TArray<FProceduralMeshSection> MeshSections;
+	MeshSections.SetNum(NumSections);
+
+	for (int32 z = 0; z < ChunkZElements; z += CurrentLOD)
+	{
+		int zIndex = (ChunkLineElementsP2Ext * (z));
+		for (int32 y = 0; y < ChunkLineElements; y += CurrentLOD)
 		{
 			int yIndex = (ChunkLineElementsExt * (y + 1));
-			for (int32 x = 0; x < ChunkLineElements; ++x)
+			for (int32 x = 0; x < ChunkLineElements; x += CurrentLOD)
 			{
 				int32 Index = (x + 1) + yIndex + zIndex;
-				if (Index < 0 && Index >= ChunkTotalElements) continue;
+				if (Index < 0 && Index >= ChunkFields.Num()) continue;
 				int32 MeshIndex = ChunkFields[Index];
-
-				// For safety back when block data was an array
-				//if (MeshIndex >= BlockData->Row())
-				//{
-				//	UE_LOG(LogTemp,Warning,TEXT("Fatal Error: MeshIndex was more than MeshSections' array size."));
-				//	// continue;
-				//}
 
 				if (MeshIndex > 0)
 				{
@@ -1248,22 +1248,18 @@ void AMCWorld_Voxel::UpdateMesh()
 							- IE: MeshIndex is 0 then it is an air block;
 							-     MeshIndex is 1 then we find the material at index 0 so we must subtract 1.
 					*/
-					MeshIndex--;
+					--MeshIndex;
 
+					// If mesh index is out of bounds, restart loop.
 					if (MeshIndex >= NumSections || MeshIndex < 0) continue;
 
 					FDTMCBlockInfo* Data = BlockDataTable->FindRow<FDTMCBlockInfo>(BlockDataTable->GetRowNames()[MeshIndex], "");
 
-					if (!Data) continue;
+					if (!Data || Data->BlockType < 0 || BlockTypes.IsEmpty() || !BlockTypes.IsValidIndex(Data->BlockType)) continue; // Restart loop; DO NOT EXECUTE FURTHER AFTER THIS IF TRUE
 
-					int32 MeshType = Data->BlockType;
 					bool MeshTransparent = Data->bIsTransparent;
 					MeshSections[MeshIndex].Material = Data->Material;
-
-					// This value is 0 by default and should never be negative.
-					// Maybe it should be changed to an unsigned integer.
-					if (Data->BlockType < 0)
-						continue; // Restart loop; DO NOT EXECUTE FURTHER AFTER THIS IF TRUE
+					UGameplayTileData* MeshData = BlockTypes[Data->BlockType];
 
 					TArray<FVector>& Vertices = MeshSections[MeshIndex].Vertices;
 					TArray<int32>& Triangles = MeshSections[MeshIndex].Triangles;
@@ -1276,26 +1272,54 @@ void AMCWorld_Voxel::UpdateMesh()
 					int Triangle_Num = 0;
 					for (int i = 0; i < 6; i++)
 					{
+						// Index of voxel neighboring the current face
 						int NewIndex = Index + VoxelMask[i].X +
 							(VoxelMask[i].Y * ChunkLineElementsExt) + /* Is equal to 0 based on Voxel mask */
 							(VoxelMask[i].Z * ChunkLineElementsP2Ext); /* Is equal to 0 based on Voxel mask */
 
 						bool Flag = false;
-						// Treat this face like we are empty?
-						if (MeshTransparent) Flag = true;
+						
 						// Is this side a neighbor with an existing side?
-						else if (NewIndex >= 0 && NewIndex < ChunkTotalElements)
+						if (NewIndex >= 0 && NewIndex < ChunkFields.Num())
 						{
-							int32 NewMeshIndex = ChunkFields[NewIndex];
+							int32 NewMeshIndex = ChunkFields[NewIndex]; 
 
-							//	// Are our neighbors not empty?
+							// Are our neighbors not Air?
 							if (NewMeshIndex > 0)
 							{
-								FDTMCBlockInfo* newData = BlockDataTable->FindRow<FDTMCBlockInfo>(BlockDataTable->GetRowNames()[NewMeshIndex - 1], "");
-								if (newData)
+								// Treat this face like we are empty?
+								if (MeshTransparent)
 								{
-									// Are our neighbors acting like they are empty?
-									if (newData->bIsTransparent) Flag = true;
+									// Is our neighbor a different block than I am?
+									if (NewMeshIndex != MeshIndex)
+									{
+										const TArray<FName>& Names = BlockDataTable->GetRowNames();
+										if (Names.IsValidIndex(NewMeshIndex))
+										{
+											if (FDTMCBlockInfo* newData = BlockDataTable->FindRow<FDTMCBlockInfo>(Names[NewMeshIndex], ""))
+											{
+												// Are our neighbors acting like they are empty?
+												if (newData->bIsTransparent) Flag = true;
+											}
+										}
+									}
+									else
+									{
+										Flag = true;
+									}
+								} 
+								else
+								{
+									--NewMeshIndex;
+									const TArray<FName>& Names = BlockDataTable->GetRowNames();
+									if (Names.IsValidIndex(NewMeshIndex))
+									{
+										if (FDTMCBlockInfo* newData = BlockDataTable->FindRow<FDTMCBlockInfo>(Names[NewMeshIndex], ""))
+										{
+											// Are our neighbors acting like they are empty?
+											if (newData->bIsTransparent) Flag = true;
+										}
+									}
 								}
 							}
 							else
@@ -1303,32 +1327,22 @@ void AMCWorld_Voxel::UpdateMesh()
 								Flag = true;
 							}
 						}
-						else
-						{
-							Flag = true;
-						}
 
 						if (Flag)
 						{
-							switch (MeshType)
+							// Water gets seperate mesh...
+							if (Data->BlockType == WATER - 1)
 							{
-							case 0:
-								CreateCubeMesh(MeshSections[MeshIndex], i, x, y, z, Triangle_Num);
-								break;
-							case 1:
-								CreateSlabMesh(MeshSections[MeshIndex], i, x, y, z, Triangle_Num);
-								break;
-							case 2:
-								CreateStairMesh(MeshSections[MeshIndex], i, x, y, z, Triangle_Num);
-								break;
-							case 3:
-								CreatePostMesh(MeshSections[MeshIndex], i, x, y, z, Triangle_Num);
-								break;
+								// if (WaterMesh)
 							}
+
+							// CreateMeshFace(MeshSections[MeshIndex], i, FIntVector(x, y, z), Triangle_Num);
+							// const FVoxelFaceData FaceData = FVoxelFaceData(MeshData, FIntVector(x, y, z), i, Triangle_Num, VoxelSize, 1);
+							Triangle_Num = UGALibrary::CreateFace(MeshSections[MeshIndex], MeshData, FVector(x, y, z), i, Triangle_Num, VoxelSize, CurrentLOD);
 						}
 					}
 					MeshSections[MeshIndex].ElementID += Triangle_Num;
-					MeshSections[MeshIndex].bEnableCollision = bEnableCollision;
+					MeshSections[MeshIndex].bEnableCollision = MeshIndex == WATER - 1 ? false : bEnableCollision;
 				}
 				else if (MeshIndex < 0)
 				{
@@ -1338,36 +1352,30 @@ void AMCWorld_Voxel::UpdateMesh()
 		}
 	}
 
+	if (!PMesh)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Procedural Mesh is null!"));
+		return;
+	}
+
 	PMesh->ClearAllMeshSections();
 
 	// For each MeshSection, Create a new mesh section
-	for (int i = 0; i < MeshSections.Num(); i++)
+	for (int i = 0; i < MeshSections.Num(); ++i)
 	{
-		if (MeshSections[i].Vertices.Num() > 0)
-		{
-			PMesh->CreateMeshSection(i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, MeshSections[i].bEnableCollision);
-			PMesh->SetMaterial(i, MeshSections[i].Material);
-		}
+		// if (i == WATER - 1) WaterMesh->CreateWaterMesh(MeshSections[i]);
+		if (MeshSections[i].Vertices.Num() <= 0) continue;
+		PMesh->CreateMeshSection(i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, MeshSections[i].bEnableCollision);
+		PMesh->SetMaterial(i, MeshSections[i].Material);
 	}
-
-	// GEngine->AddOnScreenDebugMessage(-2, 10.0, FColor::Green, "Updating Mesh...");
-
-	// For each Material, set Material
-	/*int s = 0;
-	while (s < Materials.Num())
-	{
-		s++;
-	}*/
 }
 
 void AMCWorld_Voxel::UpdateExtras()
 {
 }
-
 #pragma endregion
 
 #pragma region Interaction
-
 void AMCWorld_Voxel::SetVoxel(FVector Location, int32 Value)
 {
 	// maybe location divide by ChunkLineElementsP2?
@@ -1438,5 +1446,4 @@ void AMCWorld_Voxel::VoxelInteract(FVector Location, AActor* InteractingActor)
 	}
 
 }
-
 #pragma endregion

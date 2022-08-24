@@ -632,9 +632,12 @@ bool UGACharacterMovementComponent::AreRequiredKeysDown() const
 	UInputSettings::GetInputSettings()->GetAxisMappingByName("MoveForward", MoveForwardKeyMappings);
 	for (FInputAxisKeyMapping& MoveForwardKeyMapping : MoveForwardKeyMappings)
 	{
-		if (GetPawnOwner()->GetController<APlayerController>()->IsInputKeyDown(MoveForwardKeyMapping.Key))
+		if (const auto* Controller = GetPawnOwner()->GetController<APlayerController>())
 		{
-			return true;
+			if (Controller->IsInputKeyDown(MoveForwardKeyMapping.Key))
+			{
+				return true;
+			}
 		}
 	}
 

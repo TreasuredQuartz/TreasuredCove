@@ -16,7 +16,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthModifiedDelegate, float, H
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStaminaModifiedDelegate, float, Stamina, float, MaxStamina);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnManaModifiedDelegate, float, Mana, float, MaxMana);
 
-
 /**
  * 
  */

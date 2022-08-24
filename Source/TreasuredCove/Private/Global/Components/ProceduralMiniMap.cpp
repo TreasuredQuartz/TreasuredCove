@@ -31,8 +31,7 @@ UProceduralMiniMap::UProceduralMiniMap()
 	MiniMapElements = 32;
 	MiniMapElementsHalf = 16;
 	MiniMapElementSize = 0.1;
-	RayCastRange =
-		MiniMapElementSize;
+	RayCastRange = MiniMapElementSize;
 }
 
 // Called when the game starts
@@ -250,7 +249,7 @@ void UProceduralMiniMap::UpdateMesh()
 	PMesh->ClearAllMeshSections();
 
 	PMesh->CreateMeshSection(0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents(), VertexBuffer.GetCollision());
-	PMesh->SetMaterial(0, Materials[VertexBuffer.GetMaterialIndex()]);
+	PMesh->SetMaterial(0, VertexBuffer.GetMaterial());
 }
 
 float UProceduralMiniMap::ApplyScale(int32 Size)

@@ -7,6 +7,9 @@
 #include "GACharacter.h"
 
 #include "Engine/World.h"
+#include "Gameframework/Gamestate.h"
+#include "Gameframework/PlayerState.h"
+#include "kismet/GameplayStatics.h"
 
 // Sets default values
 AZombie_Spawner::AZombie_Spawner()
@@ -23,38 +26,39 @@ void AZombie_Spawner::BeginPlay()
 }
 
 //
-void AZombie_Spawner::SpawnZombie()
+AActor* AZombie_Spawner::SpawnZombie() const
 {
-	UWorld* World = GetWorld();
-	AGACharacter* Zombie = 
-		World->SpawnActor<AGACharacter>(ActorToSpawn, GetTransform());
-	Zombie->OnTakeAnyDamage.AddDynamic(this, &AZombie_Spawner::OnZombieDamaged);
+	APawn* Zombie = nullptr;
+	if (UWorld* World = GetWorld())
+	{
+		Zombie = World->SpawnActor<APawn>(ActorToSpawn, GetTransform());
+		if (Zombie)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Spawning Zombie..."));
+			Zombie->SpawnDefaultController();
+			Zombie->OnTakeAnyDamage.AddDynamic(this, &AZombie_Spawner::OnZombieDamaged);
+		}
+	}
+
+	return Zombie;
 }
 
 //
 void AZombie_Spawner::OnZombieDamaged(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	AGACharacter* DamagedZombie = Cast<AGACharacter>(DamagedActor);
-
 	APawn* PawnCauser = Cast<APawn>(DamageCauser);
-
-	if (!PawnCauser)
-	{
-		return;
-	}
+	
+	if (!PawnCauser || !DamagedActor) return;
 
 	Manager->AddPoints(PawnCauser, 10);
 
-	if (DamagedZombie->AIInfo.CurrentAITargetStats.CurrentHealth <= 0)
+	if (DamagedActor->ActorHasTag(FName("death.headshot")))
 	{
-		if (DamagedZombie->ActorHasTag(FName("death.headshot")))
-		{
-			Manager->AddPoints(PawnCauser, 20);
-		}
-		else if (DamagedZombie->ActorHasTag(FName("death.melee")))
-		{
-			Manager->AddPoints(PawnCauser, 30);
-		}
+		Manager->AddPoints(PawnCauser, 20);
+	}
+	else if (DamagedActor->ActorHasTag(FName("death.melee")))
+	{
+		Manager->AddPoints(PawnCauser, 30);
 	}
 }
 

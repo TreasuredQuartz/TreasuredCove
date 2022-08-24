@@ -32,26 +32,36 @@ void UInventoryComponent::BeginPlay()
 // Called to check whether the inventory has any space for more items
 bool UInventoryComponent::InventoryCheck()
 {
-	uint8 Len = Inventory.Num();
-
-	for (uint8 i = 0; i < Len; ++i)
+	for (uint8 i = 0; i < InventorySize; ++i)
 	{
-		if (Inventory[i] == nullptr)
+		if (!Inventory.IsValidIndex(i))
 		{
-			bHasInventorySpace = true;
+			return Inventory.Num() < InventorySize;
+		}
+		else if (Inventory[i] == nullptr)
+		{
 			return true;
 		}
 	}
-
-	bHasInventorySpace = false;
+	
 	return false;
 }
 
 // Called to return a location in the inventory that is a nullptr
+// Will return INDEX_NONE if there are no nullptrs and the items
+// in the inventory == inventory size
 uint8 UInventoryComponent::FindEmptySlot()
 {
 	// Find available slot
-	for (uint8 i = 0; i < InventorySize; ++i) if (!Inventory[i]) return i;
+	for (uint8 i = 0; i < InventorySize; ++i)
+	{
+		if (!Inventory.IsValidIndex(i))
+		{
+			Inventory.Add(nullptr);
+			return i;
+		}
+		else if (!Inventory[i]) return i;
+	}
 
 	return INDEX_NONE;
 }
@@ -59,7 +69,7 @@ uint8 UInventoryComponent::FindEmptySlot()
 // Called to add item to inventory
 bool UInventoryComponent::AddItem(AGAActor* Item)
 {
-	if (!bHasInventorySpace && !InventoryCheck()) return false;
+	if (!InventoryCheck()) return false;
 
 	Inventory[FindEmptySlot()] = Item;
 	return true;

@@ -14,9 +14,9 @@
 
 
 // Sets default values
-AProceduralPlanet::AProceduralPlanet() : 
-	bIsValid(false), 
-	skipIndices(TArray<int>({5, -1, -1}))
+AProceduralPlanet::AProceduralPlanet() :
+	bIsValid(false),
+	playerLocation(FVector::ZeroVector)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -122,44 +122,46 @@ void AProceduralPlanet::GeneratePlanet()
 	GenerateMaterial();
 }
 
-static TArray<FVector> Directions = {
+static const TArray<FVector> Directions = {
 		FVector::UpVector,
 		FVector::DownVector,
-		FVector::LeftVector,
 		FVector::RightVector,
+		FVector::LeftVector,
 		FVector::ForwardVector,
 		FVector::BackwardVector
 };
 
 void AProceduralPlanet::Initialize()
 {
+#if WITH_EDITOR
+	if (GEditor)
+	{
+		if (const auto& Viewport = GEditor->GetActiveViewport())
+		{
+			if (auto Client = (FLevelEditorViewportClient*)(Viewport->GetClient()))
+			{
+				playerLocation = UKismetMathLibrary::ComposeTransforms(GetActorTransform(), FTransform(FRotator::ZeroRotator, Client->GetViewLocation(), FVector::OneVector)).GetLocation();
+			}
+		}
+	}
+#endif
+
 	ShapeGenerator.UpdateSettings(Settings.ShapeSettings);
 	MaterialGenerator.UpdateSettings(Settings.MaterialSettings);
 
-	if (Meshs.Num() == 0)
-		Meshs.SetNum(6);
+	if (Meshs.Num() <= 0) Meshs.SetNum(6);
 	Landscapes.SetNum(6);
 
 	for (int i = 0; i < 6; ++i)
 	{
-		if (skipIndices.Contains(i))
-		{ 
-			if (Meshs[i] != nullptr)
-			{
-				Meshs[i]->DestroyComponent();
-				Landscapes[i] = nullptr;
-			}
-			continue;
-		}
-		
 		if (Meshs[i] == nullptr)
 		{
 			UProceduralMeshComponent* meshComp = 
 				NewObject<UProceduralMeshComponent>(this, FName("Landscape_PMesh_%s" + FString::FromInt(i)));
 			FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 
+			meshComp->SetupAttachment(RootComponent);
 			meshComp->RegisterComponent();
-			meshComp->AttachToComponent(RootComponent, AttachmentRules);
 			Meshs[i] = meshComp;
 		}
 
@@ -211,31 +213,54 @@ void AProceduralPlanet::GenerateMaterial()
 	}
 }
 
+void AProceduralPlanet::CheckLOD()
+{
+	for (auto* Landscape : Landscapes)
+	{
+		if (Landscape != nullptr) Landscape->OnCameraLocationUpdated(playerLocation);
+	}
+}
+
 void AProceduralPlanet::checkCurrentView()
 {
 #if WITH_EDITOR
-	/*if (GEditor)
+	if (GEditor)
 	{
-		auto Client = (FLevelEditorViewportClient*)(GEditor->GetActiveViewport()->GetClient());
-		if (Client)
+		if (const auto& Viewport = GEditor->GetActiveViewport())
 		{
-			LODCamera->SetWorldLocation(Client->GetViewLocation());
-			LODCamera->SetWorldRotation(Client->GetViewRotation());
+			if (auto Client = (FLevelEditorViewportClient*)(Viewport->GetClient()))
+			{
+				const FVector Loc =
+					UKismetMathLibrary::ConvertTransformToRelative(FTransform(FRotator::ZeroRotator, Client->GetViewLocation(), FVector::OneVector), GetActorTransform()).GetLocation();
+				const FRotator Rot = Client->GetViewRotation();
+
+				if (playerLocation != Loc)
+				{
+					// UE_LOG(LogTemp, Warning, TEXT("UPlanet: \n -Camera location Changed! \n --%s"), *playerLocation.ToString());
+					playerLocation = Loc;
+					CheckLOD();
+				}
+			}
 		}
-	}*/
+	}
 #else
 	LODCamera->SetWorldLocation(UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraLocation());
 	LODCamera->SetWorldRotation(UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraRotation());
 #endif
-
-	if (LODCamera)
+	
+	/*if (LODCamera)
 	{
-		FVector Temp = LODCamera->GetComponentTransform().TransformPosition(GetActorLocation());
+		const FVector Temp = LODCamera->GetComponentTransform().GetLocation();
 
 		if (playerLocation != Temp)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Procedural Planet Tick: Camera Location Changed!"));
 			playerLocation = Temp;
 			GeneratePlanet();
 		}
-	}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Procedural Planet Tick: Camera Location Unchanged..."));
+		}
+	}*/
 }

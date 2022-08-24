@@ -22,15 +22,16 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	//
+	// Must be marked as UFUNCTION for delegate binding
+	UFUNCTION()
 	void OnZombieDamaged(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 public:	
 	// Actor to spawn
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<AActor> ActorToSpawn;
+	TSubclassOf<APawn> ActorToSpawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	AZombie_Manager* Manager;
 
-	void SpawnZombie();
+	AActor* SpawnZombie() const;
 };

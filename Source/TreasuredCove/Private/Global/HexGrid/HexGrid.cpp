@@ -4,97 +4,334 @@
 #include "Global/HexGrid/HexGrid.h"
 #include "HexTile.h"
 #include "SimplexNoiseBPLibrary.h"
+#include "GALibrary.h"
+#include "GameplayTileData.h"
 
 // Sets default values
-UHexGrid::UHexGrid()
+AHexGrid::AHexGrid()
 {
-	TileSize = 100;
-	Height = 5;
-	Width = 5;
-	VerticalOffset = (TileSize * .75);
-	HorizontalOffset = (DOUBLE_UE_SQRT_3 * (double)TileSize);
-	OddHorizontalOffset = ((DOUBLE_UE_SQRT_3 * (double)TileSize) * .5);
+	VoxelSize = 200;
+	ChunkLineElements = 32;
+	SurfaceHeight = 30;
+
+	VerticalOffset = (VoxelSize * .75);
+	HorizontalOffset = (DOUBLE_UE_SQRT_3 * (double)VoxelSize);
+	OddHorizontalOffset = ((DOUBLE_UE_SQRT_3 * (double)VoxelSize) * .5);
 }
 
 #if WITH_EDITOR
-void UHexGrid::PostEditChangeProperty(struct FPropertyChangedEvent& e)
+void AHexGrid::OnConstruction(const FTransform& Transform)
 {
-	if (!e.Property) return;
+	Initialize(RandomSeed, VoxelSize, ChunkLineElements, ChunkIndex);
 
-	if (e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UHexGrid, Height) || 
-		e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UHexGrid, Width) || 
-		e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UHexGrid, VerticalOffset) || 
-		e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UHexGrid, HorizontalOffset) || 
-		e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UHexGrid, OddHorizontalOffset))
+	if (GetWorld()) RootComponent->SetWorldTransform(Transform);
+
+	Super::OnConstruction(Transform);
+}
+
+void AHexGrid::PostEditChangeProperty(struct FPropertyChangedEvent& e)
+{
+	if (e.Property == NULL) return;
+
+	if (e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AHexGrid, ChunkLineElements) || 
+		e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AHexGrid, ChunkLineElements) || 
+		e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AHexGrid, VerticalOffset) || 
+		e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AHexGrid, HorizontalOffset) || 
+		e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AHexGrid, OddHorizontalOffset))
 	{
+		bShouldInitializeNoise = true;
 		bShouldInitializeTiles = true;
 	}
-	else if (e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UHexGrid, Noise))
+	else if (e.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AHexGrid, Types))
 	{
 		bShouldInitializeNoise = true;
 	}
+
+	Initialize(RandomSeed, VoxelSize, ChunkLineElements, ChunkIndex);
 
 	Super::PostEditChangeProperty(e);
 }
 #endif
 
-void UHexGrid::BeginPlay()
+void AHexGrid::BeginPlay()
 {
-	// Set properties and initialize grid
-	if (Noise.Num() <= 0 || bShouldInitializeNoise)
+	Initialize(RandomSeed, VoxelSize, ChunkLineElements, ChunkIndex);
+	
+	Super::BeginPlay();
+}
+
+void AHexGrid::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inChunkLineElements, FIntVector inChunkIndex)
+{
+	if (!this) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("Intialize..."));
+	AGameplayVoxel::Initialize(inRandomSeed, inVoxelSize, inChunkLineElements, inChunkIndex);
+
+	if (!PMesh)
 	{
-		Noise = CalcNoise();
-		bShouldInitializeNoise = false;
+		FString String = "Voxel_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
+		FName Name = FName(*String);
+		PMesh = NewObject<UProceduralMeshComponent>(this, Name);
+		PMesh->RegisterComponent();
+		SetRootComponent(PMesh);
+		// PMesh->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 	}
+
+	GenerateChunk();
+	UpdateMesh();
+}
+
+void AHexGrid::InitializeNoise()
+{
+	USimplexNoiseBPLibrary::setNoiseSeed(RandomSeed);
+	Height = CalcHeight();
+	Types = CalcTypes();
+
+	// Set properties and initialize grid
+	if (Types.Num() <= 0 || bShouldInitializeNoise)
+	{
+		
+		// bShouldInitializeNoise = false;
+	}
+}
+
+void AHexGrid::InitializeTiles()
+{
 	if (Tiles.Num() <= 0 || bShouldInitializeTiles)
 	{
-		Tiles.SetNumZeroed(Width);
-
-		uint8 i, x, y;
-		for (x = 0; x < Tiles.Num(); ++x)
-		{
-			Tiles[x].SetNumZeroed(Height);
-		}
-
-		i = 0;
-		for (y = 0; y < Height; ++y)
-		{
-			const bool oddRow = y % 2 == 1;
-			const float yPos = (Location.Y + y) * VerticalOffset;
-
-			for (x = 0; x < Width; ++x)
-			{
-				// if (y == (uint8)(Height * 0.5) && x == (uint8)(Width * 0.5)) ;
-					
-				const float xPos = oddRow ? ((Location.X + x) * HorizontalOffset) + OddHorizontalOffset : (Location.X + x) * HorizontalOffset;
-				const FVector2D Pos = FVector2D(xPos, yPos);
-				AddTile(Pos, Noise[i]);
-				AddTileDelegate.Broadcast(Pos, Noise[i++]);
-			}
-		}
-
-		bShouldInitializeTiles = false;
+		Tiles.SetNumZeroed(ChunkTotalElements);
+		
+		// bShouldInitializeTiles = false;
 	}
 }
 
-UHexTile* UHexGrid::AddTile_Implementation(const FVector2D& TileLocation, uint8 TileType)
+void AHexGrid::BeforeChunkGenerated()
 {
-	return nullptr;
+	InitializeNoise();
+	InitializeTiles();
 }
 
-TArray<uint8> UHexGrid::CalcNoise_Implementation()
+void AHexGrid::GenerateHexGrid()
 {
-	uint8 x, y;
+	BeforeChunkGenerated();
+	const auto Half = ChunkLineElements * 0.5;
+	const double F[] = {
+		3.0 / 2.0, 0.0, sqrt(3.0) / 2.0, sqrt(3.0),
+		2.0 / 3.0, 0.0, -1.0 / 3.0, sqrt(3.0) / 3.0,
+		0.0
+	};
+
+	int i = 0;
+	for (int q = -Half; q < Half; ++q)
+	{
+		int r1 = FMath::Max(-Half, -q - Half);
+		int r2 = FMath::Min(Half, -q + Half);
+		for (int r = r1; r <= r2; ++r)
+		{
+			Tiles[i] = AddTile(FVector(F[0] * q + F[1] * r, F[2] * q + F[3] * r, Height[i]), Types[i]);
+			++i;
+		}
+	}
+
+	AfterChunkGenerated();
+}
+
+void AHexGrid::ChunkGenerating(const FIntVector& CurrentLocation, int32 Index)
+{
+	const int Half = (ChunkLineElementsExt * 0.5);
+	const int x = CurrentLocation.X - Half;
+	const int y = CurrentLocation.Y - Half;
+	const int z = CurrentLocation.Z; // -(ChunkZElements * 0.5);
+	const int i = Index;
+
+	// const int r = FMath::Max(-ChunkLineElements);
+
+	if (!Tiles.IsValidIndex(i) || !Types.IsValidIndex(i)) return;
+	if (x > Half * 0.5 || x < -Half * 0.5) return;
+	if (CurrentLocation.Z > (SurfaceHeight + Height[i])) Types[i] = 0;
+
+	// Offset coordinates
+	const bool oddRow = y & 1;
+	const float yPos = (Location.Y + y) * VerticalOffset;
+	const float xPos = oddRow ? ((Location.X + x) * HorizontalOffset) + OddHorizontalOffset : (Location.X + x) * HorizontalOffset;
+
+	const FVector Pos = FVector(xPos, yPos, z);
+
+	Tiles[i] = AddTile(Pos, Types[i]);
+	// AddTileDelegate.Broadcast(Pos, Types[i]);
+	// GenerateSurface();
+}
+
+void AHexGrid::AfterChunkGenerated()
+{
+
+}
+
+const FVector VoxelMask[] = { 
+	FVector(0.00000, 0.00000, 1.00000), 
+	FVector(0.00000, 0.00000, -1.00000), 
+	FVector(0.00000, 1.00000, 0.00000), 
+	FVector(0.00000, -1.00000, 0.00000), 
+	FVector(1.00000, 0.00000, 0.00000), 
+	FVector(-1.00000, 0.00000, 0.00000) 
+};
+
+static const FVector2D HexMask[2][6] = {
+	// even cols
+	{FVector2D(1, 1),FVector2D(1, 0),FVector2D(0, -1),
+	FVector2D(-1, 0),FVector2D(-1, 1),FVector2D(0, 1)},
+	// odd cols
+	{FVector2D(1,0),FVector2D(1, -1),FVector2D(0, -1),
+	FVector2D(-1, -1),FVector2D(-1, 0),FVector2D(0, 1)}
+};
+
+void AHexGrid::UpdateMesh()
+{
+	TArray<FProceduralMeshSection> MeshSections;
+	MeshSections.SetNum(6);
+	int32 Index = -1;
+	for (const UHexTile* Tile : Tiles)
+	{
+		++Index;
+		// Nullptr possibility...
+		if (!Tile) continue;
+
+		// Out of bounds check...
+		if (Index < 0 || Index >= Types.Num()) continue;
+		uint8 TileIndex = Types[Index];
+			
+		if (TileIndex > 0)
+		{
+			--TileIndex;
+
+			// Vertices, Faces, UVs, Normals generator
+			int Triangle_Num = 0;
+			for (int i = 0; i < 6; ++i)
+			{
+				bool Flag = false;
+
+				if (i > 1)
+				{
+					for (int d = 0; d < 6; ++d)
+					{
+						int y = Tile->GetTileLocation().Y;
+						const bool parity = (y & 1);
+						const int NewIndex = Index + HexMask[parity][d].X +
+							(HexMask[parity][d].Y * ChunkLineElementsExt);
+
+						if (NewIndex >= 0 && NewIndex < Types.Num())
+						{
+							if (Types[NewIndex] == 0)
+							{
+								Flag = true;
+								break;
+							}
+						}
+					}
+				}
+				else
+				{
+					const int UpIndex = Index + (VoxelMask[i].Z * ChunkLineElementsP2Ext);
+					if (UpIndex >= 0 && UpIndex < Types.Num())
+					{
+						if (Types[UpIndex] == 0) Flag = true;
+					}
+				}
+				// Draw face
+				if (Flag) Triangle_Num = UGALibrary::CreateFace(MeshSections[TileIndex], HexTileData, Tile->GetTileLocation(), i, Triangle_Num, VoxelSize, 1);
+			}
+			MeshSections[TileIndex].ElementID += Triangle_Num;
+			MeshSections[TileIndex].bEnableCollision = false;
+			if (Materials.IsValidIndex(TileIndex)) MeshSections[TileIndex].Material = Materials[TileIndex];
+		}
+	}
+
+	PMesh->ClearAllMeshSections();
+
+	// For each MeshSection, Create a new mesh section
+	for (int i = 0; i < MeshSections.Num(); i++)
+	{
+		if (MeshSections[i].Vertices.Num() > 0)
+		{
+			PMesh->CreateMeshSection(i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, MeshSections[i].bEnableCollision);
+			if (Materials.IsValidIndex(i)) PMesh->SetMaterial(i, MeshSections[i].Material);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("--Section has 0 vertices..."));
+		}
+	}
+}
+
+UHexTile* AHexGrid::AddTile_Implementation(const FVector& TileLocation, uint8 TileType)
+{
+	UHexTile* NewTile = NewObject<UHexTile>();
+	if (NewTile)
+	{
+		NewTile->SetTileType(TileType);
+		NewTile->SetTileLocation(TileLocation);
+	}
+	return NewTile;
+}
+
+TArray<uint8> AHexGrid::CalcTypes_Implementation() const
+{
+	uint8 x, y, z;
+	float LocX, LocY;
 	TArray<uint8> Value;
 
-	Value.Reserve(Height * Width);
-	for (y = 0; y < Height; ++y)
-	for (x = 0; x < Width; ++x)
+	Value.Reserve(ChunkTotalElements);
+	for (z = 0; z < ChunkZElements; ++z)
+	for (y = 0; y < ChunkLineElementsExt; ++y)
+	for (x = 0; x < ChunkLineElementsExt; ++x)
 	{
-		Value.Add((uint8)
-			(((USimplexNoiseBPLibrary::SimplexNoise2D(x, y) + 1) * 0.5) * 6)
-		);
+		LocX = (x + (ChunkIndex.X * ChunkLineElements * 0.5));
+		LocY = (y + (ChunkIndex.Y * ChunkLineElements));
+		float Noise = ((((USimplexNoiseBPLibrary::SimplexNoise2D(LocX, LocY) + 1) * 0.5) // 0 - 1 Range
+			* 6) // 0 - 6
+			+ 1); // 1 - 7
+
+		Value.Add((uint8)Noise);
 	}
+
+	return Value;
+}
+
+TArray<int32> AHexGrid::CalcHeight_Implementation() const
+{
+	int32 x, y, z;
+	float LocX, LocY;
+	TArray<int32> Value;
+	Value.Reserve(ChunkTotalElements);
+	
+	for (z = 0; z < ChunkZElements; ++z)
+	for (y = 0; y < ChunkLineElementsExt; ++y)
+	for (x = 0; x < ChunkLineElementsExt; ++x)
+	{
+		LocX = (x + (ChunkIndex.X * ChunkLineElements * 0.5));
+		LocY = (y + (ChunkIndex.Y * ChunkLineElements));
+
+		float Noise1 = ((USimplexNoiseBPLibrary::SimplexNoise2D(LocX * 0.25, LocY * 0.25) + 1) * 0.5);
+		float Noise2 = ((USimplexNoiseBPLibrary::SimplexNoise2D(LocX * 0.025, LocY * 0.025) + 1) * 0.5) * 6;
+
+		Value.Add((int32)(Noise1 + Noise2));
+	}
+
+	/*const auto Half = ChunkLineElements * 0.5;
+	const auto HalfExt = ChunkLineElementsExt * 0.5;
+	
+	for (int q = -HalfExt; q < HalfExt; ++q)
+	{
+		int r1 = FMath::Max(-HalfExt, -q - HalfExt);
+		int r2 = FMath::Min(HalfExt, -q + HalfExt);
+		for (int r = r1; r <= r2; ++r)
+		{
+			float Noise1 = ((USimplexNoiseBPLibrary::SimplexNoise2D(q * 0.25, r * 0.25) + 1) * 0.5);
+			float Noise2 = ((USimplexNoiseBPLibrary::SimplexNoise2D(q * 0.025, r * 0.025) + 1) * 0.5) * 6;
+
+			Value.Add((uint8)(Noise1 + Noise2));
+		}
+	}*/
 
 	return Value;
 }

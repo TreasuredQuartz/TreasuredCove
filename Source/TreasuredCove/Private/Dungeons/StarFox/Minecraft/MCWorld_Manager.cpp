@@ -3,13 +3,6 @@
 
 #include "MCWorld_Manager.h"
 #include "MCWorld_Voxel.h"
-#include "MCWorld_BasicInteractionTool.h"
-
-#include "GACharacter.h"
-
-#include "Engine/StaticMesh.h"
-#include "Materials/MaterialInterface.h"
-#include "Components/InstancedStaticMeshComponent.h"
 
 // Sets default values
 AMCWorld_Manager::AMCWorld_Manager()

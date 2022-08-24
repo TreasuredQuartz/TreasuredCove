@@ -43,6 +43,7 @@ void AGameplayBuilding::EnterBuilding(UPrimitiveComponent* OverlappedComponent, 
 			OnEnteredBuilding(Pawn);
 		}
 	}
+	else UE_LOG(LogTemp, Warning, TEXT("Actor entered building, but does not implement UTownInterface!"));
 }
 
 void AGameplayBuilding::ExitBuilding(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)

@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAWidget.h"
+#include "ProceduralMeshSectionStruct.h"
 #include "HexTile.generated.h"
 
-class UStaticMeshComponent;
+// class UStaticMeshComponent;
 
 UENUM()
 enum class EHexTileType : uint8
@@ -18,16 +18,23 @@ enum class EHexTileType : uint8
 };
 
 UCLASS()
-class TREASUREDCOVE_API UHexTile : public UGAWidget
+class TREASUREDCOVE_API UHexTile : public UDataAsset
 {
 	GENERATED_BODY()
 	
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexTiles", meta = (ExposeOnSpawn="true"))
-	uint8 TileType;
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexTiles", meta = (ExposeOnSpawn="true", AllowPrivateAccess="true"))
+	uint8 Type;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexTiles", meta = (ExposeOnSpawn = "true", AllowPrivateAccess = "true"))
+	FVector Location;
 
 public:	
 	// Sets default values for this actor's properties
 	UHexTile();
 
+public:
+	void SetTileType(uint8 InTileType);
+	void SetTileLocation(const FVector& InLocation);
+
+	FVector GetTileLocation() const;
 };

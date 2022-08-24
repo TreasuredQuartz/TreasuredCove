@@ -15,9 +15,9 @@ class PROCEDURALPLANETPLUGIN_API UPlanetQuadTree
 {
 private:
 	FPlanetMeshSettings Settings;
-	UPlanetQuadTree **Children;
+	TArray<UPlanetQuadTree*> Children;
 
-	const FVector& PlayerPosition;
+	FVector PlayerPosition;
 	FVector position;
 	FVector axisA;
 	FVector axisB;
@@ -25,14 +25,18 @@ private:
 	float localRadius;
 
 	uint8 detailLevel;
-public:
-	UPlanetQuadTree() : Settings(FPlanetMeshSettings()), PlayerPosition(FVector()) {};
 
-	UPlanetQuadTree(FPlanetMeshSettings inSettings, UPlanetQuadTree** inChildren, FVector inPlayerPosition, FVector inPosition, FVector inAxisA, FVector inAxisB,
+public:
+	uint8 GetDetailLevel();
+
+public:
+	UPlanetQuadTree() : Settings(FPlanetMeshSettings()), PlayerPosition(FVector::ZeroVector) {};
+
+	UPlanetQuadTree(FPlanetMeshSettings& inSettings, const FVector& inPlayerPosition, FVector& inPosition, FVector& inAxisA, FVector& inAxisB,
 		float inLocalRadius, uint8 inDetailLevel)
 		:
 		Settings(inSettings),
-		Children(inChildren),
+		Children(TArray<UPlanetQuadTree*>()),
 		PlayerPosition(inPlayerPosition),
 		position(inPosition), 
 		axisA(inAxisA), 
@@ -43,11 +47,12 @@ public:
 
 public:
 	void ConstructQuadTree();
-	void CalculateMesh(TArray<FVector>& vertices, TArray<int>& triangles, TArray<FColor>& colors, int triangleOffset);
+	void CalculateMesh(TArray<FVector>& vertices, TArray<int>& triangles, TArray<FColor>& colors, int triangleOffset) const;
 	TArray<UPlanetQuadTree*> GetVisibleChildren();
+	bool CheckLOD(const FVector& NewLocation);
 
-	// Debugging
 public:
-	FString ToString();
-	FColor GetDebugColorForRegions();
+	// Debugging //
+	FColor GetDebugColorForRegions() const;
+	FString ToString() const;
 };

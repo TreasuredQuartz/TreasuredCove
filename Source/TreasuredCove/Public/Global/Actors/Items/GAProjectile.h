@@ -7,7 +7,6 @@
 #include "GameplayEffectTypes.h"
 #include "GAProjectile.generated.h"
 
-class USphereComponent;
 class UGAProjectileMovementComponent;
 
 UCLASS()
@@ -27,10 +26,6 @@ protected:
 
 	//////////////////////////////////////////////////////
 
-	// Projectile collision Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USphereComponent* CollisionComp;
-
 	// Projectile Movement Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UGAProjectileMovementComponent* ProjectileMovementComp;
@@ -39,10 +34,13 @@ protected:
 
 	// Projectile hit event
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Projectile")
-	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void OnHitPawn(const FHitResult& ImpactResult);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Projectile")
-	void OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnBounce(const FHitResult& ImpactResult, const FVector& ImpactVelocity);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Projectile")
+	void OnStop(const FHitResult& ImpactResult);
 public:
 	// Gets the projectile component
 	UFUNCTION(BlueprintCallable, Category = "Projectile")

@@ -8,6 +8,8 @@
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 
+#include "TimerManager.h"
+
 // Sets default values
 AZombie_Manager::AZombie_Manager(const FObjectInitializer& ObjectInitializer)
 {
@@ -20,78 +22,73 @@ AZombie_Manager::AZombie_Manager(const FObjectInitializer& ObjectInitializer)
 void AZombie_Manager::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	RandomStream = FRandomStream(RandomSeed);
+	CurrentSpawnedEnemies = 0;
+	WaveCount = 0;
 }
 
 void AZombie_Manager::SpawnEnemies()
 {
+	ensure(Spawners.Num() > 0);
+
 	uint8 MaxEnemies = MaxEnemiesAtOnce + (UserArray.Num() * MaxEnemiesPerPlayer);
 
-	for (CurrentSpawnedEnemies; CurrentSpawnedEnemies <= MaxEnemies; CurrentSpawnedEnemies++)
+	if (CurrentSpawnedEnemies <= MaxEnemies && CurrentSpawnedEnemies <= TotalEnemiesToSpawn)
 	{
-		
-		// Get all Player States
-		for (APlayerState* PS : UserArray)
+		const int32 Index = RandomStream.RandRange(0, Spawners.Num() - 1);
+		if (const auto* Zombie = Spawners[Index]->SpawnZombie())
 		{
-			int32 CurrentIndex = UserArray.IndexOfByKey(PS);
+			++CurrentSpawnedEnemies;
+			++TotalSpawnedEnemies;
 
-			if (PS)
+			if (TotalEnemiesToSpawn == TotalSpawnedEnemies)
 			{
-				FVector PlayerLocation = PS->GetPawn()->GetActorLocation();
-				AZombie_Spawner* BestSpawner = nullptr;
-				float BestDistance = 999999;
-
-				for (AZombie_Spawner* Spawner : Spawners)
-				{
-					FVector SpawnerLocation = Spawner->GetActorLocation();
-
-					float Distance = FVector::Distance(PlayerLocation, SpawnerLocation);
-					if (Distance < BestDistance)
-					{
-						BestDistance = Distance;
-						BestSpawner = Spawner;
-					}
-				}
-
-				if (BestSpawner != nullptr)
-				{
-					BestSpawner->SpawnZombie();
-				}
-
-				TotalSpawnedEnemies += 1;
+				GetWorldTimerManager().ClearTimer(SpawnTimerHandle);
 			}
 		}
+		UE_LOG(LogTemp, Warning, TEXT("Current Zombie count: %d\n Max Zombies at once: %d\n Total Spawned Zombies: %d"), CurrentSpawnedEnemies, MaxEnemies, TotalEnemiesToSpawn);
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(SpawnTimerHandle);
 	}
 }
 
 void AZombie_Manager::SpawnedEnemyRemoved(AActor* RemovedActor, AActor* ResponsibleActor)
 {
+	--CurrentSpawnedEnemies;
+
 	if (!RemovedActor || !ResponsibleActor || RemovedActor == ResponsibleActor)
 	{
 		// This was a suicide
-		CurrentSpawnedEnemies -= 1;
-		TotalSpawnedEnemies -= 1;
+		--TotalSpawnedEnemies;
 
 		if (TotalEnemiesToSpawn > TotalSpawnedEnemies)
 		{
-			SpawnEnemies();
+			if (SpawnTimerHandle.IsValid()) return;
+			
+			GetWorldTimerManager().SetTimer(SpawnTimerHandle, TimeBetweenSpawns, true);
+			return;
 		}
-		return;
 	}
 
 	if (TotalEnemiesToSpawn == TotalSpawnedEnemies)
 	{
 		EndWave();
+		GetWorldTimerManager().SetTimer(StartWaveTimerHandle, TimeBetweenWaves, false);
 	}
 }
 
 void AZombie_Manager::StartWave()
 {
-	WaveCount += 1;
+	++WaveCount;
+	CurrentSpawnedEnemies = 0;
+
 	if (WaveCount < 5)
 	{
 		uint8 MaxEnemies = MaxEnemiesAtOnce + (UserArray.Num() * MaxEnemiesPerPlayer);
-		TotalEnemiesToSpawn = MaxEnemies * (WaveCount / 5);
+		TotalEnemiesToSpawn = MaxEnemies * (WaveCount / 5.f);
 	}
 	else if (WaveCount < 10)
 	{
@@ -104,12 +101,20 @@ void AZombie_Manager::StartWave()
 		TotalEnemiesToSpawn = Multiplier + MaxEnemies;
 	}
 
+	// Activate all Spawners
+	FTimerDelegate SpawnDel;
+	SpawnDel.BindUFunction(this, FName("SpawnEnemies"), SpawnTimerHandle);
+	GetWorldTimerManager().SetTimer(SpawnTimerHandle, SpawnDel, TimeBetweenSpawns, true);
+	// GetWorldTimerManager().SetTimer(SpawnTimerHandle, TimeBetweenSpawns, true);
+
 	// Get all Player States
 	for (APlayerState* PS : UserArray)
 	{
 		const APawn* Pawn = PS->GetPawn();
 		UGameplayStatics::PlaySound2D(Pawn, WaveStartSound);
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Wave %d: Start."), WaveCount);
 }
 
 void AZombie_Manager::EndWave()
@@ -138,8 +143,8 @@ void AZombie_Manager::AddPoints(APawn* InPawn, int InPoints)
 		if (InPawn == PS->GetPawn())
 		{
 			PS->SetScore(PS->GetScore() + InPoints);
+			break;
 		}
-		break;
 	}
 }
 

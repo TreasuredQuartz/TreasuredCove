@@ -8,8 +8,24 @@
 // Sets default values
 UHexTile::UHexTile()
 {
- 	
+
 }
+
+void UHexTile::SetTileType(uint8 InTileType)
+{
+	Type = InTileType;
+}
+
+void UHexTile::SetTileLocation(const FVector& InLocation)
+{
+	Location = InLocation;
+}
+
+FVector UHexTile::GetTileLocation() const
+{
+	return Location;
+}
+
 
 
 

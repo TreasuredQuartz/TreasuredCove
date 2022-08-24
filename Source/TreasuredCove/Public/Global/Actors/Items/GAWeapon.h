@@ -51,11 +51,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	TArray<int> MaxSubMenuSlots;
 
-	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
-	TSubclassOf<UGameplayAbilitySet> InitialActiveAbilitySetClass;
-	UGameplayAbilitySet* InitialActiveAbilities;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
 	TArray<FSavedAttribute> Attributes;
 
@@ -92,9 +87,9 @@ public:
 
 public:
 	UFUNCTION()
-		void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
-		void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 public:
 	FItemKey GetPickup_Implementation()

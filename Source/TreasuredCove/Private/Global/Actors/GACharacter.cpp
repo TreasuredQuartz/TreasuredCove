@@ -79,11 +79,10 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 	ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UGACharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	PrimaryActorTick.bCanEverTick = true;
-	bUseControllerRotationYaw = bFirstPerson;
 
 	// Mesh
-	RealMesh = 
-		CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Real Mesh"));
+	/*RealMesh = 
+		CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Real Mesh"));*/
 
 	// Combo System Component
 	ComboSystem =
@@ -181,7 +180,7 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 	// Mesh Collision To Block Visibility Channel
 	if (GetMesh())
 	{
-		RealMesh->SetupAttachment(GetMesh());
+		// RealMesh->SetupAttachment(GetMesh());
 
 		if (GetMesh()->DoesSocketExist(HeadSocket))
 			Sight->SetupAttachment(GetMesh(), HeadSocket);
@@ -194,6 +193,8 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 void AGACharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ChangeCameraType(bFirstPerson);
 
 	if (WallRunTimelineCurve) 
 	{
@@ -659,11 +660,17 @@ void AGACharacter::UpdateProceduralMesh()
 
 void AGACharacter::Puncture(FVector ImpactLocation, FVector ImpactNormal, FVector ImpactExitPoint, float ImpactRadius, FVector ImpactForce)
 {
-	UStaticLibrary::HolePunchProceduralMesh(RealMesh, ImpactLocation, ImpactNormal, ImpactExitPoint, ImpactRadius, EProcMeshSliceCapOption::CreateNewSectionForCap, MeshInsideColor, 6);
+	// UStaticLibrary::HolePunchProceduralMesh(RealMesh, ImpactLocation, ImpactNormal, ImpactExitPoint, ImpactRadius, EProcMeshSliceCapOption::CreateNewSectionForCap, MeshInsideColor, 6);
 	UParticleSystem* EmitterTemplate = PSPuncture->Template;
 	PSPuncture =
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EmitterTemplate, FTransform(FRotator(), ImpactLocation, FVector(1, 1, 1)), true);
 	PSPuncture->SetVectorParameter(FName("Velocity"), ImpactForce);
+}
+
+void AGACharacter::ChangeCameraType_Implementation(bool bInFirstPerson)
+{
+	bFirstPerson = bInFirstPerson;
+	// bUseControllerRotationYaw = bFirstPerson;
 }
 
 void AGACharacter::BeginCameraTilt()
@@ -804,13 +811,16 @@ void AGACharacter::InitializeAbilitySystem()
 	// AquireAbility(DecreaseSpreadAbility, EAbilityType::Cumalitive, DecreaseSpreadAbilityHandle, false);
 	// AquireAbility(IncreaseSpreadAbility, EAbilityType::Reactive, IncreaseSpreadAbilityHandle, false);
 
-	if (InitialActiveAbilitySetClass) InitialActiveAbilities = NewObject<UAbilitySet>(InitialActiveAbilitySetClass);
+	// if (InitialActiveAbilitySetClass) InitialActiveAbilities = NewObject<UAbilitySet>(InitialActiveAbilitySetClass);
+	// 
+	// This should be a UDataAsset Instance. Meaning there is no need to spawn anything
+	// And data should be readily available for access.
 	if (InitialActiveAbilities) AquireAbilities(InitialActiveAbilities->GetAbilities(), ActiveAbilityHandles);
 
-	if (UGA_Interact::StaticClass())
+	/*if (UGA_Interact::StaticClass() && (!ActiveAbilityHandles[0].IsValid()))
 	{
 		AquireAbility(UGA_Interact::StaticClass(), ActiveAbilityHandles[0]);
-	}
+	}*/
 }
 
 // Called during ability system initialization
@@ -874,6 +884,7 @@ void AGACharacter::AquireAbility(TSubclassOf<UGameplayAbility> InAbility, FGamep
 			SpecDef.Ability = InAbility;
 			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(SpecDef, 1);
 			OutHandle = RenamedAbilitySystem->GiveAbility(AbilitySpec);
+			RenamedAbilitySystem->OnAbilityEnded.AddUObject(this, &AGACharacter::AbilityEnded);
 
 			// GEngine->AddOnScreenDebugMessage(-1, 1.0, FColor::Purple, "Aquired Ability: " + AbilityName);
 
@@ -923,6 +934,11 @@ void AGACharacter::RemoveAbilities(TArray< FGameplayAbilitySpecHandle > InHandle
 	{
 		RemoveAbility(InHandle);
 	}
+}
+
+void AGACharacter::AbilityEnded(const FAbilityEndedData& AbilityEndedData)
+{
+	OnAbilityEnded.Broadcast(AbilityEndedData.AbilityThatEnded);
 }
 
 // Called to pass the given ability information onto the player's HUD.
@@ -1568,7 +1584,7 @@ void AGACharacter::MoveForward(float Val)
 				}
 				break;
 			default:
-				Rotation = Controller->GetControlRotation();
+				Rotation = GetControlRotation();
 				Rotation.Pitch = 0.0f;
 				Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
 			}
@@ -2525,6 +2541,7 @@ void AGACharacter::EquipItem(AGAActor* Item)
 			{
 				FGAItemInfo Info = FGAItemInfo();
 				Weapon->GetItemInfo(Info);
+				HeldWeaponType = Weapon->WeaponType;
 				PC->OnEquipItem(Item, Info);
 			}
 		}
@@ -2537,7 +2554,7 @@ void AGACharacter::EquipItem(AGAActor* Item)
 		HeldItem->AttachToComponent(this->GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(DominantHand) ? DominantHand : FName());
 		HeldItem->SetActorHiddenInGame(false);
 		HeldItem->SetActorEnableCollision(false);
-		HeldWeaponType = Cast<AGAWeapon>(HeldItem)->WeaponType;
+		HeldItem->IntializeAbilitySystem();
 
 		// Item->OnEquipped();
 	}
@@ -2876,7 +2893,7 @@ void AGACharacter::OnHealed(AActor* SourceActor, EAttributeType AttributeType, f
 	}
 }
 
-void AGACharacter::OnPawnSeen(APawn* SeenPawn)
+void AGACharacter::OnPawnSeen_Implementation(APawn* SeenPawn)
 {
 	if (!SeenPawn)
 	{
@@ -2929,7 +2946,7 @@ void AGACharacter::OnPawnSeen(APawn* SeenPawn)
 	}
 }
 
-void AGACharacter::OnNoiseHeard(APawn* NoiseInstigator, const FVector& Location, float Volume)
+void AGACharacter::OnNoiseHeard_Implementation(APawn* NoiseInstigator, const FVector& Location, float Volume)
 {
 	if (!NoiseInstigator)
 	{

@@ -80,6 +80,8 @@ enum class EHeldInputType : uint8
 };
 #pragma endregion
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGAEnded, const UGameplayAbility*, AbilityEndedData);
+
 UCLASS(Blueprintable)
 class TREASUREDCOVE_API AGACharacter
 	: public ACharacter,
@@ -189,8 +191,9 @@ protected:
 	//////////////////////////////////////////////////////
 
 	//
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
+	TSubclassOf<UAbilitySet> InitialActiveAbilitySetClass;*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
-	TSubclassOf<UAbilitySet> InitialActiveAbilitySetClass;
 	UAbilitySet* InitialActiveAbilities;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
 	FGAActivatedInfo SwitchAbility;
@@ -326,6 +329,7 @@ protected:
 	void UpdateSightRotation();
 #pragma endregion
 
+#pragma region VisualFX
 	// 
 	void BeginGrip();
 	// 
@@ -345,13 +349,15 @@ protected:
 	void UpdateCameraTilt();
 	// Visual effect only for wall running rn
 	void EndCameraTilt();
-	// Called when Health Attribute is <= 0
-	void Death();
-	// Called internally when health attribute <= 0
-	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
-	void OnDeath();
+	// Changes between first person and third person camera types
+	// @TODO Add enum camera type
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void ChangeCameraType(bool bInFirstPerson);
+
 	UFUNCTION()
 	FTransform GetPawnSenseTransform();
+
+#pragma endregion
 
 #pragma region UserPreferrenceSettings
 public:
@@ -433,8 +439,8 @@ public:
 	AActor* CurrentInteractItem;
 
 	//
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UProceduralMeshComponent* RealMesh;
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UProceduralMeshComponent* RealMesh;*/
 
 	// Sight Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -608,6 +614,10 @@ public:
 	// Used to remove gameplay tags from this character
 	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Tags")
 	void RemoveGameplayTag(const FGameplayTag& OldTag);
+	UFUNCTION()
+	void AbilityEnded(const FAbilityEndedData& AbilityEndedData);
+	UPROPERTY(BlueprintAssignable)
+	FGAEnded OnAbilityEnded;
 #pragma region Attributes
 	/** Attributes */
 public:
@@ -617,6 +627,14 @@ public:
 	virtual bool GetSavedAttributesCurrentValues(TArray<FSavedAttribute>& OutAttributes);
 	virtual void PopulateSavedAttributes(const TArray<FSavedAttribute>& Attributes);
 	bool AttributeCheck(FGameplayAttribute TestAttribute, uint8 Difficulty, EAdvantageType Advantage = EAdvantageType::Neutral);
+
+	// Called when Health Attribute is <= 0, 
+	// will call blueprint version.
+	void Death();
+	// Called internally when health attribute <= 0
+	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
+	void OnDeath();
+
 	//
 	UFUNCTION()
 	void OnHealthModified(float Health, float MaxHealth);
@@ -737,10 +755,10 @@ public:
 	UFUNCTION()
 	void OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
 	//
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent)
 	void OnPawnSeen(APawn* SeenPawn);
 	//
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent)
 	void OnNoiseHeard(APawn* NoiseInstigator, const FVector& Location, float Volume);
 	void CheckVisibleCharacters();
 	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")

@@ -572,6 +572,6 @@ TObjectPtr<UObject> UStaticLibrary::GetCurrentPlanet(TObjectPtr<UObject> Calling
 {
 	if (CallingObject == nullptr) return nullptr;
 
-	return nullptr;;
+	return nullptr;
 }
 

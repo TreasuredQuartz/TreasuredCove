@@ -17,14 +17,16 @@ USenseComponent::USenseComponent()
 	PawnSense =
 		CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSense"));
 
-	if (OwningCharacter)
+	OwningCharacter = GetOwner<AGACharacter>();
+	if (GetOwner<AGACharacter>())
 	{
+		
 		PawnSense->OnSeePawn.AddDynamic(OwningCharacter, &AGACharacter::OnPawnSeen);
-
 		PawnSense->OnHearNoise.AddDynamic(OwningCharacter, &AGACharacter::OnNoiseHeard);
 	}
 
 	PawnSense->SetPeripheralVisionAngle(45);
+	// PawnSense->RegisterComponent();
 }
 
 float USenseComponent::GetFoV()

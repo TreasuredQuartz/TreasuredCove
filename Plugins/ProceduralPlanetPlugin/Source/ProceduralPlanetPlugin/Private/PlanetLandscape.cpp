@@ -9,8 +9,8 @@ UPlanetLandscape::UPlanetLandscape() :
 	ShapeGenerator(FPlanetShapeGenerator()),
 	MeshSettings(FPlanetMeshSettings()),
 	localUp(FVector(0,0,0)),
-	axisA(FVector(0, 0, 0)),
-	axisB(FVector(0, 0, 0))
+	axisA(FVector(0,0,0)),
+	axisB(FVector(0,0,0))
 {
 	Mesh =
 		CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Mesh"));
@@ -30,13 +30,19 @@ void UPlanetLandscape::Initialize(FPlanetShapeGenerator inGenerator, FPlanetMesh
 }
 
 // @desc See Sebastian Leagure (Procedural Planets)
-void UPlanetLandscape::ConstructMesh(FVector inPlayerPosition)
+void UPlanetLandscape::ConstructMesh(const FVector& NewLocation)
 {
-	QuadTree = new UPlanetQuadTree(MeshSettings, nullptr, inPlayerPosition, localUp, axisA, axisB, 1, 0);
-	QuadTree->ConstructQuadTree();
+	UE_LOG(LogTemp, Warning, TEXT("UPlanetLandscape: Constructing Mesh!"), )
+	if (QuadTree == nullptr)
+	{
+		QuadTree = new UPlanetQuadTree(MeshSettings, NewLocation, localUp, axisA, axisB, 1, 0);
+		QuadTree->ConstructQuadTree();
+	}
 
 	int triangleOffset = 0;
-	for (UPlanetQuadTree* Child : QuadTree->GetVisibleChildren())
+	const auto& Tree = QuadTree->GetVisibleChildren();
+
+	for (const auto& Child : Tree)
 	{
 		TArray<FVector> inV;
 		TArray<int> inT;
@@ -57,10 +63,10 @@ void UPlanetLandscape::ConstructMesh(FVector inPlayerPosition)
 	}
 
 	normals.SetNumUninitialized(vertices.Num());
-	int i = 0;
+	int i = -1;
 	for (const FVector& vert : vertices)
 	{
-		normals[i++] = vert.GetSafeNormal();
+		normals[++i] = vert.GetSafeNormal();
 	}
 
 	TArray<struct FProcMeshTangent> tangents;
@@ -79,10 +85,10 @@ void UPlanetLandscape::CalculateNoise()
 	newVertsPosition.SetNumUninitialized(vertices.Num());
 	ensure(newVertsPosition.Num() == vertices.Num());
 
-	int i = 0;
+	int i = -1;
 	for (FVector& Vert : vertices)
 	{
-		newVertsPosition[i++] = ShapeGenerator.CalculatePointOnPlanet(Vert) * MeshSettings.radius * PlanetSize;
+		newVertsPosition[++i] = ShapeGenerator.CalculatePointOnPlanet(Vert) * MeshSettings.radius; // * PlanetSize;
 	}
 
 	TArray<struct FProcMeshTangent> tangents;
@@ -90,6 +96,20 @@ void UPlanetLandscape::CalculateNoise()
 	if (Mesh)
 	{
 		Mesh->UpdateMeshSection(0, newVertsPosition, normals, uvs, colors, tangents);
+	}
+}
+
+void UPlanetLandscape::OnCameraLocationUpdated(const FVector& NewLocation)
+{
+	if (Mesh->WasRecentlyRendered())
+	{
+		if (QuadTree == nullptr)
+		{
+			QuadTree = new UPlanetQuadTree(MeshSettings, NewLocation, localUp, axisA, axisB, 1, 0);
+			QuadTree->ConstructQuadTree();
+		}
+
+		if (QuadTree->CheckLOD(NewLocation)) ConstructMesh(NewLocation);
 	}
 }
 

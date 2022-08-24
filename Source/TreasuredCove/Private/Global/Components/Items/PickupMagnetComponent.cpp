@@ -33,7 +33,7 @@ UPickupMagnetComponent::UPickupMagnetComponent()
 		}
 		else 
 		{
-			PickupMagnetOverlap->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+			PickupMagnetOverlap->SetupAttachment(GetOwner()->GetRootComponent());
 		}
 	}
 }

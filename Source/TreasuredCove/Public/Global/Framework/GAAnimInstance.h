@@ -20,23 +20,35 @@ class TREASUREDCOVE_API UGAAnimInstance : public UAnimInstance
 private:
 	UFUNCTION()
 	void OnMovementModeChanged(class ACharacter* InCharacter, EMovementMode PrevMovementMode, uint8 PreviousCustomMode);
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class AGACharacter* Character;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	EWeaponType HeldWeaponType;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator ControlDirection;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FRotator HandRotation;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator BodyDirection;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator HeadRotation;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector MeshSpaceVelocity;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FVector RightHandEffectorLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FVector LeftHandEffectorLocation;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector RightFootEffectorLocation;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector LeftFootEffectorLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FVector PelvisOffsetLocation;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float AimYaw;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -46,6 +58,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Direction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DominantHandTwist;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bFirstPerson;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bJumping;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bFalling;
@@ -53,6 +70,8 @@ protected:
 	bool bCrouching;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bAbilityShouldUseFullBody;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bPerformLegIKTraces;
 
 	// Call this in the AnimBP's Event graph
 	UFUNCTION(BlueprintCallable, Category = "Animation|Update")

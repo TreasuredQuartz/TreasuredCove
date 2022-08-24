@@ -21,7 +21,7 @@ public:
 
 public:
 	//
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UPawnSensingComponent* PawnSense;
 
 	AGACharacter* OwningCharacter;
