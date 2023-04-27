@@ -2,7 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "ProceduralMeshComponent.h"
+#include "Components/RuntimeMeshComponentStatic.h"
 #include "ProceduralMeshSectionStruct.generated.h"
 
 /**
@@ -13,6 +13,17 @@ struct FProceduralMeshSection
 {
 	GENERATED_BODY()
 
+public:
+	FProceduralMeshSection() : Vertices(TArray<FVector>()),
+		Triangles(TArray<int32>()),
+		Normals(TArray<FVector>()),
+		UVs(TArray<FVector2D>()),
+		Tangents(TArray<struct FRuntimeMeshTangent>()),
+		VertexColors(TArray<FColor>()),
+		Material(nullptr)
+	{}
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FVector> Vertices;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -22,7 +33,7 @@ struct FProceduralMeshSection
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FVector2D> UVs;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FProcMeshTangent> Tangents;
+	TArray<struct FRuntimeMeshTangent> Tangents;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FColor> VertexColors;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -32,6 +43,20 @@ struct FProceduralMeshSection
 	bool bEnableCollision = false;
 	uint32 ElementID = 0;
 	uint32 NumTriangles = 0;
+
+	void Clear()
+	{
+		Vertices.Empty();
+		Triangles.Empty();
+		Normals.Empty();
+		UVs.Empty();
+		Tangents.Empty();
+		VertexColors.Empty();
+		Material = nullptr;
+		bEnableCollision = false;
+		ElementID = 0;
+		NumTriangles = 0;
+	}
 
 	// UFUNCTION(BlueprintCallable, CallInEditor)
 		void AddTriangle(TArray<FVector> InVertices, TArray<int32> InTriangle) {

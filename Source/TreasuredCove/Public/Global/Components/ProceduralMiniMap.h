@@ -62,7 +62,7 @@ public:
 		return Section.UVs;
 	}
 
-	const TArray<FProcMeshTangent>& GetTangents()
+	const TArray<FRuntimeMeshTangent>& GetTangents()
 	{
 		return Section.Tangents;
 	}
@@ -122,7 +122,7 @@ public:
 	TArray<FVector> TestDirections;
 
 	UPROPERTY()
-	UProceduralMeshComponent* PMesh;
+	URuntimeMeshComponentStatic* Mesh;
 	UPROPERTY()
 	TArray<UMaterialInterface*> Materials;
 

@@ -32,3 +32,8 @@ void UCraftingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// ...
 }
 
+bool UCraftingComponent::TryCrafting(TArray<FItemKey>& InRecipe) const
+{
+	return false;
+}
+

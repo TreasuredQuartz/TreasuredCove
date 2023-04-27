@@ -20,9 +20,8 @@ USenseComponent::USenseComponent()
 	OwningCharacter = GetOwner<AGACharacter>();
 	if (GetOwner<AGACharacter>())
 	{
-		
-		PawnSense->OnSeePawn.AddDynamic(OwningCharacter, &AGACharacter::OnPawnSeen);
-		PawnSense->OnHearNoise.AddDynamic(OwningCharacter, &AGACharacter::OnNoiseHeard);
+		// PawnSense->OnSeePawn.AddDynamic(OwningCharacter, &AGACharacter::OnPawnSeen);
+		// PawnSense->OnHearNoise.AddDynamic(OwningCharacter, &AGACharacter::OnNoiseHeard);
 	}
 
 	PawnSense->SetPeripheralVisionAngle(45);

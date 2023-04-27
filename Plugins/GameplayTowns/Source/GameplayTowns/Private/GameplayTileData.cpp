@@ -3,10 +3,12 @@
 
 #include "GameplayTileData.h"
 
-DEFINE_ENUM_TO_STRING(EFaceOrientation);
+// DEFINE_ENUM_TO_STRING(EFaceOrientation);
 
 UGameplayTileData::UGameplayTileData()
 {
+	// for (int i = 0; i < EFaceOrientation::Num; ++i)
+	//	StaticFaces[i] = FQuad();
 }
 
 FPrimaryAssetId UGameplayTileData::GetPrimaryAssetId() const

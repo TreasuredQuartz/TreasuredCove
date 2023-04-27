@@ -13,6 +13,9 @@ UCLASS()
 class TREASUREDCOVE_API UDrawingLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
-
+public:
+	// Utility function for converting an array to a texture.
+	// - Used for dynamic bullet icons
+	UFUNCTION(BlueprintCallable, Category = "Drawing")
+	static UTexture2D* CreateTextureFromArray(const TArray<FColor>& Colors);
 };

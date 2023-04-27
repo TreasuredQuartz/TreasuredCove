@@ -52,6 +52,7 @@ public class ProceduralPlanetPluginEditor : ModuleRules
 
 				// ... add private dependencies that you statically link with here ...	
 				"AdvancedPreviewScene",
+				"ApplicationCore",
 				"Blutility",
 				"EditorStyle",
 				"GraphEditor",

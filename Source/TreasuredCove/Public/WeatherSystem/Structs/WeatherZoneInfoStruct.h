@@ -10,6 +10,11 @@ USTRUCT(BlueprintType)
 struct FWeatherZoneInfo
 {
 	GENERATED_BODY()
+
+public:
+	FWeatherZoneInfo() : WeatherZoneParticleSystem(nullptr),
+		AtmosphereSetting(EAtmosphereType::NoChange)
+	{}
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weather")

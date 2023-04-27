@@ -15,6 +15,11 @@ struct FRequiredAttribute
 	GENERATED_BODY()
 
 public:
+	FRequiredAttribute() : Attribute(FGameplayAttribute()),
+		AttributeAmount(0.0)
+	{}
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
 	FGameplayAttribute Attribute;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")

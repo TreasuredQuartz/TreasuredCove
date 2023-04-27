@@ -2,11 +2,14 @@
 
 
 #include "GameplayBuilding.h"
+#include "GameplayLibrary.h"
+#include "GameplayRoom.h"
 #include "TownSystemComponent.h"
 #include "TownSystemInterface.h"
 
 #include "Components/BoxComponent.h"
 #include "NavigationSystem.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AGameplayBuilding::AGameplayBuilding()
@@ -26,24 +29,60 @@ AGameplayBuilding::AGameplayBuilding()
 	EntryPoint->SetupAttachment(RootComponent);
 }
 
+void AGameplayBuilding::OnConstruction(const FTransform& Transform)
+{
+	if (!RoomClasses.IsEmpty() && (RoomClasses.Num() != Rooms.Num() || Rooms.Contains(nullptr)))
+	{
+		int i = -1;
+		Rooms.Reserve(RoomClasses.Num());
+		for (const auto& RoomClass : RoomClasses)
+		{
+			if (Rooms.IsValidIndex(++i))
+			{
+				if (Rooms[i])
+				{
+					if (Rooms[i]->GetClass() == RoomClass)
+					{
+						continue;
+					}
+					else
+					{
+						Rooms[i]->Destroy();
+						Rooms[i] = nullptr;
+					}
+				}
+				if (AGameplayRoom* NewRoom = GetWorld()->SpawnActorDeferred<AGameplayRoom>(RoomClass, Transform, this))
+				{
+					Rooms[i] = NewRoom;
+					NewRoom->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+					NewRoom->SetOwningBuilding(this);
+					NewRoom->SetOwner(this);
+					UGameplayStatics::FinishSpawningActor(NewRoom, Transform);
+				}
+			}
+			else if (AGameplayRoom* NewRoom = GetWorld()->SpawnActorDeferred<AGameplayRoom>(RoomClass, Transform, this))
+			{
+				Rooms.Add(NewRoom);
+				NewRoom->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+				NewRoom->SetOwningBuilding(this);
+				NewRoom->SetOwner(this);
+				UGameplayStatics::FinishSpawningActor(NewRoom, Transform);
+			}
+		}
+	}
+}
+
 void AGameplayBuilding::EnterBuilding(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	if (OtherActor->GetClass()->ImplementsInterface(UTownSystemInterface::StaticClass()))
+	if (UTownSystemComponent* TownSystem = UGameplayLibrary::GetGameplayTownsComponent(OtherActor))
 	{
-		UTownSystemComponent* TownSystem = Cast<ITownSystemInterface>(OtherActor)->GetTownSystemComponent();
-
-		if (TownSystem)
-		{
-			AdmitSingleOccupent(TownSystem);
-		}
-
+		AdmitSingleOccupent(TownSystem);
 		APawn* Pawn = Cast<APawn>(OtherActor);
 		if (Pawn)
 		{
 			OnEnteredBuilding(Pawn);
 		}
 	}
-	else UE_LOG(LogTemp, Warning, TEXT("Actor entered building, but does not implement UTownInterface!"));
 }
 
 void AGameplayBuilding::ExitBuilding(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)

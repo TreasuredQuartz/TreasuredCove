@@ -6,9 +6,11 @@
 #include "GameplayAbilityBase.h"
 #include "AbilitySet.h"
 
+#include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "ProceduralMeshComponent.h"
 
 #include "Engine/Engine.h"
@@ -19,18 +21,38 @@ AGAActor::AGAActor()
 	// Ability System Component
 	AbilitySystem =
 		CreateDefaultSubobject<UGASystemComponent>(TEXT("AbilitySystem"));
+
+	// Projectile Movement Component
+	ProjectileMovement =
+		CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+	ProjectileMovement->SetAutoActivate(false);
+
+	// Root
+	Root =
+		CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	SetRootComponent(Root);
+
+	// Animation Offset
+	DominantHandOffset =
+		CreateDefaultSubobject<UBillboardComponent>(TEXT("DominantHandOffset"));
+	DominantHandOffset->SetupAttachment(Root);
+
+	// Animation Offset
+	SupportingHandOffset =
+		CreateDefaultSubobject<UBillboardComponent>(TEXT("SupportingHandOffset"));
+	SupportingHandOffset->SetupAttachment(Root);
 }
 
 UAbilitySystemComponent* AGAActor::GetAbilitySystemComponent() const { return AbilitySystem; }
 
-FVector AGAActor::GetHeldHandOffset() const
+FTransform AGAActor::GetHeldHandOffset() const
 {
-	return DominantHandOffset;
+	return DominantHandOffset ? DominantHandOffset->GetComponentTransform() : FTransform();
 }
 
-FVector AGAActor::GetSupportingHandOffset() const
+FTransform AGAActor::GetSupportingHandOffset() const
 {
-	return SupportingHandOffset;
+	return DominantHandOffset ? SupportingHandOffset->GetComponentTransform() : FTransform();
 }
 
 // Called when the game starts or when spawned
@@ -96,13 +118,17 @@ void AGAActor::AquireAbility(TSubclassOf<UGameplayAbility> InAbility, FGameplayA
 
 void AGAActor::UsePrimary_Implementation()
 {
-	if (CurrentActiveAbilityHandles.IsValidIndex(0) && CurrentActiveAbilityHandles[0].IsValid()) AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[0]);
+	if (CurrentActiveAbilityHandles.IsValidIndex(0) && CurrentActiveAbilityHandles[0].IsValid())
+	{
+		AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[0]);
+	}
 	else UE_LOG(LogTemp, Warning, TEXT("Item Primary not called."));
 }
 
 void AGAActor::UseSecondary_Implementation()
 {
 	if (CurrentActiveAbilityHandles.IsValidIndex(1) && CurrentActiveAbilityHandles[1].IsValid()) AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[1]);
+	else UE_LOG(LogTemp, Warning, TEXT("Item Secondary not called."));
 }
 
 void AGAActor::UseThrow_Implementation()

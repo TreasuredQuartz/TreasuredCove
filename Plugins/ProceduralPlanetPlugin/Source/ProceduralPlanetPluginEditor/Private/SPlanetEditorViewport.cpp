@@ -11,6 +11,8 @@
 #include "InputCoreTypes.h"
 #include "UnrealWidget.h"
 
+#include "GenericPlatform\GenericPlatformInputDeviceMapper.h"
+
 
 /** Viewport Client for the preview viewport */
 class FPlanetEditorViewportClient : public FEditorViewportClient
@@ -98,12 +100,14 @@ bool FPlanetEditorViewportClient::ShouldOrbitCamera() const
 
 bool FPlanetEditorViewportClient::InputKey(FViewport* InViewport, int32 ControllerId, FKey Key, EInputEvent Event, float AmountDepressed, bool bGamepad)
 {
-	bool bHandled = FEditorViewportClient::InputKey(InViewport, ControllerId, Key, Event, AmountDepressed, false);
+	FInputKeyEventArgs Args(InViewport, ControllerId, Key, Event);
+	Args.AmountDepressed = AmountDepressed;
+	bool bHandled = FEditorViewportClient::InputKey(Args);
 
 	// Handle viewport screenshot.
 	bHandled |= InputTakeScreenshot(InViewport, Key, Event);
 
-	bHandled |= AdvancedPreviewScene->HandleInputKey(InViewport, ControllerId, Key, Event, AmountDepressed, bGamepad);
+	bHandled |= AdvancedPreviewScene->HandleInputKey(Args);
 
 	return bHandled;
 }
@@ -114,14 +118,18 @@ bool FPlanetEditorViewportClient::InputAxis(FViewport* InViewport, int32 Control
 
 	if (!bDisableInput)
 	{
-		bResult = AdvancedPreviewScene->HandleViewportInput(InViewport, ControllerId, Key, Delta, DeltaTime, NumSamples, bGamepad);
+		bResult = AdvancedPreviewScene->HandleViewportInput(InViewport, FInputDeviceId::CreateFromInternalId(ControllerId), Key, Delta, DeltaTime, NumSamples, bGamepad);
 		if (bResult)
 		{
 			Invalidate();
 		}
 		else
 		{
-			bResult = FEditorViewportClient::InputAxis(InViewport, ControllerId, Key, Delta, DeltaTime, NumSamples, bGamepad);
+			FInputDeviceId DeviceID = INPUTDEVICEID_NONE;
+			FPlatformUserId UserId = FGenericPlatformMisc::GetPlatformUserForUserIndex(ControllerId);
+			IPlatformInputDeviceMapper::Get().RemapControllerIdToPlatformUserAndDevice(ControllerId, UserId, DeviceID);
+
+			bResult = FEditorViewportClient::InputAxis(InViewport, DeviceID, Key, Delta, DeltaTime, NumSamples, bGamepad);
 		}
 	}
 

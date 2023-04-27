@@ -8,15 +8,48 @@ public class TreasuredCove : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "SimplexNoise", "Engine", "InputCore", "AIModule", "GameplayAbilities", "GameplayTasks", "GameplayTags", "RHI", "RenderCore", "UMG" });
+		PrivateDependencyModuleNames.AddRange(new string[] 
+		{ 
+			"AdvancedSessions", 
+			"AdvancedSteamSessions",
+			"AIModule",
+			"Core", 
+			"CoreUObject",
+            "ChaosVehicles",
+            "Engine", 
+			"InputCore", 
+			"GameplayAbilities",
+			"GameplayTags",
+			"GameplayTasks",
+			"Networking",
+			"OnlineSubsystem", 
+			"OnlineSubsystemUtils",
+			"RHI", 
+			"RenderCore",
+			"SimplexNoise",
+			"Slate",
+			"SlateCore",
+			"Sockets",
+			"UMG" 
+		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "ProceduralMeshComponent", "GameplayTowns", "PhysXFlyingVehicles", "DlgSystem", "UnrealEd" });
+		PrivateDependencyModuleNames.AddRange(new string[] 
+		{ 
+			"ProceduralMeshComponent", 
+			"RuntimeMeshComponent",
+			"GameplayTowns", 
+			"PhysXFlyingVehicles", 
+			"DlgSystem", 
+			"UnrealEd", 
+			"PlayFab",
+			"SenseSystem"
+		});
 
 		// Uncomment if you are using Slate UI
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 		
 		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
+		// PrivateDependencyModuleNames.AddRange(new string[] {  });
 
 		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
 	}

@@ -58,7 +58,7 @@ public:
 	int32 InstanceValue;
 	int32 BlockValue;
 	int32 BlockType;
-	FVector Location;
+	FIntVector CurrentLocation;
 	AMCWorld_Voxel* ActiveChunk;
 
 	AGAActor* CurrentItem;

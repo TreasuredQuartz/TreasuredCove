@@ -7,19 +7,19 @@
 constexpr int MAXLOD = 11;
 
 static const TArray<FColor> detailColor = {
-	FColor::White,		// 0
-	FColor::Silver,		// 1
-	FColor::Yellow,		// 2
-	FColor::Orange,		// 3
-	FColor::Red,		// 4
-	// FColor::Turquoise,	// 5
-	FColor::Emerald,	// 6
-	FColor::Green,		// 7
-	FColor::Cyan,		// 8
-	FColor::Blue,		// 9
-	FColor::Purple,		// 10
-	FColor::Magenta,	// 11
-	FColor::Black		// 12
+	FColor::White,			// 0
+	FColor::Silver,			// 1
+	FColor::Yellow,			// 2
+	FColor::Orange,			// 3
+	FColor::Red,			// 4
+	FColor(255, 255, 155),	// 5
+	FColor::Emerald,		// 6
+	FColor::Green,			// 7
+	FColor::Cyan,			// 8
+	FColor::Blue,			// 9
+	FColor::Purple,			// 10
+	FColor::Magenta,		// 11
+	FColor::Black			// 12
 };
 #pragma endregion
 
@@ -40,29 +40,29 @@ uint8 UPlanetQuadTree::GetDetailLevel()
 
 void UPlanetQuadTree::ConstructQuadTree()
 {
-	if (detailLevel < 10 && detailLevel >= 0)
+	if (detailLevel < 13 && detailLevel >= 0)
 	{
-		if (FVector::DistSquared(position * Settings.radius, PlayerPosition) <= FMath::Square(Settings.LODSettings.LevelsOfDetail[detailLevel]))
+		if (ShouldIncreaseLOD(GetPlayerDistance()))
 		{
-			Children = TArray<UPlanetQuadTree*>();
 			Children.Init(nullptr, 4);
 
-			#define halfRadiusA (axisA) * localRadius / 2.0
-			#define halfRadiusB (axisB) * localRadius / 2.0
+			#define halfRadiusA (axisA) * (localRadius * 0.5)
+			#define halfRadiusB (axisB) * (localRadius * 0.5)
 
 			TArray<FVector> dict = {
 				position + halfRadiusA + halfRadiusB,
 				position + halfRadiusA - halfRadiusB,
-				position + halfRadiusB - halfRadiusA,
-				position - halfRadiusB - halfRadiusA };
+				position - halfRadiusA + halfRadiusB,
+				position - halfRadiusA - halfRadiusB };
 
-			Children[0] = new UPlanetQuadTree(Settings, PlayerPosition, dict[0], axisA, axisB, localRadius / 2, detailLevel + 1);
-			Children[1] = new UPlanetQuadTree(Settings, PlayerPosition, dict[1], axisA, axisB, localRadius / 2, detailLevel + 1);
-			Children[2] = new UPlanetQuadTree(Settings, PlayerPosition, dict[2], axisA, axisB, localRadius / 2, detailLevel + 1);
-			Children[3] = new UPlanetQuadTree(Settings, PlayerPosition, dict[3], axisA, axisB, localRadius / 2, detailLevel + 1);
+			Children[0] = new UPlanetQuadTree(Settings, PlayerPosition, dict[0], axisA, axisB, localRadius * 0.5, detailLevel + 1);
+			Children[1] = new UPlanetQuadTree(Settings, PlayerPosition, dict[1], axisA, axisB, localRadius * 0.5, detailLevel + 1);
+			Children[2] = new UPlanetQuadTree(Settings, PlayerPosition, dict[2], axisA, axisB, localRadius * 0.5, detailLevel + 1);
+			Children[3] = new UPlanetQuadTree(Settings, PlayerPosition, dict[3], axisA, axisB, localRadius * 0.5, detailLevel + 1);
 
 			for (int i = 0; i < 4; ++i)
 			{
+				Children[i]->ActorLocation = ActorLocation;
 				Children[i]->ConstructQuadTree();
 			}
 		}
@@ -73,14 +73,31 @@ void UPlanetQuadTree::ConstructQuadTree()
 	}
 }
 
+void UPlanetQuadTree::DestructQuadTree()
+{
+	if (!Children.IsEmpty())
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			Children[i]->DestructQuadTree();
+		}
+
+		Children.Empty();
+	}
+}
+
 void UPlanetQuadTree::CalculateMesh(TArray<FVector>& vertices, TArray<int>& triangles, TArray<FColor>& colors, int triangleOffset) const
 {
-	if (Settings.resolutionPerChunk < 4 || detailLevel == MAXLOD) return;
+	// if (Settings.resolutionPerChunk < 4 /*|| detailLevel == MAXLOD*/) return;
 
 	FColor VertColor = detailColor[detailLevel];
 	int resolution = 4;
-	int triIndex = 0, total = resolution - 1,
-		i = 0, y = 0, x = 0, resSqrd = resolution * resolution;
+	int triIndex = 0;
+	int total = resolution - 1;
+	int i = 0;
+	int y = 0;
+	int x = 0;
+	int resSqrd = resolution * resolution;
 
 	vertices.SetNumZeroed(resSqrd);
 	triangles.SetNumZeroed(total * total * 6);
@@ -143,24 +160,56 @@ bool UPlanetQuadTree::CheckLOD(const FVector& NewLocation)
 {
 	// Confirmed passed vector equivellent to our stored reference
 	// UE_LOG(LogTemp, Warning, TEXT("UPlanetQuadTree: \n -NewLocation %s\n -StoredPlayerPosition: %s"), *NewLocation.ToString(), *PlayerPosition.ToString())
-	bool bChanged = false;
 	PlayerPosition = NewLocation;
+	const double distance = GetPlayerDistance();
 
-	if (!Children.IsEmpty())
+	if (ShouldDecreaseLOD(distance))
 	{
-		for (int i = 0; i < 4; ++i)
-			if (Children[i]->CheckLOD(NewLocation)) bChanged = true;
+		return true;
 	}
-	else
+	else if (ShouldIncreaseLOD(distance))
 	{
-		if (FVector::DistSquared(position * Settings.radius, PlayerPosition) <= FMath::Square(Settings.LODSettings.LevelsOfDetail[detailLevel]))
+		if (!Children.IsEmpty())
 		{
-			ConstructQuadTree();
-			bChanged = true;
+			for (int i = 0; i < 4; ++i)
+				if (Children[i]->CheckLOD(NewLocation))
+					return true;
+		}
+		else
+		{
+			return true;
 		}
 	}
 	
-	return bChanged;
+	return false;
+}
+
+bool UPlanetQuadTree::CheckLODDistance() const
+{
+	const double distance = GetPlayerDistance();
+	UE_LOG(LogTemp, Warning, TEXT("UPlanetQuadTree: \n -- Distance: %f"), distance);
+
+	if (!Children.IsEmpty())
+	{
+		return ShouldIncreaseLOD(distance) || ShouldDecreaseLOD(distance);
+	}
+
+	return ShouldDecreaseLOD(distance);
+}
+
+bool UPlanetQuadTree::ShouldIncreaseLOD(const double InDistance) const
+{
+	return Settings.LODSettings.LevelsOfDetail.IsValidIndex(detailLevel) && InDistance < Settings.LODSettings.LevelsOfDetail[detailLevel];
+}
+
+bool UPlanetQuadTree::ShouldDecreaseLOD(const double InDistance) const
+{
+	return InDistance > Settings.LODSettings.LevelsOfDetail[detailLevel];
+}
+
+double UPlanetQuadTree::GetPlayerDistance() const
+{
+	return (PlayerPosition - (ActorLocation + (position.GetSafeNormal() * Settings.radius))).Size();
 }
 
 #pragma region Debugging

@@ -2,6 +2,8 @@
 
 
 #include "AnatomicalStructure.h"
+#include "Anatomy/Organs/Organ.h"
+#include "Anatomy/Systems/OrganSystem.h"
 
 // Sets default values for this component's properties
 UAnatomicalStructure::UAnatomicalStructure()
@@ -13,14 +15,32 @@ UAnatomicalStructure::UAnatomicalStructure()
 	// ...
 }
 
-
 // Called when the game starts
 void UAnatomicalStructure::BeginPlay()
 {
 	Super::BeginPlay();
 
 	// ...
-	
+	OrganSystems.Reserve(OrganSystemClasses.Num());
+	TArray<TSubclassOf<UOrgan>> OrgansToSpawn;
+	for (const auto& OrganSystemClass : OrganSystemClasses)
+	{
+		UOrganSystem* NewSystem = NewObject<UOrganSystem>(this, OrganSystemClass);
+
+		if (NewSystem)
+		{
+			OrganSystems.Add(NewSystem);
+			for (const auto& OrganClass : NewSystem->GetOrganClasses()) 
+				OrgansToSpawn.AddUnique(OrganClass);
+		}
+	}
+
+	Organs.Reserve(OrgansToSpawn.Num());
+	for (const auto& OrganClass : OrgansToSpawn)
+	{
+		UOrgan* NewOrgan = NewObject<UOrgan>(this, OrganClass);
+	}
+
 }
 
 // Called every frame

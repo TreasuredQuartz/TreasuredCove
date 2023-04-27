@@ -5,7 +5,7 @@
 #include "GACharacter.h"
 #include "GAActor.h"
 
-#include "SenseComponent.h"
+#include "SenseReceiverComponent.h"
 #include "InteractionInterface.h"
 
 #include "Kismet/KismetSystemLibrary.h"
@@ -21,10 +21,10 @@ void UGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	if (CommitAbility(Handle, ActorInfo, ActivationInfo)) // Commit...
 	{
 		// ...Everything else we do goes here! Make sure to call EndAbility()!!!
-		float Range = 800.f;
+		float Range = 200.f;
 		FHitResult Hit;
-		FVector Start = GetOwningCharacter()->Sight->GetComponentLocation();
-		FVector End = Start + Range * GetOwningCharacter()->Sight->GetComponentRotation().Vector();
+		FVector Start = GetOwningCharacter()->AISenses->GetSensorLocation(FName("SensorSight"));
+		FVector End = Start + Range * GetOwningCharacter()->AISenses->GetSensorRotation(FName("SensorSight")).Vector();
 		FCollisionQueryParams CollisionParems;
 
 		DrawDebugLine(GetWorld(), Start, End, FColor::Purple);
@@ -45,27 +45,7 @@ void UGA_Interact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 					}
 					else
 					{
-						AGACharacter* Character = GetOwningCharacter();
-
-						if (Character)
-						{
-							AActor* Item = Character->CurrentInteractItem;
-
-							if (Item)
-							{
-								IInteractionInterface::Execute_InteractedWith(Item, Character);
-								Character->CurrentInteractItem = nullptr;
-								EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-							}
-							else
-							{
-								EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-							}
-						}
-						else
-						{
-							EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-						}
+						EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 					}
 				}
 				else

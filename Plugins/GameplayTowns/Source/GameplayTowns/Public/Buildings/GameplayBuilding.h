@@ -11,15 +11,22 @@ class APawn;
 
 class UTownSystemComponent;
 class AGameplayTown;
+class AGameplayRoom;
 
 UCLASS()
 class GAMEPLAYTOWNS_API AGameplayBuilding : public AActor
 {
 	GENERATED_BODY()
+
+private:
+	UPROPERTY(VisibleAnywhere)
+	TArray<AGameplayRoom*> Rooms;
 	
 public:	
 	// Sets default values for this actor's properties
 	AGameplayBuilding();
+
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 	UFUNCTION()
 	void EnterBuilding(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
@@ -39,6 +46,8 @@ public:
 	UBoxComponent* EntryPoint;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<UTownSystemComponent*> Occupents;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TSubclassOf<AGameplayRoom>> RoomClasses;
 
 	UFUNCTION()
 	void AdmitSingleOccupent(UTownSystemComponent* NewOccupent);

@@ -48,8 +48,9 @@ void AZombie_Spawner::OnZombieDamaged(AActor* DamagedActor, float Damage, const 
 {
 	APawn* PawnCauser = Cast<APawn>(DamageCauser);
 	
-	if (!PawnCauser || !DamagedActor) return;
+	if (!PawnCauser || !DamagedActor || !Manager) return;
 
+	UE_LOG(LogTemp, Warning, TEXT("Spawned Zombie has taken damage..."));
 	Manager->AddPoints(PawnCauser, 10);
 
 	if (DamagedActor->ActorHasTag(FName("death.headshot")))
@@ -59,6 +60,15 @@ void AZombie_Spawner::OnZombieDamaged(AActor* DamagedActor, float Damage, const 
 	else if (DamagedActor->ActorHasTag(FName("death.melee")))
 	{
 		Manager->AddPoints(PawnCauser, 30);
+	}
+
+	if (AGACharacter* Character = Cast<AGACharacter>(DamagedActor))
+	{
+		if (Character->AIInfo.CurrentAITargetStats.CurrentHealth <= 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Spawned Zombie has died..."));
+			Manager->SpawnedEnemyRemoved(DamagedActor, DamageCauser);
+		}
 	}
 }
 

@@ -1,11 +1,12 @@
+
+
+
 #include "VehicleMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 
-UVehicleMovementComponent::UVehicleMovementComponent(class FObjectInitializer const & ObjectInitializer)
-	: Super(ObjectInitializer)
-	, Mass(100)
-	, Acceleration(100)
+UVehicleMovementComponent::UVehicleMovementComponent()
 {
+
 }
 
 void UVehicleMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -30,6 +31,16 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime, enum ELevelTick T
 			SafeMoveUpdatedComponent(Velocity, UpdatedComponent->GetComponentRotation(), true, Hit);
 		}
 	}
+}
+
+void UVehicleMovementComponent::Update(float DeltaTime)
+{
+	Super::Update(DeltaTime);
+}
+
+void UVehicleMovementComponent::UpdateState(float DeltaTime)
+{
+	Super::UpdateState(DeltaTime);
 }
 
 void UVehicleMovementComponent::UpdateForwardForce(float DeltaTime)

@@ -19,6 +19,7 @@
 
 class UBoxComponent;
 class UItemEditor;
+class UItemPopupData;
 class UCommandMenu;
 class UGameplayAbilitySet;
 
@@ -27,16 +28,21 @@ class UGameplayAbilitySet;
  */
 UCLASS(Blueprintable)
 class TREASUREDCOVE_API AGAWeapon : 
-	public AGAActor,
-	public IPickupInterface
+	public AGAActor
 {
 	GENERATED_BODY()
 	
 protected:
+	bool bBeingPickedUp;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	FName Name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	UTexture2D* Texture;
+
+	UPROPERTY(Instanced, EditDefaultsOnly, Category = "Item")
+	UItemPopupData* ItemData;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	TSubclassOf<UCommandMenu> ActiveMenuClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
@@ -51,37 +57,29 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	TArray<int> MaxSubMenuSlots;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
-	TArray<FSavedAttribute> Attributes;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	class UMeshComponent* Mesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	class UBoxComponent* Box;
-
-	template<class T>
-	T* GetMesh()
-	{
-		return Cast<T>(Mesh);
-	}
-
-	UFUNCTION(BlueprintPure, meta = (DisplayName = "Get Mesh"))
-	class USkeletalMeshComponent* BP_GetMesh()
-	{
-		return Cast<USkeletalMeshComponent>(Mesh);
-	}
-
-	//
-	UFUNCTION()
-	void GetItemInfo(FGAItemInfo& Info);
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	EWeaponType WeaponType;
 
 	// This would be where the projectile from an ability would spawn
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	FVector AbilitySpawnLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
+	TArray<FSavedAttribute> Attributes;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	class UBoxComponent* Box;
+
+public:
+	// Used by owning character to throw held item
+	void LaunchItem(const FVector& LaunchVelocity) const;
+
+	//
+	UFUNCTION()
+	void GetItemInfo(FGAItemInfo& Info);
+
+	UFUNCTION(BlueprintCallable, Category="Item")
+	UObject* GetItemData();
 
 	virtual void InteractedWith_Implementation(AActor* OtherActor) override;
 
@@ -90,15 +88,12 @@ public:
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION()
+	void OnPhysicsSleep(UPrimitiveComponent* SleepingComponent, FName BoneName);
 
 public:
 	FItemKey GetPickup_Implementation()
 	{
 		return FItemKey(Name, 1);
-	}
-
-	UStaticMeshComponent* GetPickupMesh_Implementation()
-	{
-		return Cast<UStaticMeshComponent>(Mesh);
 	}
 };

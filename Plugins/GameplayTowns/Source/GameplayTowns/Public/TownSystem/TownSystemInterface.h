@@ -16,7 +16,7 @@ class UTownSystemComponent;
 * 
 * Could not cast to Interface in Blueprint!
 * Why does the GAS (Gameplay Ability System) use the previous Interface Type?
-* Because it is mostly used in c++ at the moment and does not need to be called in blueprints!
+* Use the library to grab the component instead.
 */
 UINTERFACE(MinimalAPI, meta = (CannotImplementInterfaceInBlueprint))
 class UTownSystemInterface : public UInterface

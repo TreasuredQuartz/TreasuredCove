@@ -9,6 +9,22 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameSpeedModified, float, GameSpeed);
 
+UENUM(BlueprintType)
+enum class ETimeType : uint8
+{
+	Milliseconds,
+	Seconds,
+	Minutes,
+	Hours,
+	Days,
+	Months,
+	Years,
+	Decades,
+	Centuries,
+	Eras,
+	Num UMETA(Hidden)
+};
+
 UCLASS()
 class GAMEPLAYTOWNS_API UGameplayClockComponent 
 	: public UActorComponent,
@@ -37,17 +53,9 @@ public:
 	// float TownSpeedMultiplier;
 
 	int DayCounter;
-	int Milliseconds;
-	int Seconds;
-	int Minutes;
-	int Hours;
-	int Days;
-	int Months;
-	int Years;
-	int Centuries;
-	int Eras;
 
-	TArray<int> GameDate;
+	UPROPERTY(EditDefaultsOnly, EditFixedSize, meta = (EditFixedOrder, ArraySizeEnum = "ETimeType"))
+	int GameDate[ETimeType::Num];
 
 public:
 	float GetSolarTime();

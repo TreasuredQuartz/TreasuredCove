@@ -4,21 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
-#include "Templates/SubclassOf.h"
-#include "GameFramework/PawnMovementComponent.h"
+#include "ChaosVehicleMovementComponent.h"
 #include "VehicleMovementComponent.generated.h"
 
 /**
  * Base Component holding common variables and functions useful to handling the vehicle simulation of an actor
  */
-UCLASS(Abstract, hidecategories = (PlanarMovement, "Components|Movement|Planar", Activation, "Components|Activation"))
+UCLASS(/*Abstract, hidecategories = (PlanarMovement, "Components|Movement|Planar", Activation, "Components|Activation")*/)
 class PHYSXFLYINGVEHICLES_API UVehicleMovementComponent : 
-	public UPawnMovementComponent
+	public UChaosVehicleMovementComponent
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
+
+public:
+	UVehicleMovementComponent();
 
 public:
 	void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void Update(float DeltaTime) override;
+	void UpdateState(float DeltaTime) override;
 
 	float Mass;
 	FVector Momentum;

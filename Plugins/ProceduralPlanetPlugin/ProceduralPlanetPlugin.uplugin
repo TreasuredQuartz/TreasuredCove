@@ -28,12 +28,16 @@
 	],
 	"Plugins": [
 		{
+			"Name": "RuntimeMeshComponent",
+			"Enabled": true
+		},
+		{
 			"Name": "ProceduralMeshComponent",
 			"Enabled": true
 		},
 		{
 			"Name": "SimplexNoise",
-			"Enabled":  true
+			"Enabled": true
 		}
 	]
 }

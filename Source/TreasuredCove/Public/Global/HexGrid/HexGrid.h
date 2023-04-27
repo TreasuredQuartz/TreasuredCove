@@ -29,7 +29,7 @@ private:
 	uint8 SurfaceHeight;
 
 	UPROPERTY()
-	UProceduralMeshComponent* PMesh;
+	URuntimeMeshComponentStatic* Mesh;
 protected:
 	TArray<uint8> Types;
 	TArray<int32> Height;

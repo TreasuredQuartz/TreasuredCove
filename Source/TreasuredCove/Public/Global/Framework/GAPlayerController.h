@@ -65,6 +65,7 @@ public:
 	*/
 
 	//
+	void OnDeath();
 	void OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
 	void OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
 	void OnHealthModified(float Health, float MaxHealth);
@@ -78,7 +79,9 @@ public:
 	//
 	void OnDesiredLocationCleared();
 	void OnDesiredLocationSet(FVector DesiredLocation);
+	UFUNCTION()
 	void OnUpdateCurrentBuilding(FName CurrentBuildingName);
+	UFUNCTION()
 	void OnUpdateTargetBuilding(FName TargetBuildingName);
 
 	//------------------------------
@@ -108,7 +111,7 @@ public:
 	// Inventory Pass Functions
 	//------------------------------
 
-	void NotifyPickup(FName ItemName, bool CanPickup);
+	void NotifyCanInteract(FName ItemName, bool CanPickup);
 
 	// Pickup item into our inventory
 	void OnPickupItem(FGAItemInfo& ItemInfo);
@@ -126,7 +129,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnMoveItem(uint8 From, uint8 To);
 	UFUNCTION(BlueprintCallable)
-	void OnDropItem(uint8 Slot);
+	void OnDropItemFromInventory(uint8 Slot);
+	void OnDropItem();
 
 	//------------------------------
 	// Dialogue Functions

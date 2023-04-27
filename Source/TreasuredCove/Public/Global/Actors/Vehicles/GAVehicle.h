@@ -3,11 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "WheeledVehiclePawn.h"
+//#include "GameFramework/Pawn.h"
+#include "VehicleMovementReplication.h"
 #include "AbilitySystemInterface.h"
 #include "InteractionInterface.h"
+#include "GameplayTagContainer.h"
+#include "GameplayAbilitySpecHandle.h"
+#include "SavedAttribute.h"
 #include "GAVehicle.generated.h"
 
+class UGameplayAbility;
+class UAbilitySet;
 class UAttributeSet;
 class UBoxComponent;
 class UMeshComponent;
@@ -17,41 +24,98 @@ class UGASystemComponent;
 
 UCLASS()
 class TREASUREDCOVE_API AGAVehicle :
-	public APawn,
+	/*public APawn,*/
+	public AWheeledVehiclePawn,
 	public IAbilitySystemInterface,
 	public IInteractionInterface
 {
 	GENERATED_BODY()
 
+public:
 	// Override function from ability system interface
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	// Override Getter from base Pawn class
-	virtual UPawnMovementComponent* GetMovementComponent() const override;
+
 public:
 	// Sets default values for this pawn's properties
 	AGAVehicle();
 
-	float ThrustSpeed;
-	float CurrentSpeed;
-
-	TArray<AGACharacter*> Passengers;
-	AGACharacter* Driver;
-
+private:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", meta = (AllowPrivateAccess = "true"))
+	FName Name;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Vehicle", meta = (AllowPrivateAccess = "true"))
+	uint8 bAutoPilot:1;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", meta = (AllowPrivateAccess = "true"))
 	int32 MaxPassengers;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Vehicle", meta = (AllowPrivateAccess = "true"))
+	float ThrustSpeed;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Vehicle|Abilities", meta = (AllowPrivateAccess = "true"))
+	UAbilitySet* InitialActiveAbilities;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Vehicle|Abilities", meta = (AllowPrivateAccess = "true"))
+	UDataTable* InitialStatsTable;
+	// Attributes to save
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vehicle|Abilities", meta = (AllowPrivateAccess = "true"))
+	TArray<FSavedAttribute> AttributesToSave;
+
+	TArray<FGameplayAbilitySpecHandle> ActiveAbilityHandles;
+
+#pragma region GameplayTagMembers
+	/** Gameplay Tags */
+private:
+	//
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle|Abilities|Tags", meta = (AllowPrivateAccess = "true"))
+	FGameplayTag FullHealthTag;
+	//
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle|Abilities|Tags", meta = (AllowPrivateAccess = "true"))
+	FGameplayTag FullAmmoTag;
+	//
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle|Abilities|Tags", meta = (AllowPrivateAccess = "true"))
+	FGameplayTag FullManaTag;
+	//
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle|Abilities|Tags", meta = (AllowPrivateAccess = "true"))
+	FGameplayTag FullStaminaTag;
+	//
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle|Abilities|Tags", meta = (AllowPrivateAccess = "true"))
+	FGameplayTag FullExperienceTag;
+	//
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vehicle|Abilities|Tags", meta = (AllowPrivateAccess = "true"))
+	FGameplayTag FullUltimateTag;
+#pragma endregion
+
+	float CurrentSpeed;
+	AGACharacter* Driver;
+	TArray<AGACharacter*> Passengers;
+
+	//~ Components ~//
+public:
 	// Abilities Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UGASystemComponent* AbilitySystem;
-	// Attribute Set Component
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
-	TArray<TSubclassOf<UAttributeSet>> AttributeSet;
+
+	// Attribute Set Class Components
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	TArray<TSubclassOf<UAttributeSet>> AttributeSetClasses;
+
 	// Box Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* Collision;
-	// Movement Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UVehicleMovementComponent* Movement;
 
+	// Movement Component
+	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UVehicleMovementComponent* Movement;*/
+
+	// Collision interaction events
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+public:
+	void LaunchVehicle(const FVector& LaunchVelocity);
+	void AddForce(const FVector& Force);
+
+	//~ InputHandling ~//
+public:
 	// Interaction
 	virtual void InteractedWith_Implementation(AActor* OtherActor) override;
 	void Drive(AGACharacter* Character);
@@ -86,9 +150,28 @@ public:
 	void Throttle();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void Brake();
+
 public:
-	//
+	//Begin APawn Interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void PossessedBy(AController* Controller) override;
+	virtual void UnPossessed() override;
+	virtual void OnRep_Controller() override;
+	//End APawn Interface
+
+	//Begin AGAVehicle Interface
+	float GetThrustSpeed() const { return ThrustSpeed; };
+	void SetThrustSpeed(float InThrustSpeed) { ThrustSpeed = InThrustSpeed; }
+	void AddGameplayTag(const FGameplayTag& NewTag);
+	void RemoveGameplayTag(const FGameplayTag& OldTag);
+	void InitializeAbilitySystem();
+	void AquireAbility(TSubclassOf<UGameplayAbility> InAbility, FGameplayAbilitySpecHandle& OutHandle);
+	void AquireAbilities(TArray<TSubclassOf<UGameplayAbility>> InAbilities, TArray<FGameplayAbilitySpecHandle>& OutHandles);
+	void InitializeAttributeSet(UAttributeSet* Set);
+	void PopulateSavedAttributes(const TArray<FSavedAttribute>& Attributes);
+	//End AGAVehicle Interface
+
+	//~ Animation Montages ~//
 public:
 	//
 	UPROPERTY()
@@ -100,5 +183,16 @@ public:
 	UPROPERTY()
 	TArray<UAnimMontage*> CharacterExitMontages;
 
+public:
 
+	//////////////////////////////////////////////////////////////////////////
+	// Server RPC that passes through to CharacterMovement (avoids RPC overhead for components).
+	// The base RPC function (eg 'ServerMove') is auto-generated for clients to trigger the call to the server function,
+	// eventually going to the _Implementation function (which we just pass to the CharacterMovementComponent).
+	//////////////////////////////////////////////////////////////////////////
+
+	UFUNCTION(unreliable, server, WithValidation)
+	void ServerMovePacked(const FVehicleServerMovePackedBits& PackedBits);
+	void ServerMovePacked_Implementation(const FVehicleServerMovePackedBits& PackedBits);
+	bool ServerMovePacked_Validate(const FVehicleServerMovePackedBits& PackedBits);
 };

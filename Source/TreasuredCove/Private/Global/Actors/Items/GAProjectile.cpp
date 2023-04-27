@@ -7,6 +7,7 @@
 
 #include "DestructibleMeshInterface.h"
 
+#include "GACharacter.h"
 #include "AbilitySystemComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/Engine.h"
@@ -57,13 +58,16 @@ UGAProjectileMovementComponent* AGAProjectile::GetProjectileMovementComponent()
 
 void AGAProjectile::OnHitPawn_Implementation(const FHitResult& HitResult)
 {
-	if (HitResult.GetActor() && HitResult.GetActor() != GetOwner() && UGALibrary::GetAbilitySystemComponent(HitResult.GetActor()))
+	if (HitResult.GetActor() && HitResult.GetActor() != GetOwner() && HitResult.GetActor() != GetInstigator() && EffectSpecHandleFromAbility.IsValid() && UGALibrary::GetAbilitySystemComponent(HitResult.GetActor()))
 	{
-		FGameplayEffectContextHandle Context;
-		Context.AddInstigator(GetOwner(), this);
-		Context.AddHitResult(HitResult);
-		EffectSpecHandleFromAbility.Data->SetContext(Context);
+		UE_LOG(LogTemp, Warning, TEXT("Projectile trace hit pawn!"));
+		
 		UGALibrary::ApplyGESpecHandleToTargetDataSpecsHandle(EffectSpecHandleFromAbility, UGALibrary::AbilityTargetDataFromActor(HitResult.GetActor()));
+		if (AGACharacter* HitCharacter = Cast<AGACharacter>(HitResult.GetActor()))
+		{
+			// Force == Velocity * Mass
+			HitCharacter->SimulateHit(HitResult, GetVelocity() * GetProjectileMovementComponent()->ProjectileGravityScale * 0.01);
+		}
 	}
 }
 

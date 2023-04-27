@@ -80,6 +80,21 @@ public:
 	void SetFromLineTrace(const FHitResult& InHit, const float InLineDist, const bool bIsClimbableWall);
 };
 
+USTRUCT(BlueprintType)
+struct TREASUREDCOVE_API FWallStepDownResult
+{
+	GENERATED_BODY()
+
+public:
+	uint32 bComputedWall : 1;
+	FFindWallResult WallResult;
+
+	FWallStepDownResult()
+		: bComputedWall(false)
+	{
+	}
+};
+
 /** This class is being designed in tandem with ReidsChannel (YouTube)
  * The WallRunning logic comes from his tutorial but it has been moved from the ACharacter to here.
  */
@@ -92,22 +107,49 @@ class TREASUREDCOVE_API UGACharacterMovementComponent : public UCharacterMovemen
 	
 #pragma region Defaults
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Movement|Grounded", Meta = (AllowPrivateAccess = "true"))
+	// Sprinting members
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sprinting", Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanSprint:1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sprinting", Meta = (AllowPrivateAccess = "true"))
 	float MaxSprintSpeed = 800.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Movement|Grounded", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sprinting", Meta = (AllowPrivateAccess = "true"))
 	float SprintAcceleration = 2000.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
-	float LineTraceVerticalTolerance = 50.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
-	float MaxWallRunSpeed = 600.f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
-	float ForwardWallRunThreshold = 0.25;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
+	// Sliding members
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanSlide:1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	uint8 bConsecutiveSlidesLoseMomentum:1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	float MaxSlideSpeed = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	float SlideAcceleration = 500000.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	float SlideGroundFriction = 0.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	float BrakingDecelerationSliding = 800.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	float SlideConsecutiveResetDelay = 3.0f;
+
+	// Wall running members
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanWallRun:1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
+	float LineTraceVerticalTolerance = 20.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
+	float MaxWallRunSpeed = 2000.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
+	float ForwardWallRunThreshold = 0.3;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
 	float MaxWallRunDuration = 0.5;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character|Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
+	// Climbing members
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Climbing", Meta = (AllowPrivateAccess = "true"))
+	bool bCanClimb = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Climbing", Meta = (AllowPrivateAccess = "true"))
 	float MaxClimbSpeed = 200.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Climbing", Meta = (AllowPrivateAccess = "true"))
+	float BrakingDecelerationClimbing = 4096;
 #pragma endregion
 
 #pragma region Overrides
@@ -119,15 +161,25 @@ public:
 	//End UActorComponent Interface
 
 	//BEGIN UCharacterMovementComponent Interface
+
 	virtual void OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity) override;
 	virtual float GetMaxSpeed() const override;
 	virtual float GetMaxAcceleration() const override;
+	virtual float GetMaxBrakingDeceleration() const override;
 	virtual void UpdateFromCompressedFlags(uint8 flags) override;
 	virtual void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
+	// BEGIN Jumping
 	virtual bool CanAttemptJump() const override;
 	virtual bool DoJump(bool bReplayingMoves) override;
 	virtual void ProcessLanded(const FHitResult& Hit, float remainingTime, int32 Iterations) override;
+	// END Jumping
+	
+	// BEGIN Crouching
+	virtual void Crouch(bool bClientSimulation) override;
+	virtual void UnCrouch(bool bClientSimulation) override;
+	// END Crouching
+
 	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
 	//END UCharacterMovementComponent Interface
 #pragma endregion
@@ -142,8 +194,30 @@ public:
 	bool SweepTrace(FHitResult& Hit, const FVector& start, const FVector& end) const;
 #pragma endregion
 
+#pragma region Sliding
+public:
+	//
+	FORCEINLINE bool CanEverSlide() const { return bCanSlide; };
+	//
+	bool CanSlide() const;
+	// 
+	void StartSliding();
+	//
+	void StopSliding();
+	// Sets CurrentSlides to 0
+	void ResetSliding();
+	// Returns true if we are in a custom movement mode, that movement mode is Sliding, and UpdatedComponent is valid
+	bool IsSliding() const;
+	// Find acceleration based off of current slope
+	FVector CalculateFloorInfluence(const FVector& InSlope) const;
+#pragma endregion
+
 #pragma region Sprinting
 public:
+	//
+	FORCEINLINE bool CanEverSprint() const { return bCanSprint; };
+	//
+	bool IsSprinting() const;
 	// Sets sprinting to be enabled or disabled
 	UFUNCTION(BlueprintCallable, Category = "Character|Movement")
 	void StartSprinting();
@@ -161,8 +235,15 @@ public:
 	void ComputeWallDist(const FVector& CapsuleLocation, float LineDistance, float SweepDistance, FFindWallResult& OutWallResult, float SweepRadius, const FHitResult* ForwardSweepResult = NULL) const;
 	//
 	void FindWall(const FVector& CapsuleLocation, FFindWallResult& OutWallResult, bool bCanUseCachedLocation, const FHitResult* ForwardSweepResult = NULL) const;
+
 #pragma region WallRunning
 public:
+	//
+	ENavType GetWallRunSide() const { return WallRunSide; };
+	//
+	FVector GetWallRunDirection() const { return WallRunDirection; };
+	//
+	FORCEINLINE bool CanEverWallRun() const { return bCanWallRun; };
 	// Requests that the player begins wall running
 	UFUNCTION(BlueprintCallable, Category = "Character|Movement")
 	bool BeginWallRun();
@@ -171,7 +252,7 @@ public:
 	void EndWallRun();
 	// Reutrns true if the keys required for wall running are down
 	bool AreRequiredKeysDown() const;
-	//Returns true if the player is next to a wall that can be wall run
+	// Returns true if the player is next to a wall that can be wall run
 	bool IsNextToWall(float vertical_tolerance = 0.0f);
 	// Finds the wall run direction and side based on the specified surface normal
 	void FindWallRunDirectionAndSide(const FVector& surface_normal, FVector& direction, ENavType& side) const;
@@ -191,6 +272,8 @@ private:
 
 #pragma region Climbing
 public:
+	//
+	FORCEINLINE bool CanEverClimb() const { return bCanClimb; };
 	// Requests the player to start climbing
 	bool BeginClimb();
 	// Called to set Movement mode off of climbing
@@ -202,7 +285,7 @@ public:
 	// Actual velocity calulcator for climbing
 	void PhysClimbing(float DeltaTime, int32 Iterations);
 	// 
-	void MoveAlongWall(float DeltaTime, int32 Iterations);
+	void MoveAlongWall(const FVector& InVelocity, float DeltaSeconds, FHitResult* OutHit);
 	//
 	void ClimbLedge(float DeltaTime, int32 Iterations);
 	// 
@@ -218,25 +301,43 @@ public:
 
 #pragma region CompressedFlags
 private:
-	uint8 bWantsToSprint : 1;
-	uint8 bForwardKeysAreDown : 1;
+	uint8 bWantsToSprint:1;
+	uint8 bWantsToSlide:1;
+	uint8 bForwardKeysAreDown:1;
 #pragma endregion
 
 #pragma region PrivateVariables
 private:
-	//
+	// The value at beginplay
+	bool bDefaultUseControllerRotationYaw = false;
+	// The value at beginplay
+	bool bDefaultOrientRotationToMovement = true;
+	// Attached to ledge
 	bool bClimbingLedge = false;
 	// Holds the value before we enter Wall Climbing state
-	bool bPrevOrientRotationToMovement;
+	bool bPrevOrientRotationToMovement = false;
+	// Holds the value before we enter Wall Climbing state
+	bool bPrevUseControllerRotationYaw = false;
 	// True if the sprint key is down
 	bool bSprintKeyDown = false;
+
+	// Amount of consecutive slides
+	uint32 CurrentSlides = 0;
+
+	// The value at beginplay
+	float DefaultGroundFriction = 0.f;
 	// The amount of time spent on current wall and traveling in current direction.
 	float WallRunDuration = 0.0f;
+	// The amount of time before resetting slide strength
+	float SlideConsecutiveResetDuration = 0.0f;
+
+	// The value at begin play
+	FVector DefaultMeshRelativeLocation = FVector::ZeroVector;
 	// The direction the character is currently wall running in.
 	FVector WallRunDirection;
 	// The side of the wall the player is running on.
 	ENavType WallRunSide;
-	//
+	// Comparable to CurrentFloor but instead for walls
 	FFindWallResult CurrentWall;
 #pragma endregion
 };

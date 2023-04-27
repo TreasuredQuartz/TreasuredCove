@@ -4,13 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ProceduralMeshComponent.h"
 
 #include "PlanetSettings.h"
 #include "PlanetShapeGenerator.h"
 #include "PlanetMaterialGenerator.h"
+
+#include "Components/TimelineComponent.h"
 #include "ProceduralPlanet.generated.h"
 
+class URuntimeMeshComponentStatic;
 class UCameraComponent;
 class UPlanetLandscape;
 
@@ -26,12 +28,15 @@ public:
 	FPlanetMaterialGenerator MaterialGenerator;
 private:
 	bool bIsValid;
+	float LODCheckPeriod;
+	float TimeSinceLastLODCheck;
 	FVector playerLocation;
 	FVector playerDirection;
 
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "false"))
-	TArray<UProceduralMeshComponent*> Meshs;
+	TArray<URuntimeMeshComponentStatic*> RuntimeMeshs;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "false"))
 	TArray<UPlanetLandscape*> Landscapes;
 
@@ -46,7 +51,7 @@ public:
 	void OnShapeSettingsUpdated();
 	void OnMaterialSettingsUpdated();
 
-	void checkCurrentView();
+	void checkCurrentView(float DeltaTime);
 	void CheckLOD();
 	bool LODLineTrace();
 
@@ -74,6 +79,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	// Called every frame inside editor with a valid editor-type world. "Level Editor" for instance
+	void EditorTick(float DeltaTime);
 
 public:
 	/* Components */

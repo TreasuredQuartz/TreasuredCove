@@ -17,7 +17,7 @@ AWaterBodyProcedural::AWaterBodyProcedural(const FObjectInitializer& ObjectIniti
 	WaterBodyType = EWaterBodyType::Transition;
 
 #if WITH_EDITOR
-	ActorIcon = FWaterIconHelper::EnsureSpriteComponentCreated(this, TEXT("/Water/Icons/WaterBodyCustomSprite"));
+	// ActorIcon = FWaterIconHelper::EnsureSpriteComponentCreated(this, TEXT("/Water/Icons/WaterBodyCustomSprite"));
 #endif
 
 #if WITH_EDITORONLY_DATA

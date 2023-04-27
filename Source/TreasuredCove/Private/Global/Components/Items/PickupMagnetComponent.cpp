@@ -21,9 +21,13 @@ UPickupMagnetComponent::UPickupMagnetComponent()
 
 	// ...
 	PickupMagnetOverlap =
-		CreateDefaultSubobject<USphereComponent>(TEXT("Magnet Collision"));
+		CreateDefaultSubobject<USphereComponent>(TEXT("Magnet Pickup Collision"));
+	PickupMagnetOverlap->SetSphereRadius(PickupRadius);
 	PickupMagnetOverlap->OnComponentBeginOverlap.AddDynamic(this, &UPickupMagnetComponent::OnBeginOverlap);
+}
 
+void UPickupMagnetComponent::OnRegister()
+{
 	if (GetOwner())
 	{
 		if (!GetOwner()->GetRootComponent())
@@ -31,11 +35,20 @@ UPickupMagnetComponent::UPickupMagnetComponent()
 			GetOwner()->SetRootComponent(this);
 			PickupMagnetOverlap->SetupAttachment(GetOwner()->GetRootComponent());
 		}
-		else 
+		else
 		{
-			PickupMagnetOverlap->SetupAttachment(GetOwner()->GetRootComponent());
+			this->SetupAttachment(GetOwner()->GetRootComponent());
+			PickupMagnetOverlap->SetupAttachment(this);
 		}
 	}
+	else
+	{
+		PickupMagnetOverlap->SetupAttachment(this);
+	}
+
+	Super::OnRegister();
+
+	PickupMagnetOverlap->RegisterComponent();
 }
 
 // Called when the game starts
@@ -47,6 +60,8 @@ void UPickupMagnetComponent::BeginPlay()
 	PickupMagnetOverlap->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel1);
 	PickupMagnetOverlap->SetCollisionResponseToAllChannels(ECR_Ignore);
 	PickupMagnetOverlap->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1, ECR_Overlap);
+
+	PickupMagnetOverlap->SetSphereRadius(PickupRadius);
 }
 
 #if WITH_EDITOR
@@ -91,10 +106,10 @@ void UPickupMagnetComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 					const FVector::FReal Distance = Delta.Size();
 					const FVector::FReal MaxStep = 500 * DeltaTime;
 
-					if (FMath::IsNearlyZero(Distance))
+					if (FMath::IsNearlyZero(Distance) || Delta.IsNearlyZero())
 					{
-						CurrentAnimatingPickups.RemoveSingle(Pickup);
 						IPickupInterface::Execute_OnPickedUp(Pickup, GetOwner());
+						CurrentAnimatingPickups.RemoveSingle(Pickup);
 						continue;
 					}
 
@@ -127,17 +142,18 @@ void UPickupMagnetComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+void UPickupMagnetComponent::SetPickupRadius(float NewRadius)
+{
+	PickupRadius = NewRadius;
+	PickupMagnetOverlap->SetSphereRadius(NewRadius);
+}
+
 void UPickupMagnetComponent::OnBeginOverlap_Implementation(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Magnet Overlap..."));
-
 	if (OtherActor)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("...Other actor is valid..."));
-
 		if (OtherActor->GetClass()->ImplementsInterface(UPickupInterface::StaticClass()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("...Other actor implements pickup interface..."));
 			if (IPickupInterface::Execute_CanBePickedUp(OtherActor, GetOwner()))
 			{
 				CurrentAnimatingPickups.Add(OtherActor);
@@ -150,9 +166,18 @@ void UPickupMagnetComponent::OnBeginOverlap_Implementation(UPrimitiveComponent* 
 					if (UMovementComponent* MC = Cast<UMovementComponent>(AC))
 					{
 						MC->StopMovementImmediately();
+						MC->SetComponentTickEnabled(false);
+						MC->Deactivate();
+					}
+					else if (UPrimitiveComponent* PC = Cast<UPrimitiveComponent>(AC))
+					{
+						if (PC->IsSimulatingPhysics())
+						{
+							PC->SetSimulatePhysics(false);
+						}
 					}
 				}
-			} else UE_LOG(LogTemp, Warning, TEXT("...Other actor denies pickup..."));
+			}
 		}
 	}
 }

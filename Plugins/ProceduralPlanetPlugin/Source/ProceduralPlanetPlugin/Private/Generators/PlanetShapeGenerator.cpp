@@ -45,7 +45,7 @@ FVector FPlanetShapeGenerator::CalculatePointOnPlanet(FVector pointOnUnitSphere)
 	}
 	
 	elevationMinMax.Add(++elevation); // Add the value "elevation + 1" to "elevationMinMax"
-	return pointOnUnitSphere * elevation; // We are multiplying by elevation, but "Evualate" could return a value of 0. Add one before this then.
+	return pointOnUnitSphere * elevation; // We are multiplying by elevation, but "Evaluate" could return a value of 0. Add one before this then.
 }
 
 

@@ -43,6 +43,10 @@ public:
 	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "FloatingText")
 	void AddFloatingText_Client(const FText& Text, const FVector& WorldLocation);
 
+	// Callable function to destroy all currently active text actors (On Death for instance)
+	UFUNCTION()
+	void DestroyAllTexts();
+
 protected:
 	// Callback function called when a floating text actior is destroyed
 	UFUNCTION()

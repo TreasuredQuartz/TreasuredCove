@@ -2,6 +2,7 @@
 
 #include "GAProjectileMovementComponent.h"
 #include "Gameframework/PhysicsVolume.h"
+#include "DrawDebugHelpers.h"
 
 void UGAProjectileMovementComponent::BeginPlay()
 {
@@ -16,16 +17,20 @@ void UGAProjectileMovementComponent::TickComponent(float DeltaTime, enum ELevelT
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction); // Moves us?
 
 	FHitResult Hit;
-	if (GetWorld() && GetWorld()->LineTraceSingleByChannel(Hit, Start, Start + Velocity, ECollisionChannel::ECC_Pawn)) // Velocity after move?
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActors(IgnoredActors);
+	if (GetWorld() && GetWorld()->LineTraceSingleByChannel(Hit, Start, Start + Velocity, ECollisionChannel::ECC_Pawn, Params)) // Velocity after move?
 	{
+		IgnoredActors.Add(Hit.GetActor());
 		OnProjectileHitPawn.Broadcast(Hit);
 	}
+	// DrawDebugLine(GetWorld(), Start, Start + Velocity, FColor::Red, true, 1.0f);
 }
 
 FVector UGAProjectileMovementComponent::ComputeAcceleration(const FVector& InVelocity, float DeltaTime) const
 {
-	FVector Ret = Super::ComputeAcceleration(InVelocity, DeltaTime);
-
+	FVector Acceleration = Super::ComputeAcceleration(InVelocity, DeltaTime);
+	
 	if (bEnablePivotAxis)
 	{
 		// Our location before moving this frame
@@ -44,15 +49,17 @@ FVector UGAProjectileMovementComponent::ComputeAcceleration(const FVector& InVel
 		// Move Back toward center if we drift
 		FVector DriftCorrection = (PivotAxisOffset - CurrentLength) * CurrentOffset;
 
-		Ret += (Tangent.GetSafeNormal() + DriftCorrection) * PivotAxisRotationRate;
+		Acceleration += (Tangent.GetSafeNormal() + DriftCorrection) * PivotAxisRotationRate;
 	}
 
 	if (bEnableDrag)
 	{
-		Ret -= ComputeDrag(InVelocity);
+		Acceleration -= ComputeDrag(InVelocity);
 	}
 
-	return Ret;
+	Acceleration /= ProjectileGravityScale == 0 ? 1 : ProjectileGravityScale;
+
+	return Acceleration;
 }
 
 // D = Cd * (r * V^2) * A
@@ -62,7 +69,10 @@ FVector UGAProjectileMovementComponent::ComputeDrag(const FVector& InVelocity) c
 	// kg/m^3
 	float AirDensity = PhysicsVolume && PhysicsVolume->bWaterVolume ? PhysicsVolume->FluidFriction : 1.225;
 
-	return DragCoefficient * ((AirDensity * InVelocity * InVelocity) * 0.5) * Area;
+	// convert to kg/cm^3
+	AirDensity *= 0.000001;
+
+	return DragCoefficient * ((AirDensity * (InVelocity * InVelocity)) * 0.5) * Area;
 }
 
 void UGAProjectileMovementComponent::CalculateArea()

@@ -15,6 +15,7 @@
 class UGASystemComponent;
 class UAbilitySet;
 class UGameplayAbilityBase;
+class UProjectileMovementComponent;
 
 /** This Class serves a dual purpose:
 * - Reduce Complexity of AGACharacter.
@@ -36,10 +37,11 @@ private:
 	// These are the handles to the actual abilities 
 	// that will be given to us by the ability system
 	TArray< FGameplayAbilitySpecHandle > CurrentActiveAbilityHandles;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAActor|Animation", meta = (MakeEditWidget = true, AllowPrivateAccess = true))
-	FVector DominantHandOffset;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAActor|Animation", meta = (MakeEditWidget = true, AllowPrivateAccess = true))
-	FVector SupportingHandOffset;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAActor|Animation", meta = (AllowPrivateAccess = true))
+	UBillboardComponent* DominantHandOffset;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAActor|Animation", meta = (AllowPrivateAccess = true))
+	UBillboardComponent* SupportingHandOffset;
+
 public:	
 	// Sets default values for this actor's properties
 	AGAActor();
@@ -48,10 +50,11 @@ public:
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	// For animation blueprint dominant hand offset from default animation
-	virtual FVector GetHeldHandOffset() const;
+	virtual FTransform GetHeldHandOffset() const;
 
 	// For animation blueprint off hand offset from default animation
-	virtual FVector GetSupportingHandOffset() const;
+	virtual FTransform GetSupportingHandOffset() const;
+
 public:
 	/**	Begin UObject Interface	*/
 
@@ -86,21 +89,39 @@ public:
 	void UseMelee_Implementation() override;
 
 	/** End IControlInput Interface	*/
+
+
+	/** Begin Item Interface */
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	void OnPickedUp();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	void OnDropped();
+
+	/** End Item Interface */
 protected:
 	// The array of abilities that we currently can use
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	UAbilitySet* InitialActiveAbilities;
 
 	// The Datatable to initialize our attribute sets from
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	UDataTable* InitialStatsTable;
 
 public:
+	// Root Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USceneComponent* Root;
+
 	// Abilities Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UGASystemComponent* AbilitySystem;
 
 	// Attribute Set Component
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<UAttributeSet>> AttributeSetClasses;
+
+	// Projectile Movement Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UProjectileMovementComponent* ProjectileMovement;
 };

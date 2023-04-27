@@ -66,9 +66,11 @@ public:
 	void SetChunkIndex(const FIntVector&);
 	void SetCurrentLOD(int32);
 
+	// Getters //
+	int32 GetVoxelSize();
 public:	
 	void GenerateChunk();
-	void UpdateChunk(FIntVector inChunkIndex);
+	void UpdateChunk(FIntVector inChunkIndex, int32 InCurrentLOD);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Gameplay|Voxel")
 	void OnChunkUpdated();

@@ -85,7 +85,7 @@ void AHexGridManager::AddChunk()
 				}
 				else {
 					GEngine->AddOnScreenDebugMessage(3, 10.f, FColor::Red, "Chunk updated!");
-					Chunks[ChunkCoords.IndexOfByKey(LocVector)]->UpdateChunk(LocVector);
+					Chunks[ChunkCoords.IndexOfByKey(LocVector)]->UpdateChunk(LocVector, 1);
 				}
 			}
 		}

@@ -59,9 +59,11 @@ void AZombie_Manager::SpawnedEnemyRemoved(AActor* RemovedActor, AActor* Responsi
 {
 	--CurrentSpawnedEnemies;
 
+	UE_LOG(LogTemp, Warning, TEXT("Spawned Enemy was removed..."));
+
 	if (!RemovedActor || !ResponsibleActor || RemovedActor == ResponsibleActor)
 	{
-		// This was a suicide
+		// This was a suicide or a mistake
 		--TotalSpawnedEnemies;
 
 		if (TotalEnemiesToSpawn > TotalSpawnedEnemies)
@@ -73,17 +75,27 @@ void AZombie_Manager::SpawnedEnemyRemoved(AActor* RemovedActor, AActor* Responsi
 		}
 	}
 
-	if (TotalEnemiesToSpawn == TotalSpawnedEnemies)
+	if (APawn* Pawn = Cast<APawn>(ResponsibleActor))
 	{
+		AddPoints(Pawn, 50);
+	}
+
+	if (CurrentSpawnedEnemies == 0 && TotalEnemiesToSpawn == TotalSpawnedEnemies)
+	{
+		FTimerDelegate StartDel;
+		StartDel.BindUFunction(this, FName("StartWave"), StartWaveTimerHandle);
+		GetWorldTimerManager().SetTimer(StartWaveTimerHandle, StartDel, TimeBetweenWaves, false);
+
 		EndWave();
-		GetWorldTimerManager().SetTimer(StartWaveTimerHandle, TimeBetweenWaves, false);
 	}
 }
 
 void AZombie_Manager::StartWave()
 {
 	++WaveCount;
+	TotalSpawnedEnemies = 0;
 	CurrentSpawnedEnemies = 0;
+	UE_LOG(LogTemp, Warning, TEXT("Wave %d: Starting"), WaveCount);
 
 	if (WaveCount < 5)
 	{
@@ -125,19 +137,24 @@ void AZombie_Manager::EndWave()
 		const APawn* Pawn = PS->GetPawn();
 		UGameplayStatics::PlaySound2D(Pawn, WaveEndSound);
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Wave End."));
 }
 
 void AZombie_Manager::AddUser(APawn* InPawn)
 {
 	Super::AddUser(InPawn);
 
-	APlayerState* PS = InPawn->GetPlayerState();
-
-	PS->SetScore(0);
+	if (APlayerState* PS = InPawn->GetPlayerState())
+	{
+		PS->SetScore(0);
+	}
 }
 
 void AZombie_Manager::AddPoints(APawn* InPawn, int InPoints)
 {
+	if (UserArray.IsEmpty()) return;
+
 	for (APlayerState* PS : UserArray)
 	{
 		if (InPawn == PS->GetPawn())

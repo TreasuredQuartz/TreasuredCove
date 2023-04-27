@@ -7,7 +7,7 @@
 #include "FlyingVehicleMovementComponent.generated.h"
 
 USTRUCT()
-struct FAirFoil
+struct PHYSXFLYINGVEHICLES_API FAirFoil
 {
 	GENERATED_BODY()
 

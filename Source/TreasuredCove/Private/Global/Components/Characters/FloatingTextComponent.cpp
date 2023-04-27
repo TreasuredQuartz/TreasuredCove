@@ -85,14 +85,26 @@ void UFloatingTextComponent::AddFloatingText_Client_Implementation(const FText& 
 	if (!newTextActor)
 		return;
 
-	newTextActor->Initialize(Text);
 	newTextActor->OnDestroyed.AddDynamic(this, &UFloatingTextComponent::OnTextDestroyed);
 	UGameplayStatics::FinishSpawningActor(newTextActor, spawnTransform);
 
+	newTextActor->Initialize(Text);
 	ActiveTextActors.Insert(newTextActor, 0);
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawned Floating Text Actor"));
 }
 
 void UFloatingTextComponent::OnTextDestroyed(AActor* DestroyedActor)
 {
 	ActiveTextActors.Pop();
+}
+
+void UFloatingTextComponent::DestroyAllTexts()
+{
+	for (AFloatingTextActor* Actor : ActiveTextActors)
+	{
+		if (Actor) Actor->Destroy();
+	}
+
+	ActiveTextActors.Empty();
 }

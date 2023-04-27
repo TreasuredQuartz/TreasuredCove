@@ -13,12 +13,16 @@
  */
 class PROCEDURALPLANETPLUGIN_API UPlanetQuadTree
 {
-private:
+public:
+// private:
 	FPlanetMeshSettings Settings;
 	TArray<UPlanetQuadTree*> Children;
 
 	FVector PlayerPosition;
+	FVector ActorLocation;
 	FVector position;
+
+// private:
 	FVector axisA;
 	FVector axisB;
 
@@ -45,11 +49,18 @@ public:
 		detailLevel(inDetailLevel)
 	{};
 
+
+
 public:
 	void ConstructQuadTree();
+	void DestructQuadTree();
 	void CalculateMesh(TArray<FVector>& vertices, TArray<int>& triangles, TArray<FColor>& colors, int triangleOffset) const;
 	TArray<UPlanetQuadTree*> GetVisibleChildren();
 	bool CheckLOD(const FVector& NewLocation);
+	bool CheckLODDistance() const;
+	bool ShouldIncreaseLOD(const double InDistance) const;
+	bool ShouldDecreaseLOD(const double InDistance) const;
+	double GetPlayerDistance() const;
 
 public:
 	// Debugging //

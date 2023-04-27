@@ -3,10 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Global/Actors/Items/GAWeapon.h"
+#include "Global/Actors/Items/GAPickup.h"
+#include "Global/Structs/ProceduralMeshSectionStruct.h"
 #include "MCWorld_VoxelItem.generated.h"
 
+class UGameplayTileData;
+class URuntimeMeshComponentStatic;
 class URotatingMovementComponent;
+class UBobbingMovementComponent;
 
 /** This class originally inherrited from AGAActor, but now
  * The structure of the project has changed. AGAWeapon was empty
@@ -14,25 +18,33 @@ class URotatingMovementComponent;
  */
 UCLASS()
 class TREASUREDCOVE_API AMCWorld_VoxelItem : 
-	public AGAWeapon
+	public AGAPickup
 {
 	GENERATED_BODY()
+
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VoxelItem", Meta = (AllowPrivateAccess = "true"))
+	URuntimeMeshComponentStatic* Mesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VoxelItem", Meta = (AllowPrivateAccess = "true"))
+	URotatingMovementComponent* Rotation;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VoxelItem", Meta = (AllowPrivateAccess = "true"))
+	UBobbingMovementComponent* Bobbing;
 
 public:
 	AMCWorld_VoxelItem();
 
-	URotatingMovementComponent* Rotation;
-
-	// UPROPERTY()
-	// class UProceduralMeshComponent* PMesh;
+	FProceduralMeshSection MeshSection;
 
 	FVector PMeshScale;
 	FVector PMeshLocation;
 	FRotator PMeshRotation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UMaterialInterface* Material;
-
+	UMaterialInterface* Material;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UGameplayTileData* BlockData;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int VoxelSize;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

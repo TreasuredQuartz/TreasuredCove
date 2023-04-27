@@ -13,6 +13,7 @@ public class PhysXFlyingVehicles : ModuleRules
             {
                     "Core",
                     "CoreUObject",
+                    "ChaosVehicles",
                     "Engine",
                     "EngineSettings",
                     "RenderCore",

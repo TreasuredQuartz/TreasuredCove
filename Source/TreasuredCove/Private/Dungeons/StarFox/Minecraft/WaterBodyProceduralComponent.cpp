@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "WaterBodyProceduralComponent.h"
+#include "Dungeons/StarFox/Minecraft/WaterBodyProceduralComponent.h"
 #include "ProceduralMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "WaterSubsystem.h"
@@ -27,7 +27,7 @@ UWaterBodyProceduralComponent::UWaterBodyProceduralComponent(const FObjectInitia
 	check(!IsHeightOffsetSupported());
 }
 
-TArray<UPrimitiveComponent*> UWaterBodyProceduralComponent::GetCollisionComponents() const
+TArray<UPrimitiveComponent*> UWaterBodyProceduralComponent::GetCollisionComponents(bool blah) const
 {
 	TArray<UPrimitiveComponent*> Result;
 	if ((MeshComp != nullptr) && (MeshComp->GetCollisionEnabled() != ECollisionEnabled::NoCollision))
@@ -74,11 +74,11 @@ void UWaterBodyProceduralComponent::OnUpdateBody(bool bWithExclusionVolumes)
 		MeshComp->SetupAttachment(this);
 		MeshComp->SetCollisionProfileName(GetCollisionProfileName());
 		// In the case of custom meshes, the static mesh component acts as both collision and visual component so we simply disable collision on it: 
-		MeshComp->SetGenerateOverlapEvents(bGenerateCollisions);
-		if (!bGenerateCollisions)
+		// MeshComp->SetGenerateOverlapEvents(bGenerateCollisions);
+		/*if (!bGenerateCollisions)
 		{
 			MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
+		}*/
 		MeshComp->RegisterComponent();
 	}
 
@@ -88,11 +88,11 @@ void UWaterBodyProceduralComponent::OnUpdateBody(bool bWithExclusionVolumes)
 	// Make no assumptions for custom meshes.  Add all components with collision to the list of collision components
 	for (UPrimitiveComponent* Comp : PrimitiveComponents)
 	{
-		if (bGenerateCollisions && (Comp->GetCollisionEnabled() != ECollisionEnabled::NoCollision))
-		{
-			// Use value of bFillCollisionUnderWaterBodiesForNavmesh for all components with collisions.
-			Comp->bFillCollisionUnderneathForNavmesh = bFillCollisionUnderWaterBodiesForNavmesh;
-		}
+		//if (bGenerateCollisions && (Comp->GetCollisionEnabled() != ECollisionEnabled::NoCollision))
+		//{
+		//	// Use value of bFillCollisionUnderWaterBodiesForNavmesh for all components with collisions.
+		//	Comp->bFillCollisionUnderneathForNavmesh = bFillCollisionUnderWaterBodiesForNavmesh;
+		//}
 
 		Comp->SetMobility(Mobility);
 	}

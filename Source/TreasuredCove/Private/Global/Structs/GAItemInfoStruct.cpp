@@ -3,18 +3,16 @@
 #include "GAItemInfoStruct.h"
 
 FGAItemInfo::FGAItemInfo()
-	: ItemActor(nullptr)
-	, Name("")
+	: Name("")
 	, Texture(nullptr)
 	, ActiveMenuClass(nullptr)
 	, EditMenuClass(nullptr)
 {
 }
 
-FGAItemInfo::FGAItemInfo(AActor* InItemActor, FName InName, UTexture2D* inTexture, 
+FGAItemInfo::FGAItemInfo(FName InName, UTexture2D* inTexture, 
 	TSubclassOf<UCommandMenu> InItemWidgetActiveMenuClass, TSubclassOf<UItemEditor> InItemWidgetEditMenuClass)
-	: ItemActor(InItemActor)
-	, Name(InName)
+	: Name(InName)
 	, Texture(inTexture)
 	, ActiveMenuClass(InItemWidgetActiveMenuClass)
 	, EditMenuClass(InItemWidgetEditMenuClass)

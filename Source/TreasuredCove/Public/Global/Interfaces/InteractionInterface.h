@@ -28,8 +28,8 @@ public:
 
 	//
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	void NotifyCanPickup(AActor* Item, bool CanPickup);
-	virtual void NotifyCanPickup_Implementation(AActor* Item, bool CanPickup);
+	void NotifyCanInteract(FName InteractibleName, bool CanInteract);
+	virtual void NotifyCanInteract_Implementation(FName InteractibleName, bool CanPickup);
 
 	//
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")

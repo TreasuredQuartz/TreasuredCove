@@ -1,13 +1,163 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GALibrary.h"
+#include "GAGameState.h"
+#include "GameTimeInterface.h"
 
 #include "AbilitySystemComponent.h"
 #include "GameplayTileData.h"
 
+#include "Components/PointLightComponent.h"
+#include "Components/RectLightComponent.h"
+#include "Components/SpotLightComponent.h"
+
+#include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/DirectionalLight.h"
+#include "Engine/PointLight.h"
+#include "Engine/RectLight.h"
+#include "Engine/SpotLight.h"
+#include "Engine/Engine.h"
+
 #include "Editor.h"
 #include "EditorViewportClient.h"
-#include "Engine/Engine.h"
+
+bool UGALibrary::GetIsShadowed(const AActor* InActor)
+{
+	if (IGameTimeInterface* WorldTime = Cast<IGameTimeInterface>(UGameplayStatics::GetGameState(InActor)))				// 7 AM to 19 (7) PM is night
+	{
+		float CurrentTime = WorldTime->GetTimeOfDay();
+
+		if (CurrentTime > 7 && CurrentTime < 19) // Day time
+		{
+			TArray<AActor*> DirectLights;
+			UGameplayStatics::GetAllActorsOfClass(InActor, ADirectionalLight::StaticClass(), DirectLights);
+
+			if (DirectLights.IsValidIndex(0))
+			{
+				if (AActor* Sun = DirectLights[0]) // The Sun
+				{
+					FVector Start;
+					FVector End;
+					FRotator ActorRotation;
+					FRotator SunDirection = Sun->GetActorRotation();
+					FCollisionQueryParams Params;
+					Params.AddIgnoredActor(InActor);
+					Params.bTraceComplex = true;
+
+					InActor->GetActorEyesViewPoint(Start, ActorRotation);
+
+					End = Start + (SunDirection.Vector() * 999999);														// Impossibly long distance because sun is infinitely far away
+
+					FHitResult Hit;
+					if (!InActor->GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))		// Nothing is blocking the sun
+					{
+						return false;
+					}
+					else
+					{
+						Start = InActor->GetActorLocation();
+						End = Start + (SunDirection.Vector() * 999999);													// Impossibly long distance because sun is infinitely far away
+						if (!InActor->GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))	// Nothing is blocking the sun
+						{
+							return false;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// We are shadowed from the sun at this point.
+
+	TArray<AActor*> PointLights;
+	TArray<AActor*> RectLights;
+	TArray<AActor*> SpotLights;
+
+	UGameplayStatics::GetAllActorsOfClass(InActor, APointLight::StaticClass(), PointLights);
+	UGameplayStatics::GetAllActorsOfClass(InActor, ARectLight::StaticClass(), RectLights);
+	UGameplayStatics::GetAllActorsOfClass(InActor, ASpotLight::StaticClass(), SpotLights);
+
+	for (const AActor* PointLight : PointLights)
+	{
+		if (const APointLight* Light = Cast<APointLight>(PointLight))
+		{
+			float Distance = (Light->GetActorLocation() - InActor->GetActorLocation()).Size();
+			if (Distance < Light->PointLightComponent->AttenuationRadius)
+			{
+				FVector Start = InActor->GetActorLocation();
+				FVector End = Light->GetActorLocation();
+				FCollisionQueryParams Params;
+				Params.AddIgnoredActor(InActor);
+				Params.bTraceComplex = true;
+
+				FHitResult Hit;
+				if (!InActor->GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))			// Nothing is blocking the light
+				{
+					return false;
+				}
+			}
+		}
+	}
+
+	for (const AActor* RectLight : RectLights)
+	{
+		if (const ARectLight* Light = Cast<ARectLight>(RectLight))
+		{
+			const FVector Direction = (Light->GetActorLocation() - InActor->GetActorLocation());
+			float Distance = Direction.Size();
+			if (Distance < Light->RectLightComponent->AttenuationRadius)
+			{
+				float Angle = FVector::DotProduct(Light->GetActorRotation().Vector(), Direction);
+				if (Angle > 0 && Angle > (1 - Light->RectLightComponent->BarnDoorAngle / 90))
+				{
+					FVector Start = InActor->GetActorLocation();
+					FVector End = Light->GetActorLocation();
+					FCollisionQueryParams Params;
+					Params.AddIgnoredActor(InActor);
+					Params.bTraceComplex = true;
+
+					FHitResult Hit;
+					if (!InActor->GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))			// Nothing is blocking the light
+					{
+						return false;
+					}
+				}
+			}
+		}
+	}
+
+	for (const AActor* SpotLight : SpotLights)
+	{
+		if (const ASpotLight* Light = Cast<ASpotLight>(SpotLight))
+		{
+			const FVector Direction = (Light->GetActorLocation() - InActor->GetActorLocation());
+			float Distance = Direction.Size();
+			if (Distance < Light->SpotLightComponent->AttenuationRadius)
+			{
+				float Angle = FVector::DotProduct(Light->GetActorRotation().Vector(), Direction);
+				if (Angle > 0 && Angle > (1 - Light->SpotLightComponent->OuterConeAngle / 90))
+				{
+					FVector Start = InActor->GetActorLocation();
+					FVector End = Light->GetActorLocation();
+					FCollisionQueryParams Params;
+					Params.AddIgnoredActor(InActor);
+					Params.bTraceComplex = true;
+
+					FHitResult Hit;
+					if (!InActor->GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))			// Nothing is blocking the light
+					{
+						return false;
+					}
+				}
+			}
+		}
+	}
+
+	// We are shadowed from all light sources at this point.
+
+	return true;
+}
 
 void UGALibrary::GetEditorViewLocRot(FVector& OutLocation, FRotator& OutRotation)
 {
@@ -26,9 +176,12 @@ void UGALibrary::ApplyGESpecHandleToTargetDataSpecsHandle(const FGameplayEffectS
 {
 	for(TSharedPtr<FGameplayAbilityTargetData> Data : TargetDataHandle.Data)
 	{
-		if (Data) Data->ApplyGameplayEffectSpec(*GESpecHandle.Data.Get());
+		if (Data)
+		{
+			Data->ApplyGameplayEffectSpec(*GESpecHandle.Data.Get());
+			GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Red, "We applyed an effect!");
+		}
 
-		// GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Red, "We applyed an effect!");
 	}
 }
 

@@ -9,6 +9,7 @@
 #include "ProceduralMeshSectionStruct.h"
 #include "MCWorld_Voxel.generated.h"
 
+class URuntimeMeshComponentStatic;
 class UInstancedStaticMeshComponent;
 class UGameplayTileData;
 class UWaterBodyProceduralActor;
@@ -52,6 +53,7 @@ private:
 	TArray<int32> Moisture;
 	TArray<int32> Temperature;
 	TArray<int32> TreeType;
+	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess="true"))
 	FRandomStream RandomStream;
 	TArray< FMCWorld_Building > HouseStructures;
 
@@ -74,11 +76,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
 	UDataTable* BlockDataTable;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
-	TArray<UGameplayTileData*> BlockTypes;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	UStaticMeshComponent* SelectionMesh;
-
+	TMap<int32, UObject*> RuntimeBlockData;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
+	TArray<UGameplayTileData*> BlockTypes;
+
+	TArray<UStaticMesh*> CustomMeshes;
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
 	TArray<class UInstancedStaticMeshComponent*> CustomMeshInstances;
 
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -104,8 +107,8 @@ public:
 	UPROPERTY()
 	TArray< int32 > ChunkFields;
 	UPROPERTY()
-	UProceduralMeshComponent* PMesh;
-	UWaterBodyProceduralActor* WaterMesh;
+	URuntimeMeshComponentStatic* Mesh;
+	URuntimeMeshComponentStatic* WaterMesh;
 
 	UFUNCTION(BlueprintNativeEvent)
 	TArray<int32> CalcNoise();
@@ -141,14 +144,15 @@ public:
 #endif
 
 	virtual void Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inChunkLineElements, FIntVector inChunkIndex) override;
-	void SetVoxel(FVector Location, int32 Value);
-	void VoxelInteract(FVector Location, AActor* InteractingActor);
+	void SetVoxel(const FVector& Location, int32 Value);
+	void VoxelInteract(const FVector& Location, AActor* InteractingActor);
 
 private:
 	// Begin AGameplayVoxel Interface //
 	virtual void BeforeChunkGenerated() override;
 	virtual void ChunkGenerating(const FIntVector& CurrentLocation, int32 Index) override;
 	virtual void AfterChunkGenerated() override;
+	virtual void OnChunkUpdated_Implementation() override;
 	// End AGameplayVoxel Interface //
 
 	// Initialization
@@ -160,6 +164,7 @@ private:
 
 	// Generation
 	void GenerateGround(FIntVector Location, int32 Index, int32 Height, int32 Biome);
+	void GenerateUnderGround();
 	void GenerateTrees();
 	void GenerateTowns();
 	void GenerateOrePockets();

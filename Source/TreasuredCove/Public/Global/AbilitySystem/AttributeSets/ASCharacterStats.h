@@ -16,6 +16,9 @@ class TREASUREDCOVE_API UASCharacterStats : public UAttributeSet
 	GENERATED_BODY()
 	
 public:
+	UASCharacterStats();
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Health")
 	FGameplayAttributeData MaxGroundMovementSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Health")

@@ -20,15 +20,15 @@ class TREASUREDCOVE_API UWaterBodyProceduralComponent : public UWaterBodyCompone
 	friend class AWaterBodyProcedural;
 public:
 	/** AWaterBody Interface */
-	virtual EWaterBodyType GetWaterBodyType() const override { return EWaterBodyType::Transition; }
-	virtual TArray<UPrimitiveComponent*> GetCollisionComponents() const override;
-	virtual TArray<UPrimitiveComponent*> GetStandardRenderableComponents() const override;
+	EWaterBodyType GetWaterBodyType() const override { return EWaterBodyType::Transition; };
+	TArray<UPrimitiveComponent*> GetCollisionComponents(bool blah) const override;
+	TArray<UPrimitiveComponent*> GetStandardRenderableComponents() const override;
 
 protected:
 	/** AWaterBody Interface */
-	virtual void Reset() override;
-	virtual void BeginUpdateWaterBody() override;
-	virtual void OnUpdateBody(bool bWithExclusionVolumes) override;
+	void Reset() override;
+	void BeginUpdateWaterBody() override;
+	void OnUpdateBody(bool bWithExclusionVolumes) override;
 
 #if WITH_EDITOR
 	virtual TArray<TSharedRef<FTokenizedMessage>> CheckWaterBodyStatus() const override;

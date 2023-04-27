@@ -63,6 +63,22 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
 	void OnDialogueStarted();
 
+	//---------------------------------
+	// Player Information Functions
+	//---------------------------------
+	
+	//
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
+	void OnDeath();
+
+	//
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
+	void OnDamaged(float DamageAmount);
+
+	//
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
+	void OnHealed(float HealAmount);
+
 	//
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
 	void OnMaxHealthModified(float PreviousHealth, float CurrentHealth);
@@ -91,6 +107,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
 	void OnExperienceModified(float Experience, float MaxExperience);
 
+	//
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
 	void OnStatModified(float Charisma, float Constitution, float Dexterity, float Intelligence, float Strength, float Wisdom);
 
@@ -163,7 +180,7 @@ public:
 
 	//
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
-	void NotifyPickup(FName ItemName, bool CanPickup);
+	void NotifyCanInteract(FName ItemName, bool CanPickup);
 
 	//
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
@@ -202,7 +219,10 @@ public:
 
 	//
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
-	void OnDropItem(uint8 Slot);
+	void OnDropItemFromInventory(uint8 Slot);
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
+	void OnDropItem();
 
 public:
 	// Cursor

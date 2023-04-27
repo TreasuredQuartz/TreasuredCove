@@ -2,6 +2,8 @@
 
 
 #include "Global/Actors/FloatingTextActor.h"
+#include "Components/WidgetComponent.h"
+#include "GAWidget.h"
 
 // Sets default values
 AFloatingTextActor::AFloatingTextActor()
@@ -11,6 +13,11 @@ AFloatingTextActor::AFloatingTextActor()
 
 }
 
+//const UWidget* AFloatingTextActor::GetUserWidget() const
+//{
+//	return WidgetComponent->GetUserWidgetObject();
+//}
+
 // Called when the game starts or when spawned
 void AFloatingTextActor::BeginPlay()
 {
@@ -18,6 +25,8 @@ void AFloatingTextActor::BeginPlay()
 	
 	AnchorLocation = GetActorLocation();
 }
+
+
 
 // Called every frame
 //void AFloatingTextActor::Tick(float DeltaTime)

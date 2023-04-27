@@ -6,11 +6,16 @@
 #include "TownSystemComponent.h"
 #include "GameplayBuilding.h"
 
+// Sense System Plugin
+#include "SenseReceiverComponent.h"
+#include "SenseStimulusBase.h"
+
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Kismet/GameplayStatics.h"
 
 AGAAIController::AGAAIController(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -44,12 +49,14 @@ AGAAIController::AGAAIController(const FObjectInitializer& ObjectInitializer)
 	}
 
 	CurrentBuildingKey = FName("CurrentBuilding");
-	CurrentEnemyKey = FName("CurrentEnemy");
+	CurrentEnemyKey = FName("Enemy");
 	DesiredLocationKey = FName("DesiredLocation");
+	HeardLocationKey = FName("HeardLocation");
 	IsBusyKey = FName("IsBusy");
 	IsFollowerKey = FName("IsFollower");
 	IsInCombatKey = FName("IsInCombat");
 	IsInDialogueKey = FName("IsInDialogue");
+	HeardSomethingKey = FName("HeardSomething");
 	TargetBuildingKey = FName("TargetBuilding");
 	WarPartyRoleKey = FName("WarPartyRole");
 }
@@ -141,17 +148,28 @@ void AGAAIController::UpdateCurrentBuilding(AGameplayBuilding* CurrentBuilding)
 
 void AGAAIController::UpdateCurrentEnemy(AActor* NewEnemy)
 {
-	Blackboard->SetValueAsObject(CurrentEnemyKey, NewEnemy);
+	CurrentEnemy = NewEnemy;
+	Blackboard->SetValueAsObject(CurrentEnemyKey, CurrentEnemy);
 }
 
-void AGAAIController::UpdateDesiredLocation(FVector DesiredLocation)
+void AGAAIController::UpdateDesiredLocation(const FVector& DesiredLocation)
 {
 	Blackboard->SetValueAsVector(DesiredLocationKey, DesiredLocation);
+}
+
+void AGAAIController::UpdateHeardLocation(const FVector& HeardLocation)
+{
+	Blackboard->SetValueAsVector(HeardLocationKey, HeardLocation);
 }
 
 void AGAAIController::UpdateIsBusy(bool bIsBusy)
 {
 	Blackboard->SetValueAsBool(IsBusyKey, bIsBusy);
+}
+
+void AGAAIController::UpdateHeardSomething(bool bHeardSomething)
+{
+	Blackboard->SetValueAsBool(HeardSomethingKey, bHeardSomething);
 }
 
 void AGAAIController::UpdateTargetBuilding(AGameplayBuilding* TargetBuilding)
@@ -166,22 +184,166 @@ void AGAAIController::UpdateWarPartyRollKey(bool bIsFollower)
 
 //----- Sensory Responses -----//
 
-void AGAAIController::OnPawnSeen(APawn* SeenPawn)
+void AGAAIController::AddEnemy(AActor* NewEnemy)
 {
-
-}
-
-void AGAAIController::OnNoiseHeard(APawn* NoiseInstigator, const FVector& Location, float Volume)
-{
-
+	Enemies.Add(NewEnemy);
 }
 
 void AGAAIController::OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
 {
-	
+
 }
 
 void AGAAIController::OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
 {
 
+}
+
+void AGAAIController::OnNewSense(const USensorBase* Sensor, int32 Channel, const TArray<FSensedStimulus>& SensedStimulus)
+{
+	for (const FSensedStimulus& Stimulus : SensedStimulus)
+	{
+		if (!Stimulus.StimulusComponent.IsValid())
+		{
+			// GEngine->AddOnScreenDebugMessage(9, 5.f, FColor::Cyan, "Stimulus Component is invalid!");
+			continue;
+		}
+
+		if (Sensor->SensorTag == FName("SensorSight"))
+		{
+			if (AGACharacter* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner<AGACharacter>())
+			{
+				if (SeenCharacter->GetIsDead())
+				{
+					// GEngine->AddOnScreenDebugMessage(9, 5.f, FColor::Cyan, "Seen Character is dead!");
+					continue;
+				}
+
+				/*FAICharacterInfo SeenInfo(SeenCharacter, SeenCharacter->GetActorLocation(), 0);
+
+				FAICharacterAwareness& AIState = SeenInfo.CurrentAIAwarenessTowardTarget;
+
+				AIState.SetCurrentSuspicion(1);
+
+				GetWorldTimerManager().SetTimer(SeenInfo.AwarenessTimerHandle, ReactionTime, true);
+				AwareOfCharacters.Add(SeenInfo);*/
+
+				if (CurrentEnemy == nullptr && Enemies.Contains(SeenCharacter))
+				{
+					// GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Cyan, "Updated Current Enemy.");
+					SeenCharacter->OnDeathDelegate.AddUniqueDynamic(this, &AGAAIController::OnEnemyDeath);
+					UpdateCurrentEnemy(SeenCharacter);
+					OnEnemyDiscovered();
+				}
+				else
+				{
+					// GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Cyan, "CurrentEnemy is not nullptr or enemies does not contain character.");
+				}
+			}
+		}
+		else if (Sensor->SensorTag.IsEqual(FName("SensorHearing")))
+		{
+			if (CurrentEnemy != nullptr)
+				continue;
+
+			if (AActor* HeardActor = Stimulus.StimulusComponent.Get()->GetOwner()->GetOwner())
+			{
+				if (HeardActor != this && Enemies.Contains(HeardActor))
+				{
+					if (AGACharacter* HeardCharacter = Cast<AGACharacter>(HeardActor))
+					{
+						if (HeardCharacter->GetIsDead())
+							continue;
+					}
+
+					UpdateHeardSomething(true);
+					UpdateHeardLocation(HeardActor->GetActorLocation());
+					GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Cyan, "We heard The Player.");
+				}
+			}
+		}
+		else
+		{
+			// GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Cyan, "Owner of Component fails cast to AGACharacter.");
+		}
+	}
+}
+
+void AGAAIController::OnCurrentSense(const USensorBase* Sensor, int32 Channel, const TArray<struct FSensedStimulus>& SensedStimulus)
+{
+
+}
+
+void AGAAIController::OnLostSense(const USensorBase* Sensor, int32 Channel, const TArray<struct FSensedStimulus>& SensedStimulus)
+{
+	for (const FSensedStimulus& Stimulus : SensedStimulus)
+	{
+		if (!Stimulus.StimulusComponent.IsValid()) continue;
+
+		if (Sensor->SensorTag == FName("SensorSight"))
+		{
+			if (AGACharacter* SeenCharacter = Cast<AGACharacter>(Stimulus.StimulusComponent.Get()->GetOwner()))
+			{
+				if (CurrentEnemy == SeenCharacter)
+				{
+					SeenCharacter->OnDeathDelegate.RemoveDynamic(this, &AGAAIController::OnEnemyDeath);
+					UpdateCurrentEnemy(nullptr);
+					OnEnemyLost();
+				}
+			}
+		}
+		else if (Sensor->SensorTag == FName("SensorHearing"))
+		{
+			UpdateHeardSomething(false);
+		}
+	}
+}
+
+void AGAAIController::OnForgetSense(const USensorBase* Sensor, int32 Channel, const TArray<struct FSensedStimulus>& SensedStimulus)
+{
+	if (Sensor == nullptr || SensedStimulus.IsEmpty())
+		return;
+
+	for (int i = 0; i < SensedStimulus.Num(); ++i)
+	{
+		if (!SensedStimulus.IsValidIndex(i))
+			continue;
+
+		const FSensedStimulus& Stimulus = SensedStimulus[i];
+
+		if (!Stimulus.StimulusComponent.IsValid()) continue;
+
+		if (Sensor->SensorTag == FName("SensorSight"))
+		{
+			if (AGACharacter* SeenCharacter = Cast<AGACharacter>(Stimulus.StimulusComponent.Get()->GetOwner()))
+			{
+				if (CurrentEnemy == SeenCharacter)
+				{
+					SeenCharacter->OnDeathDelegate.RemoveDynamic(this, &AGAAIController::OnEnemyDeath);
+					UpdateCurrentEnemy(nullptr);
+					OnEnemyLost();
+				}
+			}
+		}
+		else if (Sensor->SensorTag == FName("SensorHearing"))
+		{
+			UpdateHeardSomething(false);
+		}
+	}
+}
+
+void AGAAIController::OnEnemyDiscovered_Implementation()
+{
+	
+}
+
+void AGAAIController::OnEnemyLost_Implementation()
+{
+
+}
+
+void AGAAIController::OnEnemyDeath()
+{
+	UpdateCurrentEnemy(nullptr);
+	OnEnemyLost();
 }

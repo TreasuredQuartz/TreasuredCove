@@ -6,12 +6,15 @@
 #include "AbilitySystemInterface.h"
 #include "InteractionInterface.h"
 #include "RepositoryInterface.h"
+#include "InventoryInterface.h"
 #include "DlgDialogueParticipant.h"
 #include "TownSystemInterface.h"
 #include "GameFramework/Character.h"
 #include "Abilities/GameplayAbility.h"
 
 #include "DialogueComponent.h"
+
+#include "SenseSysHelpers.h"
 
 #include "Element.h"
 #include "TownJob.h"
@@ -21,7 +24,6 @@
 #include "AttributeType.h"
 #include "NavType.h"
 
-#include "Components/TimelineComponent.h"
 #include "SavedAttribute.h"
 #include "GAActiveLoadoutStruct.h"
 #include "AICharacterInfoStruct.h"
@@ -31,6 +33,7 @@
 
 #pragma region ForwardDeclarations
 class AGAActor;
+class AGAWeapon;
 class AGAPlayerController;
 class AGAAIController;
 class AGravityWidget;
@@ -47,12 +50,20 @@ class UGameplayAbilityBase;
 
 class UComboComponent;
 class UCraftingComponent;
-class UInventoryComponent;
-class URepositoryComponent;
-class UPickupMagnetComponent;
-class USenseComponent;
-class UGACharacterMovementComponent;
+class UFloatingBarComponent;
 class UFloatingTextComponent;
+class UFloatingItemInfoComponent;
+class UFootprintComponent;
+class UTimelineComponent;
+class UGACharacterMovementComponent;
+class UInventoryComponent;
+class ULaunchingComponent;
+class UMovementTrailComponent;
+class UPickupMagnetComponent;
+class URepositoryComponent;
+class USenseReceiverComponent;
+class USenseStimulusComponent;
+class USensorBase;
 
 class UParticleSystemComponent;
 class UProceduralMeshComponent;
@@ -80,6 +91,7 @@ enum class EHeldInputType : uint8
 };
 #pragma endregion
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGAEnded, const UGameplayAbility*, AbilityEndedData);
 
 UCLASS(Blueprintable)
@@ -89,7 +101,8 @@ class TREASUREDCOVE_API AGACharacter
 	public IInteractionInterface,
 	public IDlgDialogueParticipant,
 	public ITownSystemInterface,
-	public IRepositoryInterface
+	public IRepositoryInterface,
+	public IInventoryInterface
 {
 	GENERATED_BODY()
 
@@ -103,8 +116,10 @@ public:
 	UTownSystemComponent* GetTownSystemComponent() const override;
 	// Override function from repository interface
 	URepositoryComponent* GetRepositoryComponent_Implementation() const override;
+	// Override function from inventory interface
+	UInventoryComponent* GetInventoryComponent_Implementation() const override;
 	// Helper function for Character Movment Component
-	UGACharacterMovementComponent* GetGAMovementComponent() const;
+	UGACharacterMovementComponent* GetGACharacterMovement() const;
 	// Helper function for Skill Tree Component
 	UGASkillTreeComponent* GetSkillTreeComponent() const;
 
@@ -114,14 +129,13 @@ private:
 	bool bIsPaused = false;
 	UPROPERTY()
 	bool bShouldUpdateConstructionScript = false;
-	UPROPERTY()
+	bool bShouldUpdatePhysicalAnimation = false;
+	UPROPERTY(BlueprintReadOnly, Meta=(AllowPrivateAccess = "true"))
 	bool bIsDead = false;
-	bool bCanEverWallRun = true;
-	bool bCanWallRun = true;
-	bool bCanEverClimb = true;
-	bool bCanClimb = true;
-	bool bCanEverJump = true;
 	bool bCanJump = true;
+	bool bCanSlide = true;
+	bool bCanWallRun = true;
+	bool bCanClimb = true;
 
 	uint8 Shadowed : 1;
 
@@ -134,9 +148,13 @@ private:
 	float CameraTiltTime;
 	float ForwardAxisValue;
 	float RightAxisValue;
+	float HitReactionTimeRemaining;
+
+	FRotator ViewRotation;
 
 	FTimerHandle WallRunTimerHandle;
 	FTimerHandle CameraTiltTimerHandle;
+	FTimerHandle PhysicalAnimationHandle;
 
 	FTimerHandle MenuUpTimerHandle;
 	FTimerHandle MenuDownTimerHandle;
@@ -145,23 +163,14 @@ private:
 
 	FTimerHandle InputTimerHandle;
 
-	FTimeline WallRunCameraTiltTimeline;
+	AActor* Sun;
 
 	AGAPlayerController* PC;
 	AGAAIController* AC;
-	AActor* Sun;
+	AGAWeapon* WeaponPickup;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character", meta = (AllowPrivateAccess = "true"))
 	UMaterialInterface* MeshInsideColor;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<AGravityWidget> OnDamagedNumbersWidgetClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<AGravityWidget> OnDamagedHealthBarClass;
-
-	AGravityWidget* OnDamagedHealthBar;
-
-	FVector WallRunDirection;
-	ENavType WallRunSide;
 
 	TArray<FVector> Vertices;
 	TArray<FVector> Normals;
@@ -173,10 +182,12 @@ private:
 	TArray<FAICharacterInfo> AwareOfCharacters;
 #pragma endregion
 
+#pragma region ProceduralMesh
 	// Private and unfinshed
 	void InitProceduralMesh();
 	// Private and unfinshed
 	void UpdateProceduralMesh();
+#pragma endregion
 
 #pragma region ProtectedMembers
 protected:
@@ -190,15 +201,12 @@ protected:
 
 	//////////////////////////////////////////////////////
 
-	//
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
-	TSubclassOf<UAbilitySet> InitialActiveAbilitySetClass;*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
 	UAbilitySet* InitialActiveAbilities;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
-	FGAActivatedInfo SwitchAbility;
+	UAbilitySet* InitialPassiveAbilities;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
-	TArray< TSubclassOf<UGameplayAbilityBase> > Passives;
+	FGAActivatedInfo SwitchAbility;
 
 	TSubclassOf<UGameplayAbility> DecreaseSpreadAbility;
 	TSubclassOf<UGameplayAbility> IncreaseSpreadAbility;
@@ -207,6 +215,7 @@ protected:
 	UDataTable* InitialStatsTable;
 
 	TArray< FGameplayAbilitySpecHandle > ActiveAbilityHandles;
+	TArray< FGameplayAbilitySpecHandle > PassiveHandles;
 
 	FGameplayAbilitySpecHandle SwitchAbilityHandle;
 	FGameplayAbilitySpecHandle DecreaseSpreadAbilityHandle;
@@ -313,10 +322,6 @@ protected:
 	void BeginCrouch();
 	// Called when "Crouch" is released
 	void EndCrouch();
-	// Called when "Crouch" is pressed whilst Sprinting
-	void BeginSlide();
-	// Called when "Crouch" is released or velocity is low enough
-	void EndSlide();
 	// Called when "MoveForawrd" passed a value
 	void MoveForward(float Val);
 	// Called when "MoveRight" passed a value
@@ -330,15 +335,20 @@ protected:
 #pragma endregion
 
 #pragma region VisualFX
+public:
 	// 
 	void BeginGrip();
 	// 
 	void SwapGrip();
 	// 
 	void EndGrip();
-	// 
+	// Called when "Crouch" is pressed whilst Sprinting from MovementComponent
+	void OnBeginSlide();
+	// Called when "Crouch" is released, or velocity is low enough, from MovementComponent
+	void OnEndSlide();
+	// Called from MovementComponent when conditions are meet when hitting a wall 
 	void OnBeginWallRun();
-	// 
+	// Called from MovementComponent when no longer wall running
 	void OnEndWallRun();
 	// 
 	void ClampHorizontalVelocity();
@@ -346,7 +356,7 @@ protected:
 	void BeginCameraTilt();
 	// Visual effect only for wall running rn
 	UFUNCTION()
-	void UpdateCameraTilt();
+	void UpdateCameraTilt(float progress);
 	// Visual effect only for wall running rn
 	void EndCameraTilt();
 	// Changes between first person and third person camera types
@@ -435,21 +445,22 @@ public:
 #pragma region Components
 public:
 	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Interaction")
-	AActor* CurrentInteractItem;
-
-	//
 	/*UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UProceduralMeshComponent* RealMesh;*/
 
 	// Sight Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	USenseComponent* Sight;
+	USenseReceiverComponent* AISenses;
+
+	// Stimulus Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USenseStimulusComponent* AIStimulus;
 
 	// Abilities Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UGASystemComponent* RenamedAbilitySystem;
 
+	// Skill trees component
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
 	UGASkillTreeComponent* SkillTrees;
 	
@@ -459,8 +470,13 @@ public:
 	// Attribute Set Components
 	TArray<UAttributeSet*> AttributeSets;
 
+	// Combo System Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UComboComponent* ComboSystem;
+
+	// Launching Component (For Throwing, Pushing, etc)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	ULaunchingComponent* LaunchingComponent;
 
 	// Inventory Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -470,7 +486,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	URepositoryComponent* Repository;
 
-	// Magnet Component
+	// Item Magnet Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UPickupMagnetComponent* Magnet;
 
@@ -486,17 +502,37 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UTownSystemComponent* TownInfo;
 
-	// Material Trail Component
+	// Physical Animation Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UPhysicalAnimationComponent* PhysicalAnimation;
+
+	// Camera Animation Timeline Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UTimelineComponent* CameraTiltTimeline;
+
+	// Movement Trail Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UParticleSystemComponent* PSTrail;
+	UMovementTrailComponent* MovementTrail;
 
 	// On Damaged Particle System Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UParticleSystemComponent* PSPuncture;
 
-	//
+	// On Damaged Numbers (maybe extend to add Dialogue?)
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UFloatingTextComponent* FloatingTextComponent;
+
+	// On Damaged Health bar (maybe extend for more attributes?)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UFloatingBarComponent* FloatingBarComponent;
+
+	// While looking at a valid pickup, present info about it
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UFloatingItemInfoComponent* FloatingItemInfoComponent;
+
+	// Spawn Hints for tracking players and visual indicators for hearing footsteps
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UFootprintComponent* FootprintComponent;
 
 	//////////////////////////////////////////////////////
 #pragma endregion
@@ -508,8 +544,8 @@ public:
 	//
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|Locomotion", meta = (AllowPrivateAccess = "true"))
 	bool bIsWalking = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|Locomotion", meta = (AllowPrivateAccess = "true"))
-	bool bIsCrouching = false;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|Locomotion", meta = (AllowPrivateAccess = "true"))
+	// bool bIsCrouching = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|Locomotion", meta = (AllowPrivateAccess = "true"))
 	bool bIsSprinting = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|Locomotion", meta = (AllowPrivateAccess = "true"))
@@ -523,29 +559,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|Locomotion", meta = (AllowPrivateAccess = "true"))
 	bool bIsSubmisiveGripping = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|IK", meta = (AllowPrivateAccess = "true"))
-	float IKFootTraceDistance;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|IK", meta = (AllowPrivateAccess = "true"))
-	float IKOffsetRightFoot;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|IK", meta = (AllowPrivateAccess = "true"))
-	float IKOffsetLeftFoot;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|IK", meta = (AllowPrivateAccess = "true"))
-	float IKOffsetRightHand;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|IK", meta = (AllowPrivateAccess = "true"))
-	float IKOffsetLeftHand;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|IK", meta = (AllowPrivateAccess = "true"))
-	float IKInterpSpeed;
-
-	/** Begin IK Helper Functions	*/
-	//
-	float IKFootTrace(float Distance, FName Bone);
-	float IKHandToLocation(FVector Location, FName Bone);
-	float IKFingerTrace(float Distance, FName Bone);
 #pragma endregion
 
 	// Data Table for attribute set
 	// UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities") 
 	// UDataTable* AttrDataTable;
+
+#pragma region ObjectDefaultFunctions
+public:
+	/** Begin Object Interface		*/
+#if WITH_EDITOR
+	// Called in editor and on begin play
+	virtual void OnConstruction(const FTransform& Transform) override;
+	// Called by editor for changes made to UPROPERTYs in TArrays
+	virtual void PostEditChangeChainProperty(struct FPropertyChangedChainEvent& e) override;
+#endif
+	/**	End Object Interface		*/
+#pragma endregion
 
 #pragma region ActorDefaultFunctions
 public:
@@ -555,43 +585,68 @@ public:
 	virtual void BeginPlay() override;
 	// Called every frame
 	void Tick(float InDeltaTime) override;
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	// Called when possessed by a new controller
-	virtual void PossessedBy(AController* NewController) override;
-	// Called when control leaves this pawn (Typically to a vehicle or another character)
-	virtual void UnPossessed() override;
-	// Called on clients when controller is replicated
-	virtual void OnRep_Controller() override;
-
-#if WITH_EDITOR
-	// Called in editor and on begin play
-	virtual void OnConstruction(const FTransform& Transform) override;
-	// Called after all components have been initialized
-	virtual void PostInitializeComponents() override;
-	// Called by editor for changes made to UPROPERTYs in TArrays
-	virtual void PostEditChangeChainProperty(struct FPropertyChangedChainEvent& e) override;
-#endif
 
 	/**	End Actor Interface			*/
 #pragma endregion
 
+#pragma region PawnDefaultFunctions
+public:
+	/** Begin Pawn Interface		*/
+
+	// Called after all components have been initialized
+	virtual void PostInitializeComponents() override;
+	// Called when possessed by a new controller
+	virtual void PossessedBy(AController* NewController) override;
+	// Called when control leaves this pawn (Typically to a vehicle or another character)
+	virtual void UnPossessed() override;
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	// Called on clients when controller is replicated
+	virtual void OnRep_Controller() override;
+
+	/**	End Pawn Interface			*/
+#pragma endregion
+
+#pragma region CharacterDefaultFunctions
+public:
+	/* Begin Character Interface	*/
+
+	// Called when attempting to jump. Overridden to allow jump while crouched
+	virtual bool CanJumpInternal_Implementation() const override;
+
+	/* End Character Interface		*/
+#pragma endregion
+
 #pragma region DefaultFunctions
+public:
+	// Returns whether this character has been unpossessed by virtue of losing all Health Points.
+	UFUNCTION(BlueprintPure, Category="Character")
+	bool GetIsDead() const { return bIsDead; };
+	//
+	bool CanSprint() const;
+	//
+	void Sprint();
+	//
+	void UnSprint();
+
 	// Intended for temporary disabling of wall run
 	UFUNCTION(BlueprintCallable, Category = "Character|Movement")
 	void SetWallRunAllowed(bool bAllowed) { bCanWallRun = bAllowed; }
 	// Checks if wall run is allowed
-	bool CanWallRun() const { return bCanEverWallRun && bCanWallRun; }
-	// Intended for temporary disabling of wall run
+	bool CanWallRun() const { return bCanWallRun; }
+	// Intended for temporary disabling of climb
 	UFUNCTION(BlueprintCallable, Category="Character|Movement")
 	void SetClimbAllowed(bool bAllowed) { bCanClimb = bAllowed; }
 	// Checks if Climb is allowed
-	bool CanClimb() const { return bCanEverClimb && bCanClimb; }
-	// Intended for temporary disabling of wall run
+	bool CanClimb() const { return bCanClimb; }
+	// Intended for temporary disabling of jump
 	UFUNCTION(BlueprintCallable, Category = "Character|Movement")
 	void SetJumpAllowed(bool bAllowed) { bCanJump = bAllowed; }
-	// Checks if jump is allowed
-	bool CanJump() const { return bCanEverJump && bCanJump; }
+	// Checks if Slide is allowed
+	bool CanSlide() const { return bCanSlide; }
+	// Intended for temporary disabling of slide
+	UFUNCTION(BlueprintCallable, Category = "Character|Movement")
+	void SetSlideAllowed(bool bAllowed) { bCanSlide = bAllowed; }
 #pragma endregion
 
 #pragma region AbilitySystem
@@ -605,6 +660,11 @@ public:
 	void AddAbilityToUI(TSubclassOf<UGameplayAbilityBase> InAbility, EAbilityType AbilityType, FGameplayAbilitySpecHandle InHandle, bool bFromItem);
 	// Calls AquireAbility on every ability passed in array
 	void AquireAbilities(TArray<TSubclassOf<UGameplayAbility>> InAbilities, TArray< FGameplayAbilitySpecHandle > &OutHandles);
+	//
+	UFUNCTION()
+	void AquirePassives(TArray<TSubclassOf<UGameplayAbility>> InPassives);
+	UFUNCTION()
+	void AquirePassive(TSubclassOf<UGameplayAbility> InPassive);
 	void RemoveAbility(FGameplayAbilitySpecHandle InHandle);
 	void RemoveAbilityFromUI(FGameplayAbilitySpecHandle InHandle);
 	void RemoveAbilities(TArray< FGameplayAbilitySpecHandle > InHandles);
@@ -670,7 +730,7 @@ public:
 
 	/** Begin Interaction Interface	*/
 	//
-	virtual void NotifyCanPickup_Implementation(AActor* Item, bool CanPickup) override;
+	virtual void NotifyCanInteract_Implementation(FName InteractibleName, bool CanPickup) override;
 	virtual void InteractedWith_Implementation(AActor* OtherActor) override;
 	virtual void AddItemToInventory_Implementation(AGAActor* Item) override; 
 	virtual void AddItemToRepository_Implementation(const FString& Category, const FItemKey& Item) override;
@@ -691,7 +751,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void SwitchEquippedItems();
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void DropEquippedItem();
+	void DropEquippedItem(const FVector& DropVelocity);
 
 	void EquipItemFromInventory(uint8 Slot);
 	void StowItemFromInventory(uint8 Slot);
@@ -727,10 +787,11 @@ public:
 	virtual FText GetParticipantDisplayName_Implementation(FName ActiveSpeaker) const override { return DialogueParticipantInfo->ParticipantDisplayName; };
 	virtual UTexture2D* GetParticipantIcon_Implementation(FName ActiveSpeaker, FName ActiveSpeakerState) const override { return DialogueParticipantInfo->ParticipantIcon; };
 
-	virtual bool ModifyIntValue_Implementation(const FName ValueName, bool bDelta, int32 Value) override;
-	virtual bool ModifyFloatValue_Implementation(const FName ValueName, bool bDelta, float Value) override;
-	virtual bool ModifyBoolValue_Implementation(const FName ValueName, bool bValue) override;
-	virtual bool ModifyNameValue_Implementation(const FName ValueName, const FName NameValue) override;
+	
+	 virtual bool ModifyIntValue_Implementation(const FName ValueName, bool bDelta, int32 Value) override;
+	 virtual bool ModifyFloatValue_Implementation(const FName ValueName, bool bDelta, float Value) override;
+	 virtual bool ModifyBoolValue_Implementation(const FName ValueName, bool bValue) override;
+	 virtual bool ModifyNameValue_Implementation(const FName ValueName, const FName NameValue) override;
 
 	virtual int32 GetIntValue_Implementation(const FName ValueName) const override;
 	virtual float GetFloatValue_Implementation(const FName ValueName) const override;
@@ -754,12 +815,14 @@ public:
 	void OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
 	UFUNCTION()
 	void OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
-	//
-	UFUNCTION(BlueprintNativeEvent)
-	void OnPawnSeen(APawn* SeenPawn);
-	//
-	UFUNCTION(BlueprintNativeEvent)
-	void OnNoiseHeard(APawn* NoiseInstigator, const FVector& Location, float Volume);
+	UFUNCTION()
+	void OnSensed(const USensorBase* Sensor, int32 Channel, EOnSenseEvent SenseEvent);
+	UFUNCTION()
+	void OnHeard();
+	UFUNCTION()
+	void OnSeen();
+
+	UFUNCTION()
 	void CheckVisibleCharacters();
 	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
 	bool IsOtherHostile(AGACharacter* Other);
@@ -767,13 +830,21 @@ public:
 	void CalculateShadowed();
 	UFUNCTION()
 	void UpdateDesiredLocation(FVector DesiredLocation);
+	UFUNCTION()
 	void UpdateCurrentBuilding(AGameplayBuilding* CurrentBuilding);
+	UFUNCTION()
 	void UpdateTargetBuilding(AGameplayBuilding* TargetBuilding);
 #pragma endregion
 
 #pragma region Combat
 	/** Combat */
 public:
+	//
+	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
+	void SimulateHit(const FHitResult& Hit, const FVector& ImpactForce);
+	//
+	UFUNCTION()
+	void SimulatePhysicalAnimation();
 	// 
 	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
 	void SpawnNumbers(float Numbers);
@@ -808,6 +879,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
 	void Puncture(FVector ImpactLocation, FVector ImpactNormal, FVector ImpactExitPoint, float ImpactRadius, FVector ImpactForce);
 
+	UPROPERTY(BlueprintAssignable)
+	FOnDeath OnDeathDelegate;
 	uint8 GetTeamID() const;
 	uint8 GetActiveMenuCount() const;
 	uint8 GetSubMenuCount() const;

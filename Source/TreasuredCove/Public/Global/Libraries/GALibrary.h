@@ -50,6 +50,9 @@ class TREASUREDCOVE_API UGALibrary : public UAbilitySystemBlueprintLibrary
 	GENERATED_BODY()
 	
 public:
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	static bool GetIsShadowed(const AActor* InActor);
+
 	UFUNCTION(BlueprintCallable, Category = "Editor")
 	static void GetEditorViewLocRot(FVector& OutLocation, FRotator& OutRotation);
 
@@ -65,8 +68,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	static float GetAttributeCurrentValue(class UAbilitySystemComponent* InAbilitySystem, FString InAttributeName, bool& OutDidSucceed);
 
-	UFUNCTION(BlueprintCallable, Category = "Voxel")
 	/*static int32 CreateFace(FProceduralMeshSection& MeshSection, const FVoxelFaceData& VoxelData);
 	UFUNCTION(BlueprintCallable, Category = "Voxel")*/
+	UFUNCTION(BlueprintCallable, Category = "Voxel")
 	static int32 CreateFace(FProceduralMeshSection& MeshSection, const UGameplayTileData* InTileData, const FVector& InLocation, int32 InIndex, int32 CurTriangleNum, int32 InVoxelSize, int32 InScale);
 };

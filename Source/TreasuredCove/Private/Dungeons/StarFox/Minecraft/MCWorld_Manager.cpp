@@ -28,6 +28,7 @@ void AMCWorld_Manager::OnConstruction(const FTransform& Transform)
 void AMCWorld_Manager::BeginPlay()
 {
 	Super::BeginPlay();
+
 }
 
 // Called every frame

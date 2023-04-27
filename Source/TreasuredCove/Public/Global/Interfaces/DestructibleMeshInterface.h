@@ -22,5 +22,7 @@ class TREASUREDCOVE_API IDestructibleMeshInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void InflictDamageToMesh(float Damage, float Strength, FVector HitLoc);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Destructible")
+	void OnDamageInflicted(float Damage, float Strength, const FVector& HitLoc);
+	virtual void InflictDamageToMesh(float Damage, float Strength, const FVector& HitLoc);
 };

@@ -7,7 +7,7 @@ void IInteractionInterface::InteractedWith_Implementation(AActor* OtherActor)
 
 }
 
-void IInteractionInterface::NotifyCanPickup_Implementation(AActor* Item, bool CanPickup)
+void IInteractionInterface::NotifyCanInteract_Implementation(FName InteractibleName, bool CanInteract)
 {
 
 }

@@ -75,7 +75,7 @@ void UDrawingCanvas::InitializeCanvasFromTexture(UTexture2D* InTexture)
 
 	uint8* canvasPixelPtr = canvasPixelData.Get();
 	FTexture2DMipMap* myMipMap = &InTexture->GetPlatformData()->Mips[0];
-	FUntypedBulkData* RawImageData = &myMipMap->BulkData;
+	FBulkData* RawImageData = &myMipMap->BulkData;
 
 	canvasWidth = myMipMap->SizeX;
 	canvasHeight = myMipMap->SizeY;

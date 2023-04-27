@@ -37,7 +37,7 @@ void UASHealth::PreAttributeChange(const FGameplayAttribute& Attribute, float& N
 	if (Attribute == HealthProperty)
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, MaxHealth.GetCurrentValue());
-		UE_LOG(LogTemp, Warning, TEXT("Health Value:%f"), NewValue);
+		// UE_LOG(LogTemp, Warning, TEXT("Health Value:%f"), NewValue);
 
 		AGACharacter* CharacterOwner = Cast<AGACharacter>(GetOwningActor());
 		if (CharacterOwner)
@@ -78,7 +78,7 @@ bool UASHealth::PreGameplayEffectExecute(FGameplayEffectModCallbackData &Data)
 {
 	Super::PreGameplayEffectExecute(Data);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "PreGameplayEffectExecute");
+	// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "PreGameplayEffectExecute");
 
 	bool bModifiedAttributeIsMaxHealth = Data.EvaluatedData.Attribute.GetUProperty() == FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, MaxHealth));
 	bool bModifiedAttributeIsHealth = Data.EvaluatedData.Attribute.GetUProperty() == FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, Health));
@@ -92,7 +92,7 @@ bool UASHealth::PreGameplayEffectExecute(FGameplayEffectModCallbackData &Data)
 	// Is the attribute being modified one of our attributes
 	if (bModifiedAttributeIsHealth || bModifiedAttributeIsMaxHealth || bModifiedAttributeIsStamina || bModifiedAttributeIsMaxStamina || bModifiedAttributeIsMana || bModifiedAttributeIsMaxMana)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "An Attribute was modified");
+		// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "An Attribute was modified");
 
 		bool bDamagedHealth = Data.EvaluatedData.Magnitude < Health.GetCurrentValue();
 		bool bDamagedMaxHealth = Data.EvaluatedData.Magnitude < MaxHealth.GetCurrentValue();
@@ -107,7 +107,7 @@ bool UASHealth::PreGameplayEffectExecute(FGameplayEffectModCallbackData &Data)
 		// (IE: Damaging)
 		if (bDamagedMaxHealth || bDamagedHealth || bDamagedMaxStamina || bDamagedStamina  || bDamagedMaxMana || bDamagedMana)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "An Attribute was damaged");
+			// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "An Attribute was damaged");
 
 			bool bHasDamageImmunity = Data.EffectSpec.CapturedSourceTags.GetActorTags().HasTag(FGameplayTag::RequestGameplayTag("immunity.damage"));
 
@@ -115,7 +115,7 @@ bool UASHealth::PreGameplayEffectExecute(FGameplayEffectModCallbackData &Data)
 			// return bHasDamageImmunity; // The below explains what occurs based on this value
 			if (bHasDamageImmunity)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "Cannot Damage");
+				// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "Cannot Damage");
 
 				return false;
 				// Because we are immune to damage, and this gameplay effect would damage us
@@ -126,10 +126,10 @@ bool UASHealth::PreGameplayEffectExecute(FGameplayEffectModCallbackData &Data)
 				// We are not immune to damage, therefore this effect applies to us.
 				if (bDamagedHealth)
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "Damage Health");
+					// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "Damage Health");
 
 					AttributeType = EAttributeType::Health;
-					DeltaAmount = Health.GetCurrentValue() - Data.EvaluatedData.Magnitude;
+					DeltaAmount = 0 - Data.EvaluatedData.Magnitude;
 				}
 				else if (bDamagedStamina)
 				{
@@ -229,7 +229,7 @@ void UASHealth::PostGameplayEffectExecute(const struct FGameplayEffectModCallbac
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "PostGameplayEffectExecute");
+	// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "PostGameplayEffectExecute");
 
 	UAbilitySystemComponent* SourceAbilitySystem = Data.EffectSpec.GetContext().GetInstigatorAbilitySystemComponent();
 
@@ -242,7 +242,7 @@ void UASHealth::PostGameplayEffectExecute(const struct FGameplayEffectModCallbac
 			switch (AttributeType)
 			{
 			case EAttributeType::Health:
-				UE_LOG(LogTemp, Warning, TEXT("Health Modified event was broadcasted!"));
+				// UE_LOG(LogTemp, Warning, TEXT("Health Modified event was broadcasted!"));
 				OnHealthModified.Broadcast(Health.GetCurrentValue(), MaxHealth.GetCurrentValue());
 				break;
 			case EAttributeType::Stamina:
@@ -257,26 +257,26 @@ void UASHealth::PostGameplayEffectExecute(const struct FGameplayEffectModCallbac
 			{
 				OnDamaged.Broadcast(SourceActor, AttributeType, DeltaAmount, Data.EvaluatedData.Magnitude);
 
-				AGACharacter* OwningCharacter = Cast<AGACharacter>(GetOwningActor());
+				/*AGACharacter* OwningCharacter = Cast<AGACharacter>(GetOwningActor());
 
 				if (OwningCharacter)
 				{
 					OwningCharacter->OnDamaged(SourceActor, AttributeType, DeltaAmount, Data.EvaluatedData.Magnitude);
 				} 
 
-				UE_LOG(LogTemp, Warning, TEXT("Damage event was broadcasted!"));
+				UE_LOG(LogTemp, Warning, TEXT("Damage event was broadcasted!"));*/
 			}
 			else if (bHealed)
 			{
 				OnHealed.Broadcast(SourceActor, AttributeType, DeltaAmount, Data.EvaluatedData.Magnitude); 
-				AGACharacter* SourceCharacter = Cast<AGACharacter>(GetOwningActor());
+				/*AGACharacter* SourceCharacter = Cast<AGACharacter>(GetOwningActor());
 
 				if (SourceCharacter)
 				{
 					SourceCharacter->OnHealed(SourceActor, AttributeType, DeltaAmount, Data.EvaluatedData.Magnitude);
 				}
 
-				UE_LOG(LogTemp, Warning, TEXT("Heal event was broadcasted!"));
+				UE_LOG(LogTemp, Warning, TEXT("Heal event was broadcasted!"));*/
 			}
 			else
 			{

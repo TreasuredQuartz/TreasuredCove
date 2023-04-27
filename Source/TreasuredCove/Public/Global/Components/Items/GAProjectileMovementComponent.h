@@ -13,9 +13,10 @@ UCLASS()
 class TREASUREDCOVE_API UGAProjectileMovementComponent : public UProjectileMovementComponent
 {
 	GENERATED_BODY()
-
+private:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnProjectileHitPawnDelegate, const FHitResult&, ImpactResult);
 	
+	TArray<AActor*> IgnoredActors;
 protected:
 	// Begin UObject Interface//
 	virtual void BeginPlay() override;

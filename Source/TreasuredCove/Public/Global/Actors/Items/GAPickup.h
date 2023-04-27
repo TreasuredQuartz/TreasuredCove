@@ -32,16 +32,16 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* Mesh;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USceneComponent* Root;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* Overlap;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FString Category;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FItemKey PickupInfo;
-public:	
+
+public:
+	// Set variable. Intended for use before FinishSpawning is called.
+	void SetPickupInfo(FItemKey& InInfo);
+
 	// Called every frame
 	// virtual void Tick(float DeltaTime) override;
 
@@ -60,8 +60,5 @@ public:
 	{
 		return PickupInfo.Quantity;
 	}
-	UStaticMeshComponent* GetPickupMesh_Implementation() override
-	{
-		return Mesh;
-	}
+
 };

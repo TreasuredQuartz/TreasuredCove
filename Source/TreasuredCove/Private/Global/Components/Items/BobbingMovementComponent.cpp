@@ -6,7 +6,7 @@
 
 void UBobbingMovementComponent::BeginPlay()
 {
-	if (!bInitialized)
+	if (!bInitialized && UpdatedComponent)
 	{
 		InitialLocation = UpdatedComponent->GetComponentLocation();
 		bInitialized = true;
@@ -17,26 +17,33 @@ void UBobbingMovementComponent::BeginPlay()
 
 void UBobbingMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// skip if we don't want component updated when not rendered or if updated component can't move
+	if (ShouldSkipUpdate(DeltaTime))
+	{
+		return;
+	}
+	if (!IsValid(UpdatedComponent))
+	{
+		return;
+	}
 	if (!bInitialized)
 	{
 		InitialLocation = UpdatedComponent->GetComponentLocation();
 		bInitialized = true;
 	}
 
-	if (DeltaTime <= SMALL_NUMBER) return;
-
 	const FVector OldLocation = UpdatedComponent->GetComponentLocation();
-	const float MaxZ = InitialLocation.Z + MaxDeviation;
-	const float MinZ = InitialLocation.Z - MaxDeviation;
+	const float MaxZ = InitialLocation.Z + (2 * MaxDeviation);
+	const float MinZ = InitialLocation.Z;
 	if (OldLocation.Z >= MaxZ || OldLocation.Z <= MinZ) Direction = 0 - Direction;
 
-	FVector NewLocation = OldLocation;
+
+	FVector Delta = FVector::ZeroVector;
 	const float Deviation = Speed * Direction * DeltaTime;
-	NewLocation.Z += Deviation;
+	Delta.Z += Deviation;
 
-	const FVector DeltaLocation = OldLocation - NewLocation;
 	const bool bEnableCollision = false;
-	MoveUpdatedComponent(DeltaLocation, UpdatedComponent->GetComponentRotation(), bEnableCollision);
-
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	MoveUpdatedComponent(Delta, UpdatedComponent->GetComponentRotation(), bEnableCollision);
 }

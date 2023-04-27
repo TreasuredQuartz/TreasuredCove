@@ -3,7 +3,9 @@
 
 #include "PlanetLandscape.h"
 #include "PlanetQuadTree.h"
-#include "ProceduralMeshComponent.h"
+#include "Components/RuntimeMeshComponentStatic.h"
+
+#include "DrawDebugHelpers.h"
 
 UPlanetLandscape::UPlanetLandscape() :
 	ShapeGenerator(FPlanetShapeGenerator()),
@@ -12,16 +14,16 @@ UPlanetLandscape::UPlanetLandscape() :
 	axisA(FVector(0,0,0)),
 	axisB(FVector(0,0,0))
 {
-	Mesh =
-		CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Mesh"));
+	RuntimeMesh =
+		CreateDefaultSubobject<URuntimeMeshComponentStatic>(TEXT("RuntimeMesh"));
 }
 
 void UPlanetLandscape::Initialize(FPlanetShapeGenerator inGenerator, FPlanetMeshSettings inMeshSettings, 
-	UProceduralMeshComponent& inMesh, FVector inLocalUp)
+	URuntimeMeshComponentStatic& inMesh, FVector inLocalUp)
 {
 	this->ShapeGenerator = inGenerator;
 	this->MeshSettings = inMeshSettings;
-	this->Mesh = &inMesh;
+	this->RuntimeMesh = &inMesh;
 	this->localUp = inLocalUp;
 	this->bInitialized = false;
 
@@ -32,84 +34,125 @@ void UPlanetLandscape::Initialize(FPlanetShapeGenerator inGenerator, FPlanetMesh
 // @desc See Sebastian Leagure (Procedural Planets)
 void UPlanetLandscape::ConstructMesh(const FVector& NewLocation)
 {
-	UE_LOG(LogTemp, Warning, TEXT("UPlanetLandscape: Constructing Mesh!"), )
-	if (QuadTree == nullptr)
+	if (RuntimeMesh)
 	{
-		QuadTree = new UPlanetQuadTree(MeshSettings, NewLocation, localUp, axisA, axisB, 1, 0);
-		QuadTree->ConstructQuadTree();
-	}
+		int32 i, cur;
+		if (!MeshSections.IsEmpty())
+		{
+			for (i = 0; i < MeshSections.Num(); ++i)
+			{
+				RuntimeMesh->ClearSection(0, i);
+				MeshSections[i].ClearAllData();
+			}
+		}
+		else
+		{
+			// RuntimeMesh->RemoveAllSectionsForLOD(0);
+		}
 
-	int triangleOffset = 0;
-	const auto& Tree = QuadTree->GetVisibleChildren();
+		if (QuadTree == nullptr)
+		{
+			QuadTree = new UPlanetQuadTree(MeshSettings, NewLocation, localUp, axisA, axisB, 1, 0);
+			QuadTree->ActorLocation = PlanetLocation;
+			QuadTree->ConstructQuadTree();
+		}
 
-	for (const auto& Child : Tree)
-	{
-		TArray<FVector> inV;
-		TArray<int> inT;
-		TArray<FColor> inC;
+		// UE_LOG(LogTemp, Warning, TEXT("UPlanetLandscape: \n -- Constructing Mesh! \n\n"), )
+		// UE_LOG(LogTemp, Warning, TEXT("UPlanetLandscape: \n ==== Location: %s ===="), *NewLocation.ToString());
 
-		// UE_LOG(LogTemp, Warning, TEXT("Current Visible Child: %s"), *Child->ToString() );
-		Child->CalculateMesh(inV, inT, inC, triangleOffset);
+		cur = 0;
+		const auto& Tree = QuadTree->GetVisibleChildren();
+		MeshSections.SetNum(Tree.Num());
+		for (const auto& Child : Tree)
+		{
+			TArray<FVector> inV;
+			TArray<int> inT;
+			TArray<FColor> inC;
 
-		vertices.Append(inV);
-		triangles.Append(inT);
-		colors.Append(inC);
+			// UE_LOG(LogTemp, Warning, TEXT("Current Visible Child: %s"), *Child->ToString() );
+			Child->CalculateMesh(inV, inT, inC, MeshSections[cur].NumTriangles); // We used to use triangleOffset here before we started using seperate sections for each QuadTree.
+		
+			// DrawDebugPoint(GetWorld(), PlanetLocation + (Child->position.GetSafeNormal() * MeshSettings.radius), 25, FColor::Green, false, 0.5);
+			// DrawDebugPoint(GetWorld(), NewLocation, 50, FColor::Yellow, false, 1);
 
-		/* Before we would pass parameters in directly
-		// But triangleOffset would grow as vertices would grow
-		// Causing the last quadtree to dissappear
-		*/
-		triangleOffset += inV.Num();
-	}
+			MeshSections[cur].Vertices.Append(inV);
+			MeshSections[cur].Triangles.Append(inT);
+			MeshSections[cur].VertexColors.Append(inC);
+			MeshSections[cur].Normals.Append(inV);
+			MeshSections[cur].bEnableCollision = Child->detailLevel == 11;
 
-	normals.SetNumUninitialized(vertices.Num());
-	int i = -1;
-	for (const FVector& vert : vertices)
-	{
-		normals[++i] = vert.GetSafeNormal();
-	}
+			/* Before we would pass parameters in directly
+			// But triangleOffset would grow as vertices would grow
+			// Causing the last quadtree to dissappear
+			*/
+			MeshSections[cur].NumTriangles += inV.Num();
+			++cur;
+		}
 
-	TArray<struct FProcMeshTangent> tangents;
+		i = 0;
+		for (FPlanetMeshSection MeshSection : MeshSections)
+		{
+			if (MeshSection.NumTriangles == 0 || MeshSection.Vertices.Num() < 3)
+			{
+				// UE_LOG(LogTemp, Error, TEXT("UPlanetLandscape: \n -- Mesh Section has no triangles! \n\n"));
+			}
+			else
+			{
+				RuntimeMesh->CreateSectionFromComponents(0, i, 0,
+					MeshSection.Vertices, MeshSection.Triangles, MeshSection.Normals, MeshSection.UVs, MeshSection.VertexColors, MeshSection.Tangents,
+					MeshSection.UpdateFrequency, MeshSection.bEnableCollision);
+			}
 
-	if (Mesh)
-	{
-		Mesh->ClearAllMeshSections();
-		Mesh->CreateMeshSection(0, vertices, triangles, normals, uvs, colors, tangents, false);
+			++i;
+		}
 	}
 }
 
 void UPlanetLandscape::CalculateNoise()
 {
-	TArray<FVector> newVertsPosition;
-
-	newVertsPosition.SetNumUninitialized(vertices.Num());
-	ensure(newVertsPosition.Num() == vertices.Num());
-
-	int i = -1;
-	for (FVector& Vert : vertices)
+	int32 cur = -1;
+	for (FPlanetMeshSection MeshSection : MeshSections)
 	{
-		newVertsPosition[++i] = ShapeGenerator.CalculatePointOnPlanet(Vert) * MeshSettings.radius; // * PlanetSize;
-	}
+		TArray<FVector> newVertsPosition;
 
-	TArray<struct FProcMeshTangent> tangents;
+		newVertsPosition.SetNumUninitialized(MeshSection.Vertices.Num());
+		ensure(newVertsPosition.Num() == MeshSection.Vertices.Num());
 
-	if (Mesh)
-	{
-		Mesh->UpdateMeshSection(0, newVertsPosition, normals, uvs, colors, tangents);
+		int i = -1;
+		for (FVector& Vert : MeshSection.Vertices)
+		{
+			newVertsPosition[++i] = ShapeGenerator.CalculatePointOnPlanet(Vert) * MeshSettings.radius; // * PlanetSize;
+		}
+
+		if (RuntimeMesh)
+		{
+			RuntimeMesh->UpdateSectionFromComponents(0, ++cur,
+				newVertsPosition, MeshSection.Triangles, MeshSection.Normals, MeshSection.UVs, MeshSection.VertexColors, MeshSection.Tangents);
+			// Mesh->UpdateMeshSection(0, newVertsPosition, normals, uvs, colors, tangents);
+		}
 	}
+	
 }
 
 void UPlanetLandscape::OnCameraLocationUpdated(const FVector& NewLocation)
 {
-	if (Mesh->WasRecentlyRendered())
+	/*if (!Mesh->WasRecentlyRendered())
 	{
-		if (QuadTree == nullptr)
+		Mesh->ClearAllMeshSections();
+	}
+	else*/
+	{
+		if (QuadTree)
 		{
-			QuadTree = new UPlanetQuadTree(MeshSettings, NewLocation, localUp, axisA, axisB, 1, 0);
+			QuadTree->DestructQuadTree();
+			QuadTree->PlayerPosition = NewLocation;
 			QuadTree->ConstructQuadTree();
 		}
 
-		if (QuadTree->CheckLOD(NewLocation)) ConstructMesh(NewLocation);
+		// if (QuadTree->CheckLOD(NewLocation))
+		{
+			ConstructMesh(NewLocation);
+		}
 	}
 }
 

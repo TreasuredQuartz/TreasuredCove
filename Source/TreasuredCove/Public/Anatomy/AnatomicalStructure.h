@@ -3,13 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/SceneComponent.h"
+#include "Components/ActorComponent.h"
 #include "AnatomicalStructure.generated.h"
 
+class UOrgan;
 class UOrganSystem;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TREASUREDCOVE_API UAnatomicalStructure : public USceneComponent
+class TREASUREDCOVE_API UAnatomicalStructure : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -28,6 +29,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Anatomy")
 	TArray<TSubclassOf<UOrganSystem>> OrganSystemClasses;
 	TArray<UOrganSystem*> OrganSystems;
+	TArray<UOrgan*> Organs;
 
 	// Templated cast to given organ system.
 	template<typename T>

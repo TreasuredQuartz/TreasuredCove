@@ -14,6 +14,12 @@ struct FGAActivatedInfo
 	GENERATED_BODY()
 
 public:
+	FGAActivatedInfo() : Ability(nullptr),
+		Sound(nullptr),
+		Montage(nullptr)
+	{}
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UGameplayAbilityBase> Ability;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

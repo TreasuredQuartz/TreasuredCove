@@ -78,7 +78,7 @@ public:
 	FGameplayAttributeData Mass;
 
 	/* Damage Dependent Stats 
-	* - Stopping Power is effectively Damage
+	* - Impact Power is effectively Damage
 	*/
 
 	// The range at which the projectile reaches maximum damage
@@ -96,6 +96,10 @@ public:
 	// With the addition of buffs and other effects, Damage might need to be clamped at some point
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
 	FGameplayAttributeData MaxDamage;
+
+	// Twice the diameter of the current bullet (In milimeters)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
+	FGameplayAttributeData ImpactPower;
 
 	// Ability Outputs
 

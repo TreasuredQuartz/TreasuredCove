@@ -40,22 +40,26 @@ void AMCWorld_BasicInteractionTool::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	APawn* Pawn = GetOwner<APawn>();
+
+	if (!Pawn || !Pawn->IsLocallyControlled() || GetOwner() != UGameplayStatics::GetPlayerPawn(this, 0)) return;
+
 	if (AbilityTargeting())
 	{
 		if (AbilityTargetingActor)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "Targeting is updating!");
-			AbilityTargetingActor->SetActorLocation(Location);
+			// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "Targeting is updating!");
+			AbilityTargetingActor->SetActorLocation(FVector(CurrentLocation));
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "Targeting is being created!");
+			// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "Targeting is being created!");
 
 			FTransform Transform;
 			AMCWorld_VoxelItem* SpawnedActor = GetWorld()->SpawnActorDeferred<AMCWorld_VoxelItem>(AMCWorld_VoxelItem::StaticClass(), Transform);
 			if (SpawnedActor)
 			{
-				Transform = FTransform(FRotator(), Location, FVector());
+				Transform = FTransform(FRotator(), FVector(CurrentLocation), FVector());
 				SpawnedActor->bMini = false;
 				SpawnedActor->VoxelSize = 201;
 				SpawnedActor->Material = VoxelTargetingMaterial;
@@ -64,12 +68,13 @@ void AMCWorld_BasicInteractionTool::Tick(float DeltaTime)
 
 				AbilityTargetingActor = SpawnedActor;
 
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "Targeting was created!");
+				// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "Targeting was created!");
 			}
 		}
 	}
+	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "Targeting is not updating!");
+		// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "Targeting is not updating!");
 	}
 }
 
@@ -81,7 +86,6 @@ void AMCWorld_BasicInteractionTool::SetCurrentItem(AGAActor* NewItem)
 bool AMCWorld_BasicInteractionTool::AbilityTargeting()
 {
 	bool bShouldUpdate = false;
-	FVector NewLocation = FVector();
 
 	float Range = 500.f;
 	FHitResult Hit;
@@ -92,40 +96,36 @@ bool AMCWorld_BasicInteractionTool::AbilityTargeting()
 	FVector End = Start + (CameraForwardVector * Range);
 	FCollisionQueryParams CollisionParems;
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-
+	// DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
 	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, CollisionParems))
 	{
 		if (Hit.bBlockingHit)
 		{
-			DrawDebugPoint(GetWorld(), Hit.Location, 10, FColor::Magenta, true, 1);
+			// DrawDebugPoint(GetWorld(), Hit.Location, 10, FColor::Magenta, true, 1);
 
 			AMCWorld_Voxel* HitVoxel = Cast<AMCWorld_Voxel>(Hit.GetActor());
 			if (HitVoxel)
 			{
 				ActiveChunk = HitVoxel;
 
-				FVector Direction =
+				const FVector Direction =
 					(Hit.Location - CameraLocation).GetSafeNormal();
 
-				FVector Vector2 = Hit.Location + (Direction * 1);
+				const FVector Vector2 = Hit.Location + (Direction * 1);
 
-				FVector TempVector = Vector2; // / (ActiveChunk->ChunkLineElementsP2);
+				const FIntVector TempVector = FIntVector(Vector2) / HitVoxel->GetVoxelSize();
+				
 
-				NewLocation =
-					FVector((int)(TempVector.X), (int)(TempVector.Y), (int)(TempVector.Z));
-
-				if (Location != NewLocation)
+				if (CurrentLocation != TempVector)
 				{
 					bShouldUpdate = true;
-					Location = NewLocation;
+					CurrentLocation = TempVector;
 				}
 
-				GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, Location.ToString());
+				// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, Location.ToString());
 			}
 		}
 	}
-
 
 	return bShouldUpdate;
 }

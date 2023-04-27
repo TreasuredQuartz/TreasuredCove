@@ -33,10 +33,15 @@ private:
 	uint8 FindEmptySlot();
 
 public:
+	UFUNCTION(BlueprintCallable, Category="Inventory")
 	void SetInventorySize(uint8 Size);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool AddItem(AGAActor* Item);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void MoveItem(uint8 From, uint8 To);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void RemoveItem(uint8 Slot);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	AGAActor* GetItem(uint8 Slot);
 		
 };

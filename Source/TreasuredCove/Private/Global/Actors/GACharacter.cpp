@@ -27,20 +27,24 @@
 #include "GASkillTreeComponent.h"
 #include "ComboComponent.h"
 #include "TownSystemComponent.h"
-#include "SenseComponent.h"
 #include "PickupInterface.h"
 #include "InventoryComponent.h"
 #include "RepositoryComponent.h"
 #include "PickupMagnetComponent.h"
 #include "CraftingComponent.h"
 #include "FloatingTextComponent.h"
-#include "MaterialTrailComponent.h"
+#include "FloatingBarComponent.h"
+#include "FloatingItemInfoComponent.h"
+#include "FootprintComponent.h"
+#include "LaunchingComponent.h"
+#include "MovementTrailComponent.h"
 
 // Misc
 #include "GameplayBuilding.h"
 
 #include "GravityWidget.h"
 #include "GAWidget.h"
+#include "FloatingItemInfoActor.h"
 
 #include "Animation/AnimInstance.h"
 #include "GameFramework/DamageType.h"
@@ -49,9 +53,12 @@
 
 // Engine Components
 #include "BrainComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/TimelineComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
+#include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicsEngine/PhysicsConstraintActor.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -61,6 +68,11 @@
 #include "KismetProceduralMeshLibrary.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "Rendering/SkeletalMeshLODRenderData.h"
+
+// Sense System Plugin
+#include "SenseReceiverComponent.h"
+#include "SenseStimulusComponent.h"
+#include "SenseStimulusBase.h"
 
 // Global
 #include "AbilitySystemGlobals.h"
@@ -73,6 +85,8 @@
 #include "Engine/DirectionalLight.h"
 #include "UObject/ConstructorHelpers.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogCharacter, Log, All);
+
 #pragma region Defaults
 // Sets default values
 AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) : 
@@ -80,9 +94,13 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Mesh
+	// Procedural Mesh
 	/*RealMesh = 
 		CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Real Mesh"));*/
+
+	// Town System Component
+	TownInfo =
+		CreateDefaultSubobject<UTownSystemComponent>(TEXT("Town System"));
 
 	// Combo System Component
 	ComboSystem =
@@ -98,23 +116,29 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 		CreateDefaultSubobject<UGASkillTreeComponent>(TEXT("Skill Trees"));
 
 	// Pawn Sensing Component
-	Sight = 
-		CreateDefaultSubobject<USenseComponent>(TEXT("Senses"));
-	Sight->OwningCharacter = this;
-	Sight->SetupAttachment(RootComponent);
-	// Sight->SetRelativeRotation(FRotator(0, 0, -90));
-	Sight->SetRelativeLocation(FVector(0, 0, 68));
+	AISenses = 
+		CreateDefaultSubobject<USenseReceiverComponent>(TEXT("AISenses"));
+	AISenses->SetupAttachment(RootComponent);
+	// AISenses->SetRelativeRotation(FRotator(0, 0, -90));
+	// AISenses->SetRelativeLocation(FVector(0, 0, 68));
+
+	// Stimulus Component
+	AIStimulus =
+		CreateDefaultSubobject<USenseStimulusComponent>(TEXT("SenseStimulus"));
 
 	// Inventory Component
 	Inventory =
 		CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 	Inventory->SetInventorySize(5);
 
+	// Repository Component
 	Repository =
 		CreateDefaultSubobject<URepositoryComponent>(TEXT("Repository"));
+
+	// Magnet Component
 	Magnet =
 		CreateDefaultSubobject<UPickupMagnetComponent>(TEXT("Magnet"));
-	// Magnet->SetupAttachment(RootComponent);
+	Magnet->SetupAttachment(RootComponent);
 
 	// Crafting Component
 	Crafting =
@@ -124,44 +148,45 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 	DialogueParticipantInfo =
 		CreateDefaultSubobject<UDialogueComponent>(TEXT("DialogueParticipantInfo"));
 
+	// Phycial Animation Component
+	PhysicalAnimation =
+		CreateDefaultSubobject<UPhysicalAnimationComponent>(TEXT("Physical Animation"));
+
 	// Floating Text Component
 	FloatingTextComponent =
 		CreateDefaultSubobject<UFloatingTextComponent>(TEXT("Floating Text"));
 
+	// Floating Bar Component
+	FloatingBarComponent =
+		CreateDefaultSubobject<UFloatingBarComponent>(TEXT("Floating Bar"));
+
+	// Item Info Popup Component
+	FloatingItemInfoComponent =
+		CreateDefaultSubobject<UFloatingItemInfoComponent>(TEXT("Floating Item Info"));
+
+	// Footprint Component
+	FootprintComponent =
+		CreateDefaultSubobject<UFootprintComponent>(TEXT("Footprints"));
+
+	// Launching Component
+	LaunchingComponent =
+		CreateDefaultSubobject<ULaunchingComponent>(TEXT("Launch Capability"));
+
 	// Movement Trail Component
-	/*static ConstructorHelpers::FObjectFinder<UParticleSystem> PSTrailObject(TEXT("/Game/GameplayAbilities/FX/ParticleSystems/PS_AffectingTrail"));
-	PSTrail =
-		CreateDefaultSubobject<UParticleSystemComponent>("PSTrail");
-	PSTrail->SetupAttachment(RootComponent);
-	PSTrail->bOwnerNoSee = true;
-	PSTrail->ComponentTags.Add("GrassAffector");
-	PSTrail->ComponentTags.Add("WaterAffector");
-
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> PSPunctureObject(TEXT("/Game/GameplayAbilities/FX/ParticleSystems/PS_RainbowBurst"));
-	PSPuncture =
-		CreateDefaultSubobject<UParticleSystemComponent>("PSPuncture");
-	PSPuncture->SetAutoActivate(false);
-
-	if (PSTrailObject.Succeeded())
-	{
-		PSTrail->SetTemplate(PSTrailObject.Object);
-	}
-
-	if (PSPunctureObject.Succeeded())
-	{
-		PSPuncture->SetTemplate(PSPunctureObject.Object);
-		PSPuncture->SetHiddenInGame(true);
-	}*/
+	MovementTrail =
+		CreateDefaultSubobject<UMovementTrailComponent>(TEXT("Movement Trail"));
+	MovementTrail->SetSpawnActors(false);
 
 	/* Default Character values */
+
+	// Camera tilt timeline
+	// Camera tilt timeline
+	CameraTiltTimeline = 
+		CreateDefaultSubobject<UTimelineComponent>(TEXT("Camera Tilt Timeline"));
 
 	// Default AIController
 	TSubclassOf<AGAAIController> DefaultAIC;
 	AIControllerClass = DefaultAIC;
-
-	// IKFootTrace Variables
-	Scale = GetActorTransform().GetScale3D().Z;
-	IKFootTraceDistance = GetCapsuleComponent()->GetScaledCapsuleHalfHeight()* Scale;
 
 	// Name values
 	Tags.Add(FName("GrassAffector"));
@@ -183,7 +208,7 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 		// RealMesh->SetupAttachment(GetMesh());
 
 		if (GetMesh()->DoesSocketExist(HeadSocket))
-			Sight->SetupAttachment(GetMesh(), HeadSocket);
+			AISenses->SetupAttachment(GetMesh(), HeadSocket);
 
 		GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	}
@@ -194,37 +219,52 @@ void AGACharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	bIsPaused = false;
 	ChangeCameraType(bFirstPerson);
+	PhysicalAnimation->SetSkeletalMeshComponent(GetMesh());
 
-	if (WallRunTimelineCurve) 
-	{
-		FOnTimelineFloat TimelineCallback;
-		// FOnTimelineEventStatic TimelineFinishedCallback;
-
-		TimelineCallback.BindUFunction(this, FName("UpdateCameraTilt"));
-		// TimelineFinishedCallback.BindUFunction(this, FName(TEXT("")));
-
-		WallRunCameraTiltTimeline.AddInterpFloat(WallRunTimelineCurve, TimelineCallback);
-		WallRunCameraTiltTimeline.SetLooping(true);
-	}
-
-	SightInitialRotation = Sight->GetComponentRotation();
+	// SightInitialRotation = Sight->GetComponentRotation();
 
 	AutoDetermineTeamIDByControllerType();
 	PC = Cast<AGAPlayerController>(GetController());
 	AC = Cast<AGAAIController>(GetController());
 	
+	if (WallRunTimelineCurve)
+	{
+		FOnTimelineFloat TimelineCallback;
+		TimelineCallback.BindDynamic(this, &AGACharacter::UpdateCameraTilt);
+		CameraTiltTimeline->AddInterpFloat(WallRunTimelineCurve, TimelineCallback);
+
+		CameraTiltTimeline->SetLooping(false);
+		CameraTiltTimeline->SetTimelineLength(0.2f);
+		CameraTiltTimeline->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
+		CameraTiltTimeline->SetPlaybackPosition(0.f, false);
+	}
 	if (PC) PC->SetItemPriority(bWeaponPriority);
-
-	bIsPaused = false;
-
 	if (TownInfo != nullptr)
 	{
 		TownInfo->UpdateDesiredLocation.AddDynamic(this, &AGACharacter::UpdateDesiredLocation);
 		TownInfo->UpdateCurrentBuilding.AddDynamic(this, &AGACharacter::UpdateCurrentBuilding);
 		TownInfo->UpdateTargetBuilding.AddDynamic(this, &AGACharacter::UpdateTargetBuilding);
 	}
-
+	if (AISenses != nullptr)
+	{
+		if (PC)
+		{
+			// return;
+		}
+		else if (AC)
+		{
+			AISenses->OnNewSense.AddUniqueDynamic(AC, &AGAAIController::OnNewSense);
+			AISenses->OnCurrentSense.AddUniqueDynamic(AC, &AGAAIController::OnCurrentSense);
+			AISenses->OnLostSense.AddUniqueDynamic(AC, &AGAAIController::OnLostSense);
+			AISenses->OnForgetSense.AddUniqueDynamic(AC, &AGAAIController::OnForgetSense);
+		}
+	}
+	if (AIStimulus != nullptr)
+	{
+		AIStimulus->OnSensedFromSensor.AddUniqueDynamic(this, &AGACharacter::OnSensed);
+	}
 	if (HeldItem)
 	{
 		EquipItem(HeldItem);
@@ -239,46 +279,23 @@ void AGACharacter::Tick(float InDeltaTime)
 	Super::Tick(InDeltaTime);
 	DeltaTime = InDeltaTime;
 
-	WallRunCameraTiltTimeline.TickTimeline(DeltaTime);
-	// ClampHorizontalVelocity();
-
-	/*if (CumalitiveAbilityHandles.Num() > 0)
+	if (CameraTiltTimeline && GetController())
 	{
-		for (FGameplayAbilitySpecHandle Handle : CumalitiveAbilityHandles)
+		if (CameraTiltTimeline->IsPlaying())
 		{
-			if (Handle.IsValid())
-				RenamedAbilitySystem->TryActivateAbility(Handle);
+			CameraTiltTimeline->TickComponent(DeltaTime, ELevelTick::LEVELTICK_TimeOnly, NULL);
+			GetController()->SetControlRotation(FMath::RInterpTo(GetControlRotation(), ViewRotation, DeltaTime, 10));
 		}
-	}*/
-	/*if (HeldItem)
-	{
-		if (ItemCumalitiveAbilityHandles.Num() > 0)
+		else if (CameraTiltTimeline->GetPlaybackPosition() == 0.f)
 		{
-			for (FGameplayAbilitySpecHandle Handle : ItemCumalitiveAbilityHandles)
+			if (!ViewRotation.Equals(GetControlRotation()))
 			{
-				if (Handle.IsValid())
-					RenamedAbilitySystem->TryActivateAbility(Handle);
+				ViewRotation = GetControlRotation();
+				ViewRotation.Roll = 0; 
+				GetController()->SetControlRotation(FMath::RInterpTo(GetControlRotation(), ViewRotation, DeltaTime, 10));
 			}
 		}
-	}*/
-	/*if (GetVelocity().Size() > 0)
-	{
-		RenamedAbilitySystem->TryActivateAbility(IncreaseSpreadAbilityHandle);
 	}
-	else
-	{
-		RenamedAbilitySystem->TryActivateAbility(DecreaseSpreadAbilityHandle);
-	}*/
-
-	if (bIsWalking)
-	{
-		float Result = IKFootTrace(IKFootTraceDistance, FName("foot_r"));
-		IKOffsetRightFoot = FMath::FInterpTo(IKOffsetRightFoot, Result, DeltaTime, IKInterpSpeed);
-
-		Result = IKFootTrace(IKFootTraceDistance, FName("foot_l"));
-		IKOffsetLeftFoot = FMath::FInterpTo(IKOffsetLeftFoot, Result, DeltaTime, IKInterpSpeed);
-	}
-
 }
 
 // Called to bind functionality to input
@@ -351,7 +368,7 @@ void AGACharacter::UnPossessed()
 	Super::UnPossessed();
 }
 
-// Called 
+// Called when server replicates controller to clients
 void AGACharacter::OnRep_Controller()
 {
 	if (RenamedAbilitySystem)
@@ -403,110 +420,112 @@ void AGACharacter::PostEditChangeChainProperty(struct FPropertyChangedChainEvent
 // */
 //////////////////////////////////////////////////////
 /////			IK HELPER FUNCTIONS				//////
+/////			    DEPRECIATED					//////
 //////////////////////////////////////////////////////
 
-float AGACharacter::IKFootTrace(float Distance, FName Bone)
-{
-	FVector LocationA = GetMesh()->GetBoneLocation(Bone);
-	FVector LocationB = GetActorLocation();
+//float AGACharacter::IKFootTrace(float Distance, FName Bone)
+//{
+//	FVector LocationA = GetMesh()->GetBoneLocation(Bone);
+//	FVector LocationB = GetActorLocation();
+//
+//	FHitResult Hit;
+//	FVector Start = FVector(LocationA.X, LocationA.Y, LocationB.Z);
+//	FVector End = FVector(LocationA.X, LocationA.Y, LocationB.Z - Distance);
+//	FCollisionQueryParams CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
+//
+//	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
+//	// DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
+//
+//	float Result = 0.0f;
+//
+//	if (Hit.bBlockingHit)
+//	{
+//		// DrawDebugPoint(GetWorld(), Hit.Location, 10, FColor::Magenta, true, 1);
+//		FVector Difference = End - Hit.Location;
+//		Result = Difference.Size() / Scale;
+//	}
+//
+//	return Result;
+//}
 
-	FHitResult Hit;
-	FVector Start = FVector(LocationA.X, LocationA.Y, LocationB.Z);
-	FVector End = FVector(LocationA.X, LocationA.Y, LocationB.Z - Distance);
-	FCollisionQueryParams CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
+//float AGACharacter::IKFingerTrace(float Distance, FName Bone)
+//{
+//	FVector LocationA = GetMesh()->GetBoneLocation(Bone);
+//
+//	FHitResult Hit;
+//	FVector Start = FVector(LocationA.X, LocationA.Y, 0);
+//	FVector End = FVector(LocationA.X, LocationA.Y, 0 - Distance);
+//	FCollisionQueryParams CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
+//
+//	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
+//	DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
+//
+//	float Result = 0.0f;
+//
+//	if (Hit.bBlockingHit)
+//	{
+//		FVector Difference = End - Hit.Location;
+//		Result = Difference.Size();
+//	}
+//	else
+//	{
+//		FVector FingerVector;
+//		Start = FVector(Hit.Location);
+//		End = FVector(Hit.Location + FVector());
+//		CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
+//
+//		GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
+//		DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
+//
+//		if (Hit.bBlockingHit)
+//		{
+//			FVector Difference = End - Hit.Location;
+//			Result = Difference.Size();
+//		}
+//		else
+//		{
+//			Start = FVector(Hit.Location);
+//			End = FVector(Hit.Location + FVector());
+//			CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
+//
+//			GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
+//			DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
+//
+//			if (Hit.bBlockingHit)
+//			{
+//				FVector Difference = End - Hit.Location;
+//				Result = Difference.Size();
+//			}
+//		}
+//	}
+//
+//	return Result;
+//}
 
-	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-	// DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-
-	float Result = 0.0f;
-
-	if (Hit.bBlockingHit)
-	{
-		// DrawDebugPoint(GetWorld(), Hit.Location, 10, FColor::Magenta, true, 1);
-		FVector Difference = End - Hit.Location;
-		Result = Difference.Size() / Scale;
-	}
-
-	return Result;
-}
-
-float AGACharacter::IKFingerTrace(float Distance, FName Bone)
-{
-	FVector LocationA = GetMesh()->GetBoneLocation(Bone);
-
-	FHitResult Hit;
-	FVector Start = FVector(LocationA.X, LocationA.Y, 0);
-	FVector End = FVector(LocationA.X, LocationA.Y, 0 - Distance);
-	FCollisionQueryParams CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
-
-	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-	DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-
-	float Result = 0.0f;
-
-	if (Hit.bBlockingHit)
-	{
-		FVector Difference = End - Hit.Location;
-		Result = Difference.Size();
-	}
-	else
-	{
-		FVector FingerVector;
-		Start = FVector(Hit.Location);
-		End = FVector(Hit.Location + FVector());
-		CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
-
-		GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-		DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-
-		if (Hit.bBlockingHit)
-		{
-			FVector Difference = End - Hit.Location;
-			Result = Difference.Size();
-		}
-		else
-		{
-			Start = FVector(Hit.Location);
-			End = FVector(Hit.Location + FVector());
-			CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
-
-			GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-
-			if (Hit.bBlockingHit)
-			{
-				FVector Difference = End - Hit.Location;
-				Result = Difference.Size();
-			}
-		}
-	}
-
-	return Result;
-}
-
-float AGACharacter::IKHandToLocation(FVector Location, FName Bone)
-{
-	FVector LocationA = GetMesh()->GetBoneLocation(Bone);
-
-	FHitResult Hit;
-	FVector Start = FVector(LocationA);
-	FVector End = FVector(Location);
-	FCollisionQueryParams CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
-
-	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-	DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-
-	float Result = 0.0f;
-
-	if (Hit.bBlockingHit)
-	{
-		FVector Difference = End - Hit.Location;
-		Result = Difference.Size() / Scale;
-	}
-
-	return Result;
-}
+//float AGACharacter::IKHandToLocation(FVector Location, FName Bone)
+//{
+//	FVector LocationA = GetMesh()->GetBoneLocation(Bone);
+//
+//	FHitResult Hit;
+//	FVector Start = FVector(LocationA);
+//	FVector End = FVector(Location);
+//	FCollisionQueryParams CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
+//
+//	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
+//	DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
+//
+//	float Result = 0.0f;
+//
+//	if (Hit.bBlockingHit)
+//	{
+//		FVector Difference = End - Hit.Location;
+//		Result = Difference.Size() / Scale;
+//	}
+//
+//	return Result;
+//}
 #pragma endregion
+
 
 #pragma region VisualEffects
 // */
@@ -516,19 +535,56 @@ float AGACharacter::IKHandToLocation(FVector Location, FName Bone)
 
 void AGACharacter::SpawnNumbers(float Numbers)
 {
-	FloatingTextComponent->AddFloatingText_Client(FText::FromString(FString::SanitizeFloat(Numbers)), GetActorLocation());
+	FVector Top = FVector(0, 0, GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() * 2);
+	FloatingTextComponent->AddFloatingText_Client(FText::FromString(FString::SanitizeFloat(Numbers)), GetActorLocation() + Top);
 }
 
 void AGACharacter::SpawnValueBar(EAttributeType BarType, float CurrentValue, float MaxValue)
 {
-	if (!OnDamagedHealthBar)
+	if (FloatingBarComponent->HasIndex((uint8)BarType))
 	{
-		OnDamagedHealthBar = GetWorld()->SpawnActor<AGravityWidget>(OnDamagedHealthBarClass,
-			FTransform(FRotator(), GetActorLocation(), FVector()));
-		OnDamagedHealthBar->Gravity = FVector(0);
-		OnDamagedHealthBar->SetOwner(this);
-		OnDamagedHealthBar->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::SnapToTarget, true),
-			GetMesh()->DoesSocketExist(HeadSocket) ? HeadSocket : FName());
+		FloatingBarComponent->UpdateProgress((uint8)BarType, CurrentValue, MaxValue);
+	}
+	else
+	{
+		FVector Top = FVector(0, 0, GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() * 2);
+		FloatingBarComponent->AddFloatingBar_Client(CurrentValue, MaxValue, GetActorLocation() + Top);
+	}
+}
+
+void AGACharacter::SimulateHit(const FHitResult& Hit, const FVector& ImpactForce)
+{
+	const FName PhysicsBone = Hit.BoneName == FName("pelvis") ? FName("spine_01") : Hit.BoneName;
+
+	HitReactionTimeRemaining += 0.5;
+	GetMesh()->SetAllBodiesBelowSimulatePhysics(FName("pelvis"), true, false);
+	PhysicalAnimation->ApplyPhysicalAnimationProfileBelow(PhysicsBone, FName("HitReactionProfile"), false);
+	PhysicalAnimation->SetStrengthMultiplyer(1.0f);
+
+	// HitCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->AddImpulseToAllBodiesBelow(ImpactForce, PhysicsBone, true, true);
+	if (!GetWorldTimerManager().IsTimerActive(PhysicalAnimationHandle))
+	{
+		GetWorldTimerManager().SetTimer(PhysicalAnimationHandle, this, &AGACharacter::SimulatePhysicalAnimation, 0.033, true);
+	}
+}
+
+void AGACharacter::SimulatePhysicalAnimation()
+{
+	if (bIsDead)
+	{
+		GetWorldTimerManager().ClearTimer(PhysicalAnimationHandle);
+		return;
+	}
+
+	HitReactionTimeRemaining -= 0.033;
+	GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName("pelvis"), FMath::Min(HitReactionTimeRemaining, 1.0f), false, false);
+
+	if (HitReactionTimeRemaining <= 0)
+	{
+		HitReactionTimeRemaining = 0;
+		GetMesh()->SetAllBodiesBelowSimulatePhysics(FName("pelvis"), false);
+		GetWorldTimerManager().ClearTimer(PhysicalAnimationHandle);
 	}
 }
 
@@ -676,34 +732,77 @@ void AGACharacter::ChangeCameraType_Implementation(bool bInFirstPerson)
 void AGACharacter::BeginCameraTilt()
 {
 	/* Would like this on a timer
-	* Not so much a timeline.
+	* Not so much a timeline. 
 	CameraTiltTime = 0.0;
 	FTimerDelegate TiltDel;
-	TiltDel.BindUFunction(this, "UpdateCameraTilt", CameraTiltTime, increment, endValue, endTime);
-	GetWorldTimerManager().SetTimer(CameraTiltTimerHandle, increment, true);
-	*/
+	TiltDel.BindUFunction(this, FName("UpdateCameraTilt"), CameraTiltTime, increment, endValue, endTime);
+	GetWorldTimerManager().SetTimer(CameraTiltTimerHandle, increment, true); */
+	UE_LOG(LogTemp, Warning, TEXT("Begin Camera Tilt!"));
 
-	WallRunCameraTiltTimeline.Play();
+	CameraTiltTimeline->Play();
 }
 
-void AGACharacter::UpdateCameraTilt()
+void AGACharacter::UpdateCameraTilt(float progress)
 {
-	float TimelineValue = WallRunCameraTiltTimeline.GetPlaybackPosition();
-	float progress = WallRunTimelineCurve->GetFloatValue(TimelineValue);
-	
-	FRotator Rotation = GetController()->GetControlRotation();
+	if (!WallRunTimelineCurve || !GetController())
+		return;
 
-	switch (WallRunSide)
+	// float TimelineValue = WallRunCameraTiltTimeline.GetPlaybackPosition();
+	// float progress = WallRunTimelineCurve->GetFloatValue(TimelineValue);
+	
+	FRotator Rotation = GetControlRotation();
+
+	if (GetGACharacterMovement())
 	{
-	case ENavType::Left:
-		Rotation.Roll = -1 * progress;
+		if (false)
+		{
+			if (bIsSliding)
+			{
+				// ENavType FloorSide = GetGACharacterMovement()->CurrentFloor.HitResult.Normal;
+				switch (ENavType::Right)
+				{
+				case ENavType::Left:
+					Rotation.Roll = 0 - progress;
+					break;
+				case ENavType::Right:
+					Rotation.Roll = progress;
+					break;
+				}
+			}
+			else if (GetGACharacterMovement()->IsWallRunning())
+			{
+				switch (GetGACharacterMovement()->GetWallRunSide())
+				{
+				case ENavType::Left:
+					Rotation.Roll = 0 - progress;
+					break;
+				case ENavType::Right:
+					Rotation.Roll = progress;
+					break;
+				}
+			}
+			else
+			{
+				Rotation.Roll = progress;
+			}
+		}
+
+		switch (GetGACharacterMovement()->GetWallRunSide())
+		{
+		case ENavType::Front:
+		case ENavType::Left:
+			Rotation.Roll = 0 - progress;
 			break;
-	case ENavType::Right:
-		Rotation.Roll = progress;
-		break;
+		case ENavType::Right:
+			Rotation.Roll = progress;
+			break;
+		default:
+			Rotation.Roll = progress;
+			break;
+		}
 	}
 
-	GetController()->SetControlRotation(Rotation);
+	ViewRotation = Rotation;
 }
 
 void AGACharacter::EndCameraTilt()
@@ -714,7 +813,16 @@ void AGACharacter::EndCameraTilt()
 	TiltDel.BindUFunction(this, "UpdateCameraTilt", CameraTiltTime, increment, endValue, 0);
 	GetWorldTimerManager().SetTimer(CameraTiltTimerHandle, increment, true);*/
 
-	WallRunCameraTiltTimeline.Reverse();
+	if (CameraTiltTimeline->IsPlaying())
+	{
+		CameraTiltTimeline->Reverse();
+	}
+	else
+	{
+		CameraTiltTimeline->ReverseFromEnd();
+	}
+
+	// if (GEngine) GEngine->AddOnScreenDebugMessage(4, 0.5f, FColor::Red, "End camera tilt");
 }
 #pragma endregion
 
@@ -728,6 +836,7 @@ UAbilitySystemComponent* AGACharacter::GetAbilitySystemComponent() const
 //
 UTownSystemComponent* AGACharacter::GetTownSystemComponent() const
 {
+	if (!TownInfo) UE_LOG(LogTemp, Warning, TEXT("Town Component nullptr"));
 	return TownInfo;
 }
 
@@ -738,9 +847,15 @@ URepositoryComponent* AGACharacter::GetRepositoryComponent_Implementation() cons
 }
 
 //
-UGACharacterMovementComponent* AGACharacter::GetGAMovementComponent() const
+UInventoryComponent* AGACharacter::GetInventoryComponent_Implementation() const
 {
-	return static_cast<UGACharacterMovementComponent*>(GetCharacterMovement());
+	return Inventory;
+}
+
+//
+UGACharacterMovementComponent* AGACharacter::GetGACharacterMovement() const
+{
+	return GetCharacterMovement<UGACharacterMovementComponent>();
 }
 
 // 
@@ -774,7 +889,7 @@ void AGACharacter::RemoveGameplayTag(const FGameplayTag& OldTag)
 /////			CHARACTER ABILITIES				//////
 //////////////////////////////////////////////////////
 
-// Called during begin play
+// Called during begin play or possession
 void AGACharacter::InitializeAbilitySystem()
 {
 	RenamedAbilitySystem->InitAbilityActorInfo(this, this);
@@ -808,19 +923,10 @@ void AGACharacter::InitializeAbilitySystem()
 		AddGameplayTag(FullManaTag);
 	}
 
-	// AquireAbility(DecreaseSpreadAbility, EAbilityType::Cumalitive, DecreaseSpreadAbilityHandle, false);
-	// AquireAbility(IncreaseSpreadAbility, EAbilityType::Reactive, IncreaseSpreadAbilityHandle, false);
-
-	// if (InitialActiveAbilitySetClass) InitialActiveAbilities = NewObject<UAbilitySet>(InitialActiveAbilitySetClass);
-	// 
 	// This should be a UDataAsset Instance. Meaning there is no need to spawn anything
 	// And data should be readily available for access.
 	if (InitialActiveAbilities) AquireAbilities(InitialActiveAbilities->GetAbilities(), ActiveAbilityHandles);
-
-	/*if (UGA_Interact::StaticClass() && (!ActiveAbilityHandles[0].IsValid()))
-	{
-		AquireAbility(UGA_Interact::StaticClass(), ActiveAbilityHandles[0]);
-	}*/
+	if (InitialPassiveAbilities) AquirePassives(InitialPassiveAbilities->GetAbilities());
 }
 
 // Called during ability system initialization
@@ -886,8 +992,6 @@ void AGACharacter::AquireAbility(TSubclassOf<UGameplayAbility> InAbility, FGamep
 			OutHandle = RenamedAbilitySystem->GiveAbility(AbilitySpec);
 			RenamedAbilitySystem->OnAbilityEnded.AddUObject(this, &AGACharacter::AbilityEnded);
 
-			// GEngine->AddOnScreenDebugMessage(-1, 1.0, FColor::Purple, "Aquired Ability: " + AbilityName);
-
 			if (InAbility->IsChildOf(UGameplayAbilityBase::StaticClass()))
 			{
 				TSubclassOf<UGameplayAbilityBase> AbilityBaseClass = *InAbility;
@@ -898,10 +1002,6 @@ void AGACharacter::AquireAbility(TSubclassOf<UGameplayAbility> InAbility, FGamep
 			}
 		}
 	}
-	/*else 
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.0, FColor::Purple, "Ability System is null!!!");
-	}*/
 }
 
 // Called to give multiple abilities to a player at once.
@@ -911,6 +1011,40 @@ void AGACharacter::AquireAbilities(TArray<TSubclassOf<UGameplayAbility>> InAbili
 	for (const TSubclassOf<UGameplayAbility>& InAbility : InAbilities)
 	{
 		AquireAbility(InAbility, OutHandles[++i]);
+	}
+}
+
+void AGACharacter::AquirePassive(TSubclassOf<UGameplayAbility> Passive)
+{
+	if (RenamedAbilitySystem)
+	{
+		if (HasAuthority() && Passive)
+		{
+			FGameplayAbilitySpecHandle NewPassiveHandle;
+			FGameplayAbilitySpecDef SpecDef = FGameplayAbilitySpecDef();
+			SpecDef.Ability = Passive;
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(SpecDef, 1);
+			NewPassiveHandle = RenamedAbilitySystem->GiveAbility(AbilitySpec);
+			RenamedAbilitySystem->TryActivateAbility(NewPassiveHandle);
+
+			if (Passive->IsChildOf(UGameplayAbilityBase::StaticClass()))
+			{
+				TSubclassOf<UGameplayAbilityBase> AbilityBaseClass = *Passive;
+				if (AbilityBaseClass != nullptr)
+				{
+					AddAbilityToUI(AbilityBaseClass, EAbilityType::Passive, NewPassiveHandle, false);
+				}
+			}
+			PassiveHandles.Add(NewPassiveHandle);
+		}
+	}
+}
+
+void AGACharacter::AquirePassives(TArray<TSubclassOf<UGameplayAbility>> InPassives)
+{
+	for (const TSubclassOf<UGameplayAbility>& InPassive : InPassives)
+	{
+		AquirePassive(InPassive);
 	}
 }
 
@@ -1068,7 +1202,10 @@ void AGACharacter::EndPrimary()
 	else
 	{
 		if (ActiveAbilityHandles[0].IsValid())
+		{
+			if (HeldItem) HeldItem->AbilitySystem->InputConfirm();
 			RenamedAbilitySystem->CancelAbilityHandle(ActiveAbilityHandles[0]);
+		}
 		GetWorldTimerManager().ClearTimer(InputTimerHandle);
 	}
 }
@@ -1109,6 +1246,8 @@ void AGACharacter::EndSecondary()
 	}
 	else
 	{
+		if (HeldItem)
+			HeldItem->AbilitySystem->InputConfirm();
 		GetWorldTimerManager().ClearTimer(InputTimerHandle);
 	}
 }
@@ -1196,13 +1335,14 @@ void AGACharacter::BeginThrow()
 
 		GetWorldTimerManager().SetTimer(InputTimerHandle, InputDel, 0.1, true);
 
-		if (bWeaponPriority && HeldItem && HeldItem->GetClass()->ImplementsInterface(UControlInputInterface::StaticClass()))
+		/*if (bWeaponPriority && HeldItem && HeldItem->GetClass()->ImplementsInterface(UControlInputInterface::StaticClass()))
 		{
 			IControlInputInterface::Execute_UseThrow(HeldItem);
 		}
-		else if (ActiveAbilityHandles.IsValidIndex(2))
+		else */
+		if (ActiveAbilityHandles.IsValidIndex(1))
 		{
-			RenamedAbilitySystem->TryActivateAbility(ActiveAbilityHandles[2]);
+			RenamedAbilitySystem->TryActivateAbility(ActiveAbilityHandles[1]);
 		}
 	}
 }
@@ -1218,7 +1358,7 @@ void AGACharacter::EndThrow()
 	}
 	else
 	{
-		RenamedAbilitySystem->TryActivateAbility(ActiveAbilityHandles[3]);
+		RenamedAbilitySystem->InputConfirm();
 
 		GetWorldTimerManager().ClearTimer(InputTimerHandle);
 	}
@@ -1385,6 +1525,13 @@ void AGACharacter::StartHeldInputTimer(EHeldInputType InputType)
 /////			CHARACTER MOVEMENT				//////
 //////////////////////////////////////////////////////
 
+// Overridden to allow jump from crouch
+bool AGACharacter::CanJumpInternal_Implementation() const
+{
+	// Super::CanJumpInternal_Implementation() // Does not allow crouch jumping
+	return bCanJump && JumpIsAllowedInternal();
+}
+
 // Called When Pressing The "Jump" Action Key
 void AGACharacter::BeginJump()
 {
@@ -1397,7 +1544,17 @@ void AGACharacter::BeginJump()
 	}
 	else
 	{
+		const float TempJumpZVelocity = GetGACharacterMovement()->JumpZVelocity;
+
+		if (bIsCrouched)
+		{
+			UnCrouch();
+			GetGACharacterMovement()->JumpZVelocity *= 2;
+		}
+
 		if (CanJump()) Jump();
+
+		GetGACharacterMovement()->JumpZVelocity = TempJumpZVelocity;
 	}
 }
 
@@ -1420,7 +1577,7 @@ void AGACharacter::EndJump()
 //
 void AGACharacter::ClampHorizontalVelocity()
 {
-	if (GetCharacterMovement()->IsFalling())
+	if (GetGACharacterMovement()->IsFalling())
 	{
 		/*if (FVector2D(GetVelocity()).Length() / GetCharacterMovement()->GetMaxSpeed() > 1.0)
 		{
@@ -1443,6 +1600,50 @@ void AGACharacter::OnEndWallRun()
 	bIsWallRunning = false;
 }
 
+// Start Slide
+void AGACharacter::OnBeginSlide()
+{
+	BeginCameraTilt();
+	bIsSliding = true;
+}
+
+// Stop slide
+void AGACharacter::OnEndSlide()
+{
+	EndCameraTilt();
+	bIsSliding = false;
+}
+
+bool AGACharacter::CanSprint() const 
+{ 
+	return !bIsSprinting && GetGACharacterMovement() && GetGACharacterMovement()->CanEverSprint() && GetRootComponent() && !GetRootComponent()->IsSimulatingPhysics();
+}
+
+void AGACharacter::Sprint()
+{
+	if (GetGACharacterMovement())
+	{
+		if (CanSprint())
+		{
+			GetGACharacterMovement()->StartSprinting();
+		}
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+		else if (!GetGACharacterMovement()->CanEverSprint())
+		{
+			UE_LOG(LogCharacter, Log, TEXT("%s is trying to sprint, but sprinting is disabled on this character! (check CharacterMovement NavAgentSettings)"), *GetName());
+		}
+#endif
+	}
+}
+
+void AGACharacter::UnSprint()
+{
+	if (GetGACharacterMovement())
+	{
+		GetGACharacterMovement()->StopSprinting();
+	}
+}
+
 // Called When Pressing The "Run" Action Key
 void AGACharacter::BeginSprint()
 {
@@ -1456,19 +1657,16 @@ void AGACharacter::BeginSprint()
 		{
 			if (!bIsSprinting)
 			{
-				GetGAMovementComponent()->StartSprinting();
-				bIsSprinting = true;
+				Sprint();
 			}
 			else
 			{
-				GetGAMovementComponent()->StopSprinting();
-				bIsSprinting = false;
+				UnSprint();
 			}
 		}
 		else
 		{
-			GetGAMovementComponent()->StartSprinting();
-			bIsSprinting = true;
+			Sprint();
 		}
 	}
 }
@@ -1484,8 +1682,7 @@ void AGACharacter::EndSprint()
 	{
 		if (!bToggleSprint)
 		{
-			GetGAMovementComponent()->StopSprinting();
-			bIsSprinting = false;
+			UnSprint();
 		}
 	}
 }
@@ -1502,30 +1699,22 @@ void AGACharacter::BeginCrouch()
 	}
 	else
 	{
-		if (bIsSprinting)
+		if (bToggleCrouch)
 		{
-			BeginSlide();
-		}
-		else
-		{
-			if (bToggleCrouch)
+			if (!bIsCrouched)
 			{
-				if (!bIsCrouching)
-				{
-					Crouch();
-					bIsCrouching = true;
-				}
-				else
-				{
-					UnCrouch();
-					bIsCrouching = false;
-				}
+				Crouch();
+				// GetCapsuleComponent()->SetCapsuleHalfHeight(GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() * 0.5);
 			}
 			else
 			{
-				Crouch();
-				bIsCrouching = true;
+				UnCrouch();
+				// GetCapsuleComponent()->SetCapsuleHalfHeight(GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() * 2);
 			}
+		}
+		else
+		{
+			Crouch();
 		}
 	}
 }
@@ -1549,7 +1738,6 @@ void AGACharacter::EndCrouch()
 		else
 		{
 			UnCrouch();
-			bIsCrouching = false;
 		}
 	}
 }
@@ -1567,12 +1755,17 @@ void AGACharacter::MoveForward(float Val)
 		}
 		else
 		{
-			FVector Direction;
-			FRotator Rotation;
-			switch (GetCharacterMovement()->MovementMode)
+			FVector Direction = FVector::ZeroVector;
+			FRotator Rotation = FRotator::ZeroRotator;
+
+			switch (GetGACharacterMovement()->MovementMode)
 			{
+			case MOVE_Swimming:
+				Rotation = Controller->GetControlRotation();
+				Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
+				break;
 			case EMovementMode::MOVE_Custom:
-				switch (GetCharacterMovement()->CustomMovementMode)
+				switch (GetGACharacterMovement()->CustomMovementMode)
 				{
 				case ECustomMovementMode::MOVE_Climbing:
 					Rotation = GetActorRotation();
@@ -1583,6 +1776,9 @@ void AGACharacter::MoveForward(float Val)
 					Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
 				}
 				break;
+			case MOVE_Walking:
+			case MOVE_NavWalking:
+			case MOVE_Falling:
 			default:
 				Rotation = GetControlRotation();
 				Rotation.Pitch = 0.0f;
@@ -1607,15 +1803,21 @@ void AGACharacter::MoveRight(float Val)
 		}
 		else
 		{
-			FVector Direction;
-			FRotator Rotation;
-			switch (GetCharacterMovement()->MovementMode)
+			FVector Direction = FVector::ZeroVector;
+			FRotator Rotation = FRotator::ZeroRotator;
+
+			switch (GetGACharacterMovement()->MovementMode)
 			{
+			case MOVE_Swimming:
+				Rotation = Controller->GetControlRotation();
+				Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+				break;
 			case EMovementMode::MOVE_Custom:
-				switch (GetCharacterMovement()->CustomMovementMode)
+				switch (GetGACharacterMovement()->CustomMovementMode)
 				{
 				case ECustomMovementMode::MOVE_Climbing:
 					Rotation = GetActorRotation();
+					// Direction = FVector::UpVector ^ Rotation.Vector();
 					Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
 					break;
 				default:
@@ -1623,6 +1825,9 @@ void AGACharacter::MoveRight(float Val)
 					Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
 				}
 				break;
+			case MOVE_Walking:
+			case MOVE_NavWalking:
+			case MOVE_Falling:
 			default:
 				Rotation = Controller->GetControlRotation();
 				Rotation.Pitch = 0.0f;
@@ -1657,7 +1862,7 @@ void AGACharacter::LookUp(float Val)
 					AddControllerPitchInput(Val);
 				}
 
-				// Update Pitch on Server
+				// Update Pitch on other players' clients
 				if (!IsLocallyControlled())
 				{
 					FRotator NewRot = GetMesh()->GetRelativeRotation();
@@ -2315,11 +2520,16 @@ void AGACharacter::PopulateSavedAttributes(const TArray<FSavedAttribute>& Attrib
 // Called when damage exceeds health
 void AGACharacter::Death()
 {
+	bIsDead = true;
 	UE_LOG(LogTemp, Warning, TEXT("Character has died..."));
 
 	if (PC)
 	{
-		DisableInput(PC);
+		// PC->UnPossess();
+		PC->OnDeath();
+
+		FInputModeUIOnly UIOnly;
+		PC->SetInputMode(UIOnly);
 		// PC->DisableInput(PC);
 	}
 	else if (AC)
@@ -2327,7 +2537,24 @@ void AGACharacter::Death()
 		AC->GetBrainComponent()->StopLogic("Dead");
 	}
 
+	ChangeCameraType(false);
+	FloatingBarComponent->DestroyAllBars();
+	FVector LaunchVelocity;
+	LaunchingComponent->EndLaunch(LaunchVelocity);
+	GetMovementComponent()->StopMovementImmediately();
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetMesh()->SetSimulatePhysics(true);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMovementComponent()->Deactivate();
+
 	OnDeath();
+	OnDeathDelegate.Broadcast();
+
+	/*for (UActorComponent* Component : GetComponents())
+	{
+		if (Cast<UCameraComponent>(Component) || Cast<USpringArmComponent>(Component)) continue;
+		Component->Deactivate();
+	}*/
 }
 #pragma endregion
 
@@ -2337,13 +2564,11 @@ void AGACharacter::Death()
 /////			CHARACTER INTERACTION			//////
 //////////////////////////////////////////////////////
 
-void AGACharacter::NotifyCanPickup_Implementation(AActor* Item, bool CanPickup)
+void AGACharacter::NotifyCanInteract_Implementation(FName InteractibleName, bool CanPickup)
 {
-	CurrentInteractItem = Item;
-
 	if (PC)
 	{
-		PC->NotifyPickup(IPickupInterface::Execute_GetPickupName(Item), CanPickup);
+		PC->NotifyCanInteract(InteractibleName, CanPickup);
 	}
 }
 
@@ -2359,10 +2584,10 @@ void AGACharacter::AddItemToRepository_Implementation(const FString& Category, c
 
 void AGACharacter::InteractedWith_Implementation(AActor* OtherActor)
 {
-	if (!DialogueParticipantInfo->Dialogue)
+	/*if (!DialogueParticipantInfo->Dialogue)
 	{
 		return;
-	}
+	}*/
 
 	if (PC)
 	{
@@ -2376,7 +2601,7 @@ void AGACharacter::InteractedWith_Implementation(AActor* OtherActor)
 
 		if (OtherPC)
 		{
-			OtherPC->StartDialogue(DialogueParticipantInfo->Dialogue, this);
+			// OtherPC->StartDialogue(DialogueParticipantInfo->Dialogue, this);
 		}
 		else if (OtherAC)
 		{
@@ -2475,6 +2700,7 @@ FName AGACharacter::GetNameValue_Implementation(const FName ValueName) const
 {
 	return DialogueParticipantInfo->DialogueData.Names.Contains(ValueName) ? DialogueParticipantInfo->DialogueData.Names[ValueName] : NAME_None;
 }
+// 
 #pragma endregion
 
 #pragma region ItemHandling
@@ -2502,26 +2728,35 @@ void AGACharacter::PickupItem(AGAActor* Item)
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString("We want to pick " + Item->GetName() + " up!"));
 		}
 
+		bool bAddedItem = false;
 		if (!HeldItem)
 		{
 			EquipItem(Item);
+			bAddedItem = true;
 		}
 		else if (!StowedItem)
 		{
 			StowItem(Item);
+			bAddedItem = true;
 		}
 		else if (Inventory->AddItem(Item))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString("We have space in our invetory!"));
+			Item->SetActorHiddenInGame(true);
+			Item->SetActorEnableCollision(false);
+			bAddedItem = true;
+
 			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
 			if (Weapon && PC)
 			{
 				FGAItemInfo Info = FGAItemInfo();
 				Weapon->GetItemInfo(Info);
 				PC->OnPickupItem(Info); 
-				Weapon->SetActorHiddenInGame(true);
-				Weapon->SetActorEnableCollision(false);
 			}
+		}
+
+		if (bAddedItem)
+		{
+			Item->OnPickedUp();
 		}
 	}
 }
@@ -2608,49 +2843,50 @@ void AGACharacter::EquipItemFromInventory(uint8 Slot)
 
 void AGACharacter::StowItemFromInventory(uint8 Slot)
 {
-	if (!StowedItem)
-	{
-		StowItem(Inventory->GetItem(Slot));
-	}
-	else
-	{
-		AddStowedItemToInventory();
-		StowItem(Inventory->GetItem(Slot));
-	}
+	AGAActor* TempItem = Inventory->GetItem(Slot);
+	Inventory->RemoveItem(Slot);
+	AddStowedItemToInventory();
+	StowItem(TempItem);
 }
 
 void AGACharacter::AddStowedItemToInventory()
 {
-	StowedItem->SetActorHiddenInGame(true);
-	Inventory->AddItem(StowedItem);
-
-	if (PC)
+	if (StowedItem)
 	{
-		AGAWeapon* Weapon = Cast<AGAWeapon>(StowedItem);
-		if (Weapon)
+		StowedItem->SetActorHiddenInGame(true);
+		Inventory->AddItem(StowedItem);
+
+		if (PC)
 		{
-			FGAItemInfo Info = FGAItemInfo();
-			Weapon->GetItemInfo(Info);
-			PC->OnPickupItem(Info);
+			AGAWeapon* Weapon = Cast<AGAWeapon>(StowedItem);
+			if (Weapon)
+			{
+				FGAItemInfo Info = FGAItemInfo();
+				Weapon->GetItemInfo(Info);
+				PC->OnPickupItem(Info);
+			}
 		}
 	}
-
+	
 	StowedItem = nullptr;
 }
 
 void AGACharacter::AddEquippedItemToInventory()
 {
-	HeldItem->SetActorHiddenInGame(true);
-	Inventory->AddItem(HeldItem);
-
-	if (PC)
+	if (HeldItem)
 	{
-		AGAWeapon* Weapon = Cast<AGAWeapon>(HeldItem);
-		if (Weapon)
+		HeldItem->SetActorHiddenInGame(true);
+		Inventory->AddItem(HeldItem);
+
+		if (PC)
 		{
-			FGAItemInfo Info = FGAItemInfo();
-			Weapon->GetItemInfo(Info);
-			PC->OnPickupItem(Info);
+			AGAWeapon* Weapon = Cast<AGAWeapon>(HeldItem);
+			if (Weapon)
+			{
+				FGAItemInfo Info = FGAItemInfo();
+				Weapon->GetItemInfo(Info);
+				PC->OnPickupItem(Info);
+			}
 		}
 	}
 
@@ -2662,13 +2898,26 @@ void AGACharacter::MoveItemWithinInventory(uint8 From, uint8 To)
 	Inventory->MoveItem(From, To);
 }
 
-void AGACharacter::DropEquippedItem()
+void AGACharacter::DropEquippedItem(const FVector& DropVelocity)
 {
 	if (HeldItem)
 	{
+		FVector EyesLocation;
+		FRotator EyesRotation;
+		GetActorEyesViewPoint(EyesLocation, EyesRotation);
+		FVector ItemLocation = EyesLocation + GetActorForwardVector() * 25;
+
 		HeldItem->SetOwner(nullptr);
-		HeldItem->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepRelative, true));
+		HeldItem->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+		HeldItem->SetActorLocation(ItemLocation);
+		HeldItem->SetActorHiddenInGame(false);
 		HeldItem->SetActorEnableCollision(true);
+		HeldItem->OnDropped();
+		if (AGAWeapon* Weapon = Cast<AGAWeapon>(HeldItem))
+			Weapon->LaunchItem(DropVelocity);
+
+		if (PC)
+			PC->OnDropItem();
 
 		HeldItem = nullptr;
 	}
@@ -2687,6 +2936,7 @@ void AGACharacter::DropItemFromInventory(uint8 Slot)
 	Item->SetActorHiddenInGame(false);
 	Item->SetActorEnableCollision(true);
 	Item->SetActorLocation(ItemLocation);
+	Item->OnDropped();
 
 	Inventory->RemoveItem(Slot);
 }
@@ -2782,21 +3032,6 @@ void AGACharacter::EndGrip()
 {
 	bIsClimbing = false;
 }
-
-// Start Slide
-void AGACharacter::BeginSlide()
-{
-	bIsSliding = true;
-	Crouch();
-	PlayAnimMontage(SlideMontage);
-}
-
-// Stop slide
-void AGACharacter::EndSlide()
-{
-	bIsSliding = false;
-	UnCrouch();
-}
 #pragma endregion
 
 #pragma region AIReactionEvents
@@ -2811,8 +3046,7 @@ void AGACharacter::UpdateSightRotation()
 	if (PC)
 	{
 		FRotator DesiredRotation = PC->PlayerCameraManager->GetCameraRotation();
-
-		Sight->SetWorldRotation(FRotator(DesiredRotation.Pitch, DesiredRotation.Yaw, DesiredRotation.Roll));
+		AISenses->SetWorldRotation(FRotator(DesiredRotation.Pitch, DesiredRotation.Yaw, DesiredRotation.Roll));
 	}
 	else if (AC)
 	{
@@ -2839,9 +3073,7 @@ void AGACharacter::OnDamaged(AActor* SourceActor, EAttributeType AttributeType, 
 			return;
 		}
 
-		AGACharacter* DamageCharacter = Cast<AGACharacter>(SourceActor);
-
-		if (DamageCharacter)
+		if (AGACharacter* DamageCharacter = Cast<AGACharacter>(SourceActor))
 		{
 			bool bIsNewInstigator = true;
 
@@ -2893,111 +3125,42 @@ void AGACharacter::OnHealed(AActor* SourceActor, EAttributeType AttributeType, f
 	}
 }
 
-void AGACharacter::OnPawnSeen_Implementation(APawn* SeenPawn)
+// Called when sensed by another character
+void AGACharacter::OnSensed(const USensorBase* Sensor, int32 Channel, EOnSenseEvent SenseEvent)
 {
-	if (!SeenPawn)
+	switch (SenseEvent)
 	{
-		return;
-	}
-
-	AGACharacter* SeenCharacter = Cast<AGACharacter>(SeenPawn);
-
-	if (SeenCharacter)
-	{
-		// FGameplayAttribute Perception;
-
-		// if (AttributeCheck(Perception, 1))
-		// {
-
-		// }
-
-		if (PC)
+	case EOnSenseEvent::SenseNew:
+		if (Sensor->SensorTag.IsEqual(FName("SensorHearing")))
 		{
-
+			OnHeard();
 		}
-
-		if (AC)
+		else if (Sensor->SensorTag.IsEqual(FName("SensorSight")))
 		{
-			bool bIsNewCharacter = true;
-
-			for (FAICharacterInfo VisibleCharacter : AwareOfCharacters)
-			{
-				if (VisibleCharacter.Target == SeenCharacter)
-				{
-					bIsNewCharacter = false;
-					break;
-				}
-			}
-
-			if (bIsNewCharacter)
-			{
-				FAICharacterInfo SeenInfo(SeenCharacter, SeenCharacter->GetActorLocation(), 0);
-
-				FAICharacterAwareness& AIState = SeenInfo.CurrentAIAwarenessTowardTarget;
-
-				AIState.SetCurrentSuspicion(1);
-
-				GetWorldTimerManager().SetTimer(SeenInfo.AwarenessTimerHandle, ReactionTime, true);
-				AwareOfCharacters.Add(SeenInfo);
-			}
-
-			AC->OnPawnSeen(SeenPawn);
+			OnSeen();
 		}
+		break;
 	}
 }
 
-void AGACharacter::OnNoiseHeard_Implementation(APawn* NoiseInstigator, const FVector& Location, float Volume)
+// Called when heard by another character
+void AGACharacter::OnHeard()
 {
-	if (!NoiseInstigator)
-	{
-		return;
-	}
 
-	if (PC)
-	{
+}
 
-	}
+// Called when Seen by another character
+void AGACharacter::OnSeen()
+{
 
-	if (AC)
-	{
-		AGACharacter* NoiseCharacter = Cast<AGACharacter>(NoiseInstigator);
-
-		if (NoiseCharacter)
-		{
-			bool bIsNewInstigator = true;
-
-			for (FAICharacterInfo AwareOfCharacter : AwareOfCharacters)
-			{
-				if (AwareOfCharacter.Target != nullptr)
-				{
-					if (AwareOfCharacter.Target == NoiseCharacter)
-					{
-						FAICharacterAwareness& AIState = AwareOfCharacter.CurrentAIAwarenessTowardTarget;
-
-						AIState.SetCurrentSuspicion(AIState.GetCurrentSuspicion() + Volume);
-
-						bIsNewInstigator = false;
-						break;
-					}
-				}
-			}
-
-			if (bIsNewInstigator)
-			{
-				AwareOfCharacters.Add(FAICharacterInfo(NoiseCharacter, Location, Volume));
-			}
-		}
-
-		AC->OnNoiseHeard(NoiseInstigator, Location, Volume);
-	}
 }
 
 void AGACharacter::CheckVisibleCharacters()
 {
 	for (FAICharacterInfo VisibleCharacter : AwareOfCharacters)
 	{
-		FVector Start = Sight->GetComponentLocation();
-		FVector End = VisibleCharacter.Target->Sight->GetComponentLocation();
+		FVector Start = AISenses->GetComponentLocation();
+		FVector End = VisibleCharacter.Target->AISenses->GetComponentLocation();
 		FVector End2 = VisibleCharacter.Target->GetActorLocation();
 
 		FHitResult HitResult;
@@ -3013,13 +3176,13 @@ void AGACharacter::CheckVisibleCharacters()
 			// Can we see their head
 			if (HitResult.GetActor() == VisibleCharacter.Target)
 			{
-				FVector Vector1 = Sight->GetComponentRotation().Vector().GetSafeNormal();
+				FVector Vector1 = AISenses->GetComponentRotation().Vector().GetSafeNormal();
 				FVector Vector2 = (End - Start).GetSafeNormal();
 				float Angle = 
 					(FVector::CrossProduct(Vector1, Vector2).Z > 0 ? 1 : -1)
 					* (FMath::Acos( FVector::DotProduct(Vector1, Vector2) ));
 
-				if (abs(Angle) < Sight->GetFoV())
+				// if (abs(Angle) < AISenses->GetFoV())
 				{
 					bIsVisible = true;
 				}
@@ -3030,13 +3193,13 @@ void AGACharacter::CheckVisibleCharacters()
 			// Can we see their feet
 			if (HitResult.GetActor() == VisibleCharacter.Target)
 			{
-				FVector Vector1 = Sight->GetComponentRotation().Vector().GetSafeNormal();
+				FVector Vector1 = AISenses->GetComponentRotation().Vector().GetSafeNormal();
 				FVector Vector2 = (End - Start).GetSafeNormal();
 				float Angle =
 					(FVector::CrossProduct(Vector1, Vector2).Z > 0 ? 1 : -1)
 					* (FMath::Acos(FVector::DotProduct(Vector1, Vector2)));
 
-				if (abs(Angle) < Sight->GetFoV())
+				// if (abs(Angle) < AISenses->GetFoV())
 				{
 					bIsVisible = true;
 				}
@@ -3088,7 +3251,7 @@ void AGACharacter::CheckVisibleCharacters()
 
 void AGACharacter::CalculateShadowed()
 {
-	if (!Sun)
+	/*if (!Sun)
 	{
 		TArray<AActor*> TempActorArray;
 		UGameplayStatics::GetAllActorsOfClass(this, ADirectionalLight::StaticClass(), TempActorArray);
@@ -3134,11 +3297,14 @@ void AGACharacter::CalculateShadowed()
 	else
 	{
 		Shadowed = 0;
-	}
+	}*/
 }
 
 void AGACharacter::UpdateCurrentBuilding(AGameplayBuilding* CurrentBuilding)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Updated Current Building!"));
+	if (!CurrentBuilding) return;
+
 	if (PC)
 	{
 		PC->OnUpdateCurrentBuilding(CurrentBuilding->BuildingName);

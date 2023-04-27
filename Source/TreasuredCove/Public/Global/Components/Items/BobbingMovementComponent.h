@@ -15,9 +15,9 @@ class TREASUREDCOVE_API UBobbingMovementComponent : public UMovementComponent
 	GENERATED_BODY()
 	
 private:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(AllowPrivateAccess="true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess="true"))
 	float Speed = 1.f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta=(AllowPrivateAccess="true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess="true"))
 	float MaxDeviation = 0.0f;
 	float Direction = 1.f;
 

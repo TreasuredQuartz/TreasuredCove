@@ -9,6 +9,8 @@
 #include "SimplexNoiseBPLibrary.h"
 #include "MCWorld_BuildingHelperMacros.h"
 
+#include "Components/RuntimeMeshComponentStatic.h"
+#include "Providers/RuntimeMeshProviderStatic.h"
 #include "Engine/AssetManager.h"
 #include "Engine/Engine.h"
 #include "Engine/Selection.h"
@@ -86,8 +88,8 @@ AMCWorld_Voxel::AMCWorld_Voxel()
 	Freq = 1.f;
 	SurfaceHeight = 30;
 	// BlockData.SetNum(BEDROCK);
-	SelectionMesh =
-		CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Selected Location"));
+	/*SelectionMesh =
+		CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Selected Location"));*/
 	InitBuildings();
 
 #if WITH_EDITOR
@@ -158,6 +160,31 @@ void AMCWorld_Voxel::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 
 void AMCWorld_Voxel::PostEditChangeChainProperty(struct FPropertyChangedChainEvent& e)
 {
+	if (e.Property == NULL) return;
+
+	FName MemberPropertyName = e.MemberProperty->GetFName();
+	FName PropertyName = e.Property->GetFName();
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(AMCWorld_Voxel, CustomMeshes))
+	{
+		switch (e.ChangeType)
+		{
+		case EPropertyChangeType::ValueSet:
+			CustomMeshInstances.Empty(CustomMeshes.Num());
+
+			for (UStaticMesh* CustomMesh : CustomMeshes)
+			{
+				UInstancedStaticMeshComponent* NewComponent = NewObject<UInstancedStaticMeshComponent>();
+				NewComponent->SetStaticMesh(CustomMesh);
+				CustomMeshInstances.Add(NewComponent);
+			}
+			break;
+		}
+
+		ChunkFields = TArray<int32>();
+		Initialize(RandomSeed, VoxelSize, ChunkLineElements, ChunkIndex);
+	}
+
 	Super::PostEditChangeChainProperty(e);
 }
 
@@ -188,10 +215,10 @@ void AMCWorld_Voxel::OnSelected_Editor()
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility))
 		{
-			if (Hit.Component == PMesh)
+			if (Hit.Component == Mesh)
 			{
 				SelectedLocation = Hit.Location / VoxelSize;
-				SelectionMesh->SetWorldLocation(SelectedLocation);
+				// SelectionMesh->SetWorldLocation(SelectedLocation);
 			}
 		}
 	}
@@ -218,14 +245,32 @@ void AMCWorld_Voxel::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inC
 
 	AGameplayVoxel::Initialize(inRandomSeed, inVoxelSize, inChunkLineElements, inChunkIndex);
 
-	if (!PMesh)
+	if (!Mesh)
 	{
-		FString String = "Voxel_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
+		FString String = "NewVoxel_Land_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
 		FName Name = FName(*String);
-		PMesh = NewObject<UProceduralMeshComponent>(this, Name);
-		PMesh->RegisterComponent();
-		SetRootComponent(PMesh);
+		Mesh = NewObject<URuntimeMeshComponentStatic>(this, Name);
+		Mesh->SetCollisionObjectType(ECC_WorldStatic);
+		Mesh->SetCollisionResponseToAllChannels(ECR_Block);
+		Mesh->RegisterComponent();
+		SetRootComponent(Mesh);
 		// PMesh->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+	}
+
+	if (!WaterMesh)
+	{
+		FString String = "NewVoxel_Water_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
+		FName Name = FName(*String);
+		WaterMesh = NewObject<URuntimeMeshComponentStatic>(this, Name); 
+		WaterMesh->SetCollisionObjectType(ECC_WorldStatic);
+		FCollisionResponseContainer CollisionResponse(ECR_Block);
+		CollisionResponse.Pawn = ECR_Overlap;
+		CollisionResponse.Vehicle = ECR_Overlap;
+		CollisionResponse.WorldDynamic = ECR_Overlap;
+		CollisionResponse.GameTraceChannel1 = ECR_Ignore;
+		WaterMesh->SetCollisionResponseToChannels(CollisionResponse);
+		WaterMesh->RegisterComponent();
+		WaterMesh->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 	}
 
 	/*if (UAssetManager* AssetManager = UAssetManager::GetIfValid())
@@ -422,14 +467,14 @@ void AMCWorld_Voxel::GenerateOrePockets()
 
 	for (FIntVector IronOrePocketCenter : IronOrePocketCenters)
 	{
-		for (int x = -1; x < 1; ++x)
+		for (int z = -1; z < 1; ++z)
 			for (int y = -1; y < 1; ++y)
-				for (int z = -1; z < 1; ++z)
+				for (int x = -1; x < 1; ++x)
 				{
 					if (InRange(x + IronOrePocketCenter.X + 1, ChunkLineElements + 1) && InRange(y + IronOrePocketCenter.Y + 1, ChunkLineElements + 1) && InRange(z + IronOrePocketCenter.Z + 1, ChunkZElements))
 					{
 						float Radius = FVector(x * RandomX, y * RandomY, z * RandomZ).Size();
-						if (Radius <= 2.8)
+						if (Radius <= 5)
 						{
 							if (RandomStream.FRand() < 0.5 || Radius <= 1.4)
 							{
@@ -465,20 +510,35 @@ void AMCWorld_Voxel::GenerateOrePockets()
 
 void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHeight, int32 Biome)
 {
-	if (Location.Z == (SurfaceHeight + inHeight + 1) && Location.Z > SeaLevelHeight && (RandomStream.FRand() * 100) < 80)
+	if (Location.Z + (ChunkIndex.Z * ChunkZElements) == (SurfaceHeight + inHeight + 1) && (Location.Z + (ChunkIndex.Z * ChunkZElements) > SeaLevelHeight))
 	{
-		switch (Biome)
+		// Town Centers
+		if ((Location.X > 5 && Location.X < ChunkLineElements - 5) && (Location.Y > 5 && Location.Y < ChunkLineElements - 5) && RandomStream.FRand() * 100 < 0.01)
 		{
-		case 0:
-			ChunkFields[Index] = (RandomStream.FRand() * 100) < 25 ? GRASSTALL : GRASSSHORT;
-			break;
+			TownCenters.Add(Location);
+		}
+		// Tree Centers
+		else if ((Location.X > 2 && Location.X < ChunkLineElements - 2) && (Location.Y > 2 && Location.Y < ChunkLineElements - 2) && RandomStream.FRand() * 100 < 1)
+		{
+			TreeCenters.Add(Location);
+			TreeType[Index] = Biome;
+		}
+		// Grass
+		else if (RandomStream.FRand() * 100 < 50)
+		{
+			switch (Biome)
+			{
+			case 0:
+				ChunkFields[Index] = (RandomStream.FRand() * 100) < 40 ? GRASSTALL : GRASSSHORT;
+				break;
+			}
 		}
 	}
-	else if (Location.Z > SurfaceHeight + inHeight && Location.Z < SeaLevelHeight)
+	else if ((Location.Z + (ChunkIndex.Z * ChunkZElements) > SurfaceHeight + inHeight) && (Location.Z + (ChunkIndex.Z * ChunkZElements) <= SeaLevelHeight))
 	{
 		ChunkFields[Index] = WATER;
 	}
-	else if (Location.Z == (SurfaceHeight + inHeight))
+	else if (Location.Z + (ChunkIndex.Z * ChunkZElements) == (SurfaceHeight + inHeight))
 	{
 		switch (Biome)
 		{
@@ -487,12 +547,13 @@ void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHe
 			break;
 		case 1:
 			ChunkFields[Index] = SAND;
+			break;
 		default:
 			ChunkFields[Index] = GRASS;
 			break;
 		}
 	}
-	else if ((Location.Z <= SurfaceHeight - 1 + inHeight) && (Location.Z > SurfaceHeight - 3 + inHeight))
+	else if ((Location.Z + (ChunkIndex.Z * ChunkZElements) <= SurfaceHeight + inHeight - 1) && (Location.Z + (ChunkIndex.Z * ChunkZElements) > SurfaceHeight + inHeight - 4))
 	{
 		switch (Biome)
 		{
@@ -501,12 +562,29 @@ void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHe
 			break;
 		case 1:
 			ChunkFields[Index] = SAND;
+			break;
 		default:
 			ChunkFields[Index] = DIRT;
 			break;
 		}
 	}
-	else if ((Location.Z <= SurfaceHeight - 3 + inHeight) && Location.Z > 0)
+	else if ((Location.Z + (ChunkIndex.Z * ChunkZElements) <= SurfaceHeight + inHeight - 4) && (Location.Z + (ChunkIndex.Z * ChunkZElements) > SurfaceHeight + inHeight - 6))
+	{
+		if (floor(RandomStream.FRandRange(1, 1000)) < 10)
+			switch (Biome)
+			{
+			case 0:
+				ChunkFields[Index] = DIRT;
+				break;
+			case 1:
+				ChunkFields[Index] = SAND;
+			default:
+				ChunkFields[Index] = DIRT;
+				break;
+			}
+		else ChunkFields[Index] = STONE;
+	}
+	else if ((Location.Z + (ChunkIndex.Z * ChunkZElements) <= SurfaceHeight + inHeight - 6) && (Location.Z + (ChunkIndex.Z * ChunkZElements) > 0))
 	{
 		bool bOre = false;
 		if (floor(RandomStream.FRandRange(1, 10000)) < 10)
@@ -523,7 +601,7 @@ void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHe
 			break;
 		}
 	}
-	else if ((Location.Z <= SurfaceHeight - 10 + inHeight) && Location.Z > 0)
+	else if ((Location.Z + (ChunkIndex.Z * ChunkZElements) <= SurfaceHeight + inHeight - 45) && Location.Z + (ChunkIndex.Z * ChunkZElements) > 0)
 	{
 		bool bOre = false;
 		if ((RandomStream.FRand() * 10000) < 10)
@@ -539,7 +617,7 @@ void AMCWorld_Voxel::GenerateGround(FIntVector Location, int32 Index, int32 inHe
 			break;
 		}
 	}
-	else if (Location.Z <= 0)
+	else if (Location.Z + (ChunkIndex.Z * ChunkZElements) <= 0)
 	{
 		ChunkFields[Index] = BEDROCK;
 	}
@@ -569,9 +647,9 @@ void AMCWorld_Voxel::ChunkGenerating(const FIntVector& CurrentLocation, int32 In
 	int32 y = CurrentLocation.Y;
 	int32 z = CurrentLocation.Z;
 
-	int32 H = Height.Num() > 0 ? Height[Index] : 0;
-	int32 T = Temperature.Num() > 0 ? Temperature[x + (y * ChunkLineElementsExt)] : 0;
-	int32 M = Moisture.Num() > 0 ? Moisture[x + (y * ChunkLineElementsExt)] : 0;
+	int32 H = Height.IsValidIndex(Index) ? Height[Index] : 0;
+	int32 T = Temperature.IsValidIndex(Index) ? Temperature[Index] : 0;
+	int32 M = Moisture.IsValidIndex(Index) ? Moisture[Index] : 0;
 
 	/*FString MyStringPrintf = FString(TEXT("Current Index: {0}, Current Height {1}, Current Temperature {2}, Current Moisture {3}"));
 	FString FormattedText = FString::Format(*MyStringPrintf, { Index, H, T, M });
@@ -642,34 +720,21 @@ void AMCWorld_Voxel::ChunkGenerating(const FIntVector& CurrentLocation, int32 In
 	B = 0;
 
 	GenerateGround(CurrentLocation, Index, H, B);
-
-	// Tree Centers
-	if ((x > 2 && x < ChunkLineElements - 2) && (y > 2 && y < ChunkLineElements - 2))
-		if ((RandomStream.FRand() * 100) < 1 && z == SurfaceHeight + 1 + H && z > SeaLevelHeight)
-		{
-			TreeCenters.Add(CurrentLocation);
-			TreeType[Index] = B;
-		};
-
-	// Town Centers
-	if((x > 5 && x < ChunkLineElements - 5) && (y > 5 && y < ChunkLineElements - 5)) 
-		if (RandomStream.FRand() < 0.0001 && z == SurfaceHeight + 1 + H && z > SeaLevelHeight)
-		{
-			TownCenters.Add(CurrentLocation);
-		};
-
 }
 
 void AMCWorld_Voxel::AfterChunkGenerated()
 {
-	// Town
-	GenerateTowns();
-
-	// Tree
-	GenerateTrees();
-
 	// Ores
 	GenerateOrePockets();
+	// Tree
+	GenerateTrees();
+	// Town
+	GenerateTowns();
+}
+
+void AMCWorld_Voxel::OnChunkUpdated_Implementation()
+{
+	UpdateMesh();
 }
 
 TArray<int32> AMCWorld_Voxel::CalcNoise_Implementation()
@@ -692,17 +757,18 @@ TArray<int32> AMCWorld_Voxel::CalcNoise_Implementation()
 
 		float Noise0 = USimplexNoiseBPLibrary::SimplexNoise3D(LocX * 0.5, LocY * 0.5, LocZ * 0.5);
 		float Noise1 = USimplexNoiseBPLibrary::SimplexNoise3D(LocX * 0.1, LocY * 0.1, LocZ * 0.1);
-		float Noise2 = USimplexNoiseBPLibrary::SimplexNoise3D(LocX * 0.0025, LocY * 0.0025, LocZ * 0.025);
-		Noise0 = (Noise0 + 1) / 2;
+		float Noise2 = USimplexNoiseBPLibrary::SimplexNoise3D(LocX * 0.00025, LocY * 0.00025, LocZ * 0.025);
+		float Noise3 = USimplexNoiseBPLibrary::SimplexNoise3D(LocX * 0.063, LocY * 0.063, LocZ * 0.063);
+		// Noise0 = (Noise0 + 1) / 2;
 		Noise0 = Noise0 * 0.1;
-		Noise1 = (Noise1 + 1) / 2;
+		// Noise1 = (Noise1 + 1) / 2;
 		Noise1 = Noise1 * 2;
-		Noise2 = (Noise2 + 1) / 2;
-		Noise2 = Noise2 * 10;
+		// Noise2 = (Noise2 + 1) / 2;
+		Noise2 = Noise2 * 63;
+		// Noise3 = (Noise3 + 1) / 2;
+		Noise3 = FMath::Clamp<float>(Noise3 * 63, 0.f, 5.f);
 
-		float Noise3 = FMath::Clamp<float>(USimplexNoiseBPLibrary::SimplexNoise3D(LocX / 10, LocY / 10, LocZ / 10) * 15.f, 0.f, 5.f);
-
-		int32 FinalNoise = (int32)(((Noise0 + Noise1 + Noise2 + Noise3)) * Weight);
+		int32 FinalNoise = (int32)((Noise0 + Noise1 + Noise2 + Noise3) * Weight);
 		// FinalNoise = FMath::Clamp<int32>(FinalNoise, 0, ChunkTotalElements);
 		Value.Add(FinalNoise);
 	}
@@ -1204,11 +1270,22 @@ void AMCWorld_Voxel::UpdateChunkFromData()
 
 void AMCWorld_Voxel::UpdateMesh()
 {
-	if (!BlockDataTable) return;
+	if (!Mesh || !WaterMesh)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Procedural Mesh is null!"));
+		return;
+	}
+	if (!BlockDataTable)
+	{
+		Mesh->RemoveAllSectionsForLOD(0);
+		return;
+	}
 
 	int32 NumSections = 0;
 	//TArray<UMaterialInterface*> Materials;
 	TArray<FDTMCBlockInfo*> BlockData;
+	for (UInstancedStaticMeshComponent* CustomMeshInstance : CustomMeshInstances)
+		CustomMeshInstance->ClearInstances();
 
 	BlockDataTable->GetAllRows<FDTMCBlockInfo>("", BlockData);
 	/*Materials.Reserve(BlockData.Num());
@@ -1254,7 +1331,6 @@ void AMCWorld_Voxel::UpdateMesh()
 					if (MeshIndex >= NumSections || MeshIndex < 0) continue;
 
 					FDTMCBlockInfo* Data = BlockDataTable->FindRow<FDTMCBlockInfo>(BlockDataTable->GetRowNames()[MeshIndex], "");
-
 					if (!Data || Data->BlockType < 0 || BlockTypes.IsEmpty() || !BlockTypes.IsValidIndex(Data->BlockType)) continue; // Restart loop; DO NOT EXECUTE FURTHER AFTER THIS IF TRUE
 
 					bool MeshTransparent = Data->bIsTransparent;
@@ -1342,31 +1418,37 @@ void AMCWorld_Voxel::UpdateMesh()
 						}
 					}
 					MeshSections[MeshIndex].ElementID += Triangle_Num;
-					MeshSections[MeshIndex].bEnableCollision = MeshIndex == WATER - 1 ? false : bEnableCollision;
+
+					// Is Collision Enabled? Is the player close enough to warrent Collision? Is our current Mesh water?
+					MeshSections[MeshIndex].bEnableCollision = MeshIndex != WATER - 1 /*bEnableCollision &&*/ /*CurrentLOD <= 1*/;
+					// MeshSections[MeshIndex].CollisionResponse =  ECR_Block : ECR_Overlap;
 				}
 				else if (MeshIndex < 0)
 				{
-					AddVoxelInstance(FVector(x * VoxelSizeHalf, y * VoxelSizeHalf, z * VoxelSize), abs(MeshIndex) - 1);
+					AddVoxelInstance(FVector(x * VoxelSize, y * VoxelSize, z * VoxelSize), abs(MeshIndex) - 1);
 				}
 			}
 		}
 	}
 
-	if (!PMesh)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Procedural Mesh is null!"));
-		return;
-	}
-
-	PMesh->ClearAllMeshSections();
-
 	// For each MeshSection, Create a new mesh section
 	for (int i = 0; i < MeshSections.Num(); ++i)
 	{
-		// if (i == WATER - 1) WaterMesh->CreateWaterMesh(MeshSections[i]);
-		if (MeshSections[i].Vertices.Num() <= 0) continue;
-		PMesh->CreateMeshSection(i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, MeshSections[i].bEnableCollision);
-		PMesh->SetMaterial(i, MeshSections[i].Material);
+		if (MeshSections[i].Vertices.Num() <= 2) continue;
+		// 
+		{
+			Mesh->ClearSection(0, i);
+			Mesh->CreateSectionFromComponents(0, i, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Average, MeshSections[i].bEnableCollision);
+			Mesh->SetMaterial(i, MeshSections[i].Material);
+
+			if (i == WATER - 1)
+			{
+				WaterMesh->ClearSection(0, 0);
+				WaterMesh->CreateSectionFromComponents(0, 0, 0, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Average, true);
+				WaterMesh->SetMaterial(0, MeshSections[i].Material);
+				
+			}
+		}
 	}
 }
 
@@ -1376,48 +1458,70 @@ void AMCWorld_Voxel::UpdateExtras()
 #pragma endregion
 
 #pragma region Interaction
-void AMCWorld_Voxel::SetVoxel(FVector Location, int32 Value)
+void AMCWorld_Voxel::SetVoxel(const FVector& Location, int32 Value)
 {
 	// maybe location divide by ChunkLineElementsP2?
-	int32 x = Location.X / VoxelSize;
-	int32 y = Location.Y / VoxelSize;
-	int32 z = Location.Z / VoxelSize;
+	const int32 x = Location.X / VoxelSize;
+	const int32 y = Location.Y / VoxelSize;
+	const int32 z = Location.Z / VoxelSize;
 
-	int32 Index = x + (y * ChunkLineElementsExt) + (z * ChunkLineElementsP2Ext);
-	
-	if (bSpawnItems)
+	// Index of voxel being set
+	const int32 Index = x + (y * ChunkLineElementsExt) + (z * ChunkLineElementsP2Ext);
+
+	// Guard against invalid input or null data table...
+	if (!ChunkFields.IsValidIndex(Index) || BlockDataTable == nullptr) return;
+
+	// Actual value of voxel being set
+	const int32 ChunkField = ChunkFields[Index];
+	const TArray<FName>& TableRowNames = BlockDataTable->GetRowNames();
+
+	// Guard against an empty data table or invalid data row in table...
+	if (TableRowNames.IsEmpty() || !TableRowNames.IsValidIndex(ChunkField)) return;
+
+	if (Value != 0 && ChunkField == 0)			// Placing a block
 	{
-		int32 ChunkField = ChunkFields[Index];
-		if (Value == 0 && ChunkField != 0)
-		{
-			if (ChunkField > 0)
-			{
-				FTransform Transform = FTransform(FRotator(), FVector(), FVector(1, 1, 1));
 
-				AMCWorld_VoxelItem* Item = GetWorld()->SpawnActorDeferred<AMCWorld_VoxelItem>(AMCWorld_VoxelItem::StaticClass(), Transform);
+	}
+	else if (Value == 0 && ChunkField != 0)		// Destroying a block
+	{
+		if (bSpawnItems)						// Do we spawn items when blocks are broken?
+		{
+			if (ChunkField > 0)			// We are spawning a block, not a custom mesh
+			{
+				const FTransform Transform = FTransform(FRotator(), Location, FVector(1, 1, 1));
+
+				AMCWorld_VoxelItem* Item = 
+					GetWorld()->SpawnActorDeferred<AMCWorld_VoxelItem>(AMCWorld_VoxelItem::StaticClass(), Transform);
 
 				if (Item)
 				{
-					Transform = FTransform(FRotator(), FVector(x, y, z), FVector(1, 1, 1));
+					const FName ItemName = TableRowNames[ChunkField];
+					if (FDTMCBlockInfo* Data = BlockDataTable->FindRow<FDTMCBlockInfo>(ItemName, ""))
+					{
+						FItemKey ItemKey = FItemKey(ItemName, 1);
+						Item->SetPickupInfo(ItemKey);
+						Item->Material = Data->Material;
+						Item->bMini = true;
 
-					FDTMCBlockInfo* Data = BlockDataTable->FindRow<FDTMCBlockInfo>(BlockDataTable->GetRowNames()[ChunkField], "");
-					Item->Material = Data->Material;
-					Item->bMini = true;
+						BlockTypes[Data->BlockType];
 
-					Item->FinishSpawning(Transform);
-					GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, Transform.GetLocation().ToString());
-					GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "The item should be spawned!");
+						Item->FinishSpawning(Transform);
+						GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, Transform.GetLocation().ToString());
+						GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Purple, "The item should be spawned!");
+					}
 				}
 
 			}
 			else // Value == 0 && ChunkFields[Index] < 0
 			{
+				FDTMCBlockInfo* Data = BlockDataTable->FindRow<FDTMCBlockInfo>(BlockDataTable->GetRowNames()[ChunkField], "");
 				FTransform Transform = FTransform(FRotator(), Location, FVector(1, 1, 1));
 
-				AMCWorld_Instance* Item = GetWorld()->SpawnActorDeferred<AMCWorld_Instance>(AMCWorld_Instance::StaticClass(), Transform);
+				AMCWorld_VoxelItem* Item = GetWorld()->SpawnActorDeferred<AMCWorld_VoxelItem>(AMCWorld_VoxelItem::StaticClass(), Transform);
 
-				// Item->;
-				// Item->bMini = true;
+				FItemKey ItemKey;
+				Item->SetPickupInfo(ItemKey);
+				Item->bMini = true;
 
 				Item->FinishSpawning(Transform);
 			}
@@ -1429,21 +1533,46 @@ void AMCWorld_Voxel::SetVoxel(FVector Location, int32 Value)
 	UpdateMesh();
 }
 
-void AMCWorld_Voxel::VoxelInteract(FVector Location, AActor* InteractingActor)
+void AMCWorld_Voxel::VoxelInteract(const FVector& Location, AActor* InteractingActor)
 {
-	int32 x = Location.X * VoxelSize;
-	int32 y = Location.Y * VoxelSize;
-	int32 z = Location.Z * VoxelSize;
+	// Our table needs to be set via blueprint child first...
+	if (!BlockDataTable)
+		return;
 
-	int32 Index = x + (y * ChunkLineElementsExt) + (z * ChunkLineElementsP2Ext);
+	// maybe location divide by ChunkLineElementsP2?
+	const int32 x = Location.X / VoxelSize;
+	const int32 y = Location.Y / VoxelSize;
+	const int32 z = Location.Z / VoxelSize;
 
+	// Index of voxel being set
+	const int32 Index = x + (y * ChunkLineElementsExt) + (z * ChunkLineElementsP2Ext);
+
+	// Invalid indexes get thrown out.
+	if (!ChunkFields.IsValidIndex(Index))
+		return;
+
+	const int32 MeshIndex = ChunkFields[Index];
+	const TArray<FName> RowNames = BlockDataTable->GetRowNames();
+
+	// We should have a row for each block, but new blocks are always being added.
+	if (!RowNames.IsValidIndex(MeshIndex))
+		return;
+
+	FDTMCBlockInfo* Data = BlockDataTable->FindRow<FDTMCBlockInfo>(RowNames[MeshIndex], "");
+
+	// Final guard against nullptr values, empty array, and invalid indexes...
+	if (!Data || Data->BlockType < 0 || BlockTypes.IsEmpty() || !BlockTypes.IsValidIndex(Data->BlockType)) 
+		return;
+
+	UGameplayTileData* MeshData = BlockTypes[Data->BlockType];
 	switch(ChunkFields[Index])
 	{
 		case CRAFTINGTABLE:
 			break;
+		case FURNACE:
+			break;
 		default:
 			break;
 	}
-
 }
 #pragma endregion

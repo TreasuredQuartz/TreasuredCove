@@ -8,6 +8,12 @@
 #include "Gameframework/Character.h"
 #include "Gameframework/CharacterMovementComponent.h"
 
+UASCharacterStats::UASCharacterStats() :
+	MaxGroundMovementSpeed(500)
+{
+
+}
+
 void UASCharacterStats::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);

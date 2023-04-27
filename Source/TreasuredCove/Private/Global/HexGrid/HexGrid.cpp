@@ -67,13 +67,13 @@ void AHexGrid::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inChunkLi
 	UE_LOG(LogTemp, Warning, TEXT("Intialize..."));
 	AGameplayVoxel::Initialize(inRandomSeed, inVoxelSize, inChunkLineElements, inChunkIndex);
 
-	if (!PMesh)
+	if (!Mesh)
 	{
-		FString String = "Voxel_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
+		FString String = "NewVoxel_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
 		FName Name = FName(*String);
-		PMesh = NewObject<UProceduralMeshComponent>(this, Name);
-		PMesh->RegisterComponent();
-		SetRootComponent(PMesh);
+		Mesh = NewObject<URuntimeMeshComponentStatic>(this, Name);
+		Mesh->RegisterComponent();
+		SetRootComponent(Mesh);
 		// PMesh->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 	}
 
@@ -167,7 +167,7 @@ void AHexGrid::AfterChunkGenerated()
 
 }
 
-const FVector VoxelMask[] = { 
+const FVector CubeVoxelMask[] = { 
 	FVector(0.00000, 0.00000, 1.00000), 
 	FVector(0.00000, 0.00000, -1.00000), 
 	FVector(0.00000, 1.00000, 0.00000), 
@@ -231,7 +231,7 @@ void AHexGrid::UpdateMesh()
 				}
 				else
 				{
-					const int UpIndex = Index + (VoxelMask[i].Z * ChunkLineElementsP2Ext);
+					const int UpIndex = Index + (CubeVoxelMask[i].Z * ChunkLineElementsP2Ext);
 					if (UpIndex >= 0 && UpIndex < Types.Num())
 					{
 						if (Types[UpIndex] == 0) Flag = true;
@@ -246,15 +246,15 @@ void AHexGrid::UpdateMesh()
 		}
 	}
 
-	PMesh->ClearAllMeshSections();
+	Mesh->ClearSection(0, 0);
 
 	// For each MeshSection, Create a new mesh section
 	for (int i = 0; i < MeshSections.Num(); i++)
 	{
 		if (MeshSections[i].Vertices.Num() > 0)
 		{
-			PMesh->CreateMeshSection(i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, MeshSections[i].bEnableCollision);
-			if (Materials.IsValidIndex(i)) PMesh->SetMaterial(i, MeshSections[i].Material);
+			Mesh->CreateSectionFromComponents(0, i, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents);
+			if (Materials.IsValidIndex(i)) Mesh->SetMaterial(i, MeshSections[i].Material);
 		}
 		else
 		{

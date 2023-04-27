@@ -3,17 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "GAVehicle.h"
 #include "WingedVehicle.generated.h"
 
 UCLASS()
-class TREASUREDCOVE_API AWingedVehicle : public APawn
+class TREASUREDCOVE_API AWingedVehicle : public AGAVehicle
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this pawn's properties
 	AWingedVehicle();
+
+private:
+	//
+	uint8 bLanded:1;
 
 protected:
 	// Called when the game starts or when spawned

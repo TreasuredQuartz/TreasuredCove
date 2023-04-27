@@ -7,6 +7,8 @@
 #include "ThumbnailRendering/ThumbnailManager.h"
 #include "Editor/UnrealEd/Public/SCommonEditorViewportToolbarBase.h"
 
+class IPlanetEditor;
+
 class SPlanetEditor3DPreviewViewport : 
 	public SEditorViewport, 
 	public FGCObject, 

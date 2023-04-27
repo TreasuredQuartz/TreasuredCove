@@ -13,10 +13,12 @@ class TREASUREDCOVE_API AFloatingTextActor : public AActor
 private:
 	// The location to which the text is anchored
 	FVector AnchorLocation;
+	/*UPROPERTY(VisibkleAnywhere, BlueprintReadOnly, Category = "Floating Text", Meta = (ShouldAllowPrivateAccess = "true"))
+	UWidgetComponent* WidgetComponent;*/
 
 protected:
 	// Whether this actor will handle the setting of its location or not
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "FloatingText", Meta = (ShouldAllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Floating Text", Meta = (ShouldAllowPrivateAccess = "true"))
 	bool bSelfUpdateLocation;
 public:	
 	// Sets default values for this actor's properties
@@ -28,6 +30,8 @@ public:
 	inline const FVector& GetAnchorLocation() const { return AnchorLocation; }
 
 	inline bool DoesSelfUpdateLocation() const { return bSelfUpdateLocation; }
+
+	// const class UWidget* GetUserWidget() const;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

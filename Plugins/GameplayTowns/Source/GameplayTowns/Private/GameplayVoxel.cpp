@@ -79,6 +79,11 @@ void AGameplayVoxel::SetCurrentLOD(int32 inCurrentLOD)
 }
 
 
+int32 AGameplayVoxel::GetVoxelSize()
+{
+	return VoxelSize;
+}
+
 void AGameplayVoxel::GenerateChunk()
 {
 	BeforeChunkGenerated();
@@ -94,9 +99,10 @@ void AGameplayVoxel::GenerateChunk()
 	AfterChunkGenerated();
 }
 
-void AGameplayVoxel::UpdateChunk(FIntVector inChunkIndex) 
+void AGameplayVoxel::UpdateChunk(FIntVector inChunkIndex, int32 InCurrentLOD) 
 {
 	ChunkIndex = inChunkIndex;
+	CurrentLOD = InCurrentLOD;
 	OnChunkUpdated();
 }
 

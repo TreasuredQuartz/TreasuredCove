@@ -13,8 +13,10 @@ class TREASUREDCOVE_API UPickupMagnetComponent : public USceneComponent
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(meta = (EditCondition="true"))
+	UPROPERTY(VisibleAnywhere, Category = "Items | Repository")
 	class USphereComponent* PickupMagnetOverlap;
+	UPROPERTY(EditDefaultsOnly, Category = "Items | Repository")
+	float PickupRadius;
 
 public:	
 	// Sets default values for this component's properties
@@ -28,9 +30,11 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	// Called from owning actor when attaching component
+	virtual void OnRegister() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items | Repository")
-	float PickupRadius;
+	void SetPickupRadius(float NewRadius);
 
 	// Array of Static mesh awaiting destruction
 	TArray<AActor*> CurrentAnimatingPickups;

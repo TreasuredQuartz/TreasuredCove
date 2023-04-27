@@ -19,7 +19,7 @@
 
 void AGAPlayerController::ShouldDisableInput(bool ShouldDisable)
 {
-	if (!Player)
+	if (Player)
 	{
 		Player = Cast<AGACharacter>(this->GetCharacter());
 	}
@@ -37,7 +37,7 @@ void AGAPlayerController::ShouldDisableInput(bool ShouldDisable)
 //
 void AGAPlayerController::AddAbilityToUI(FAbilityInfo AbilityInfo, EAbilityType AbilityType, FGameplayAbilitySpecHandle InHandle, bool bFromItem)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -47,7 +47,7 @@ void AGAPlayerController::AddAbilityToUI(FAbilityInfo AbilityInfo, EAbilityType 
 
 void AGAPlayerController::RemoveAbilityFromUI(FGameplayAbilitySpecHandle InHandle)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -59,7 +59,7 @@ void AGAPlayerController::RemoveAbilityFromUI(FGameplayAbilitySpecHandle InHandl
 *
 void AGAPlayerController::OnControllerChanged(bool bIsConnected)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -67,31 +67,54 @@ void AGAPlayerController::OnControllerChanged(bool bIsConnected)
 */
 
 //
+void AGAPlayerController::OnDeath()
+{
+	if (HUD)
+	{
+		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->OnDeath();
+	}
+
+}
+
+//
 void AGAPlayerController::OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
 {
+	if (HUD)
+	{
+		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->OnDamaged(DeltaAmount);
+	}
+
 }
 
 //
 void AGAPlayerController::OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
 {
+	if (HUD)
+	{
+		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->OnHealed(DeltaAmount);
+	}
+
 }
 
 #pragma region PlayerInformation
 //
 void AGAPlayerController::OnHealthModified(float Health, float MaxHealth)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->OnHealthModified(Health, MaxHealth);
 	}
 
-	HUD->OnHealthModified(Health, MaxHealth);
 }
 
 //
 void AGAPlayerController::OnStaminaModified(float Stamina, float MaxStamina)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -102,7 +125,7 @@ void AGAPlayerController::OnStaminaModified(float Stamina, float MaxStamina)
 //
 void AGAPlayerController::OnManaModified(float Mana, float MaxMana)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -113,7 +136,7 @@ void AGAPlayerController::OnManaModified(float Mana, float MaxMana)
 //
 void AGAPlayerController::OnExperienceModified(float Experience, float MaxExperience)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -124,7 +147,7 @@ void AGAPlayerController::OnExperienceModified(float Experience, float MaxExperi
 //
 void AGAPlayerController::OnStatModified(float Charisma, float Constitution, float Dexterity, float Intelligence, float Strength, float Wisdom)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -135,7 +158,7 @@ void AGAPlayerController::OnStatModified(float Charisma, float Constitution, flo
 //
 void AGAPlayerController::OnCurrentWeaponAmmoModified(float Ammo, float MaxAmmo)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -146,7 +169,7 @@ void AGAPlayerController::OnCurrentWeaponAmmoModified(float Ammo, float MaxAmmo)
 //
 void AGAPlayerController::OnAmmoStockModified(FBullet Bullet)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -156,7 +179,7 @@ void AGAPlayerController::OnAmmoStockModified(FBullet Bullet)
 
 void AGAPlayerController::OnDesiredLocationCleared()
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -166,7 +189,7 @@ void AGAPlayerController::OnDesiredLocationCleared()
 
 void AGAPlayerController::OnDesiredLocationSet(FVector DesiredLocation)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -176,7 +199,7 @@ void AGAPlayerController::OnDesiredLocationSet(FVector DesiredLocation)
 
 void AGAPlayerController::OnUpdateCurrentBuilding(FName CurrentBuildingName)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -186,7 +209,7 @@ void AGAPlayerController::OnUpdateCurrentBuilding(FName CurrentBuildingName)
 
 void AGAPlayerController::OnUpdateTargetBuilding(FName TargetBuildingName)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -200,7 +223,7 @@ void AGAPlayerController::OnUpdateTargetBuilding(FName TargetBuildingName)
 #pragma region UIInputHandling
 void AGAPlayerController::ReturnMainMenu()
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -210,7 +233,7 @@ void AGAPlayerController::ReturnMainMenu()
 
 void AGAPlayerController::BeginPause()
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -232,7 +255,7 @@ void AGAPlayerController::EndPause()
 {
 	bIsPaused = false;
 
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -245,7 +268,7 @@ void AGAPlayerController::EndPause()
 
 void AGAPlayerController::ConfirmPressed()
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -255,7 +278,7 @@ void AGAPlayerController::ConfirmPressed()
 
 void AGAPlayerController::ConfirmReleased()
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -265,7 +288,7 @@ void AGAPlayerController::ConfirmReleased()
 
 void AGAPlayerController::ReturnPressed()
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -275,7 +298,7 @@ void AGAPlayerController::ReturnPressed()
 
 void AGAPlayerController::ReturnReleased()
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -285,7 +308,7 @@ void AGAPlayerController::ReturnReleased()
 
 void AGAPlayerController::RecieveNavRequest(ENavType NavType)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -295,7 +318,7 @@ void AGAPlayerController::RecieveNavRequest(ENavType NavType)
 
 void AGAPlayerController::RecieveTabRequest(bool bNavRight)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -305,7 +328,7 @@ void AGAPlayerController::RecieveTabRequest(bool bNavRight)
 
 void AGAPlayerController::CursorMoveUp(float Val)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -325,7 +348,7 @@ void AGAPlayerController::CursorMoveUp(float Val)
 
 void AGAPlayerController::CursorMoveRight(float Val)
 {
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -347,137 +370,148 @@ void AGAPlayerController::CursorMoveRight(float Val)
 #pragma region ItemHandling
 void AGAPlayerController::OnMenuUpdated(FVector2D MenuSelection)
 {
-	if (!HUD)
+	HUD = Cast<AGAHUD>(GetHUD());
+
+	if (HUD)
 	{
-		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->OnMenuUpdated(MenuSelection);
 	}
 
-	HUD->OnMenuUpdated(MenuSelection);
 }
 
 void AGAPlayerController::SetItemPriority(bool Priority)
 {
-	if (!HUD)
+	HUD = Cast<AGAHUD>(GetHUD());
+
+	if (HUD)
 	{
-		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->SetItemPriority(Priority);
 	}
 
-	HUD->SetItemPriority(Priority);
 }
 
 /** Inventory */
 
 //
-void AGAPlayerController::NotifyPickup(FName ItemName, bool CanPickup)
+void AGAPlayerController::NotifyCanInteract(FName ItemName, bool CanPickup)
 {
-	if (!HUD)
+	HUD = Cast<AGAHUD>(GetHUD());
+	if (HUD)
 	{
-		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->NotifyCanInteract(ItemName, CanPickup);
 	}
 
-	HUD->NotifyPickup(ItemName, CanPickup);
 }
 
 //
 void AGAPlayerController::OnPickupItem(FGAItemInfo& ItemInfo)
 {
-	if (!HUD)
+	HUD = Cast<AGAHUD>(GetHUD());
+	if (HUD)
 	{
-		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->OnPickupItem(ItemInfo);
 	}
 
-	HUD->OnPickupItem(ItemInfo);
 }
 
 void AGAPlayerController::OnAddItemToRepository(const FItemKey& Item)
 {
-	if (!HUD)
+	HUD = Cast<AGAHUD>(GetHUD());
+	if (HUD)
 	{
-		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->OnPickupItemIntoRepository(Item);
 	}
 
-	HUD->OnPickupItemIntoRepository(Item);
 }
 
 //
 void AGAPlayerController::OnEquipItem(UObject* Item, FGAItemInfo& ItemInfo)
 {
-	if (!HUD)
+	HUD = Cast<AGAHUD>(GetHUD());
+	if (HUD)
 	{
-		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->OnEquipItem(Item, ItemInfo);
 	}
-	HUD->OnEquipItem(Item, ItemInfo);
 }
 
 //
 void AGAPlayerController::OnStowedItem(FGAItemInfo& ItemInfo)
 {
-	if (!HUD)
+	HUD = Cast<AGAHUD>(GetHUD());
+	if (HUD)
 	{
-		HUD = Cast<AGAHUD>(GetHUD());
+		HUD->OnStowedItem(ItemInfo);
 	}
 
-	HUD->OnStowedItem(ItemInfo);
 }
 
 //
 void AGAPlayerController::OnEquipItemFromInventory(uint8 Slot)
 {
-	if (!Player)
+	Player = Cast<AGACharacter>(GetCharacter());
+	if (Player)
 	{
-		Player = Cast<AGACharacter>(GetCharacter());
+		Player->EquipItemFromInventory(Slot);
 	}
 
-	Player->EquipItemFromInventory(Slot);
 }
 
 //
 void AGAPlayerController::OnStowItemFromInventory(uint8 Slot)
 {
-	if (!Player)
+	Player = Cast<AGACharacter>(GetCharacter());
+	if (Player)
 	{
-		Player = Cast<AGACharacter>(GetCharacter());
+		Player->StowItemFromInventory(Slot);
 	}
 
-	Player->StowItemFromInventory(Slot);
 }
 
 //
 void AGAPlayerController::OnAddEquippedItemToInventory()
 {
-	if (!Player)
+	Player = Cast<AGACharacter>(GetCharacter());
+	if (Player)
 	{
-		Player = Cast<AGACharacter>(GetCharacter());
+		Player->AddEquippedItemToInventory();
 	}
 
-	Player->AddEquippedItemToInventory();
 }
 
 //
 void AGAPlayerController::OnAddStowedItemToInventory()
 {
-	if (!Player)
+	Player = Cast<AGACharacter>(GetCharacter());
+	if (Player)
 	{
-		Player = Cast<AGACharacter>(GetCharacter());
+		Player->AddStowedItemToInventory();
 	}
 
-	Player->AddStowedItemToInventory();
 }
 
 //
 void AGAPlayerController::OnMoveItem(uint8 From, uint8 To)
 {
-	if (!Player)
+	Player = Cast<AGACharacter>(GetCharacter());
+	if (Player)
 	{
-		Player = Cast<AGACharacter>(GetCharacter());
+		Player->MoveItemWithinInventory(From, To);
 	}
-	Player->MoveItemWithinInventory(From, To);
+}
+
+void AGAPlayerController::OnDropItem()
+{
+	if (HUD)
+	{
+		HUD = Cast<AGAHUD>(GetHUD());
+	}
+	HUD->OnDropItem();
 }
 
 //
-void AGAPlayerController::OnDropItem(uint8 Slot)
+void AGAPlayerController::OnDropItemFromInventory(uint8 Slot)
 {
-	if (!Player)
+	if (Player)
 	{
 		Player = Cast<AGACharacter>(GetCharacter());
 	}
@@ -487,12 +521,12 @@ void AGAPlayerController::OnDropItem(uint8 Slot)
 
 /** Dialogue */
 
-//
+
 void AGAPlayerController::StartDialogue(UDlgDialogue* Dialogue, UObject* OtherParticipant)
 {
 	ActiveContext = UDlgManager::StartDialogue2(Dialogue, OtherParticipant, GetPawn());
 	
-	if (!HUD)
+	if (HUD)
 	{
 		HUD = Cast<AGAHUD>(GetHUD());
 	}
@@ -512,4 +546,7 @@ void AGAPlayerController::SelectDialogueOption(int32 Index)
 	{
 		ActiveContext = nullptr;
 	}
+
+	HUD->OnDialogueStarted();
+	
 }

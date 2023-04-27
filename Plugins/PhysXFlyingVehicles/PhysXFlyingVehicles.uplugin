@@ -14,17 +14,22 @@
 	"CanContainContent" : false,
 	"IsBetaVersion" : true,
 	"Installed" : false,
-	"Modules" :
-	[
+	"Modules": [
 		{
-			"Name" : "PhysXFlyingVehicles",
-			"Type" : "Runtime",
-			"LoadingPhase" : "PreDefault"
+			"Name": "PhysXFlyingVehicles",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault"
 		},
 		{
-			"Name" : "PhysXFlyingVehiclesEditor",
-			"Type" : "DeveloperTool",
-			"LoadingPhase" : "PreDefault"
+			"Name": "PhysXFlyingVehiclesEditor",
+			"Type": "DeveloperTool",
+			"LoadingPhase": "PreDefault"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ChaosVehiclesPlugin",
+			"Enabled": true
 		}
 	]
 }

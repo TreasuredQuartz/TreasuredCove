@@ -12,5 +12,5 @@ enum ECustomMovementMode
 {
 	MOVE_WallRunning		UMETA(DisplayName = "WallRunning"),
 	MOVE_Climbing			UMETA(DisplayName = "Climbing"),
-	// MOVE_MAX				UMETA(Hidden), UnNeeded
+	// MOVE_MAX				UMETA(Hidden),						// error: redefinition; previous definition was 'enumerator'
 };

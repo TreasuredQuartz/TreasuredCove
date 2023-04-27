@@ -8,7 +8,7 @@
 #include "ProceduralPlanet.h"
 
 #include "SlateOptMacros.h"
-#include "EditorStyleSet.h"
+#include "Styling/AppStyle.h"
 
 #include "WorkflowOrientedApp/WorkflowTabManager.h"
 #include "BlueprintEditorUtils.h"
@@ -149,17 +149,17 @@ void FPlanetEditor::RegisterTabSpawners(const TSharedRef<class FTabManager>& inT
 	inTabManager->RegisterTabSpawner(PreviewTabId, FOnSpawnTab::CreateSP(this, &FPlanetEditor::SpawnTab_Preview))
 		.SetDisplayName(LOCTEXT("ViewportTab", "Viewport"))
 		.SetGroup(WorkspaceMenuCategoryRef)
-		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Viewports"));
+		.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Viewports"));
 
 	inTabManager->RegisterTabSpawner(GraphCanvasTabId, FOnSpawnTab::CreateSP(this, &FPlanetEditor::SpawnTab_GraphCanvas))
 		.SetDisplayName(LOCTEXT("GraphCanvasTab", "Graph"))
 		.SetGroup(WorkspaceMenuCategoryRef)
-		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "GraphEditor.EventGraph_16x"));
+		.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "GraphEditor.EventGraph_16x"));
 
 	inTabManager->RegisterTabSpawner(PropertiesTabId, FOnSpawnTab::CreateSP(this, &FPlanetEditor::SpawnTab_Properties))
 		.SetDisplayName(LOCTEXT("PropertiesTab", "Details"))
 		.SetGroup(WorkspaceMenuCategoryRef)
-		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.Tabs.Details"));
+		.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
 
 
 	OnRegisterTabSpawners().Broadcast(inTabManager);
@@ -225,7 +225,7 @@ TSharedRef<SDockTab> FPlanetEditor::SpawnTab_Properties(const FSpawnTabArgs& Arg
 		];
 
 	// UE5 Changed from setting on construction to set by function
-	SpawnedTab->SetTabIcon(FEditorStyle::GetBrush("LevelEditor.Tabs.Details"));
+	SpawnedTab->SetTabIcon(FAppStyle::GetBrush("LevelEditor.Tabs.Details"));
 
 	return SpawnedTab;
 }
@@ -266,7 +266,7 @@ TSharedRef<SGraphEditor> FPlanetEditor::CreateGraphEditorWidget()
 	// Create the title bar widget
 	TSharedPtr<SWidget> TitleBarWidget = 
 		SNew(SBorder)
-		.BorderImage(FEditorStyle::GetBrush(TEXT("Graph.TitleBackground")))
+		.BorderImage(FAppStyle::GetBrush(TEXT("Graph.TitleBackground")))
 		.HAlign(HAlign_Fill)
 		[
 			SNew(SVerticalBox)
@@ -277,7 +277,7 @@ TSharedRef<SGraphEditor> FPlanetEditor::CreateGraphEditorWidget()
 			.AutoHeight()
 			[
 				SNew(STextBlock)
-				.TextStyle(FEditorStyle::Get(), TEXT("GraphBreadcrumbButtonText"))
+				.TextStyle(FAppStyle::Get(), TEXT("GraphBreadcrumbButtonText"))
 				.Text(this, &FPlanetEditor::GetOriginalObjectName)
 			]
 			+ SVerticalBox::Slot()

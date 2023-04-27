@@ -6,6 +6,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "GameplayLibrary.generated.h"
 
+class UTownSystemComponent;
+
 /**
  * 
  */
@@ -16,4 +18,6 @@ class GAMEPLAYTOWNS_API UGameplayLibrary : public UBlueprintFunctionLibrary
 
 public:
 	static void SetGameTime(float InDeltaTime, float InGameTime, float InInitialGameTime, float* OutGameTime, int* OutDaysPassed);
+
+	static UTownSystemComponent* GetGameplayTownsComponent(AActor* Actor);
 };

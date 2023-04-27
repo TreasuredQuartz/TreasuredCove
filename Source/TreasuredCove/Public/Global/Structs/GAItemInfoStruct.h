@@ -18,11 +18,9 @@ struct FGAItemInfo
 
 	FGAItemInfo();
 
-	FGAItemInfo(AActor* InItemActor, FName InName, UTexture2D* inTexture, 
+	FGAItemInfo(FName InName, UTexture2D* inTexture, 
 		TSubclassOf<UCommandMenu> InItemWidgetActiveMenuClass, TSubclassOf<UItemEditor> InItemWidgetEditMenuClss);
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	AActor* ItemActor;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FName Name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")

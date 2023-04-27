@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-// #include "GameplayTileData.h"
+#include "GameplayTileData.h"
 #include "ProceduralMeshSectionStruct.h"
 #include "MCWorld_TileData.generated.h"
 
@@ -11,10 +11,10 @@
  * 
  */
 UCLASS()
-class TREASUREDCOVE_API UMCWorld_TileData : public UObject// UGameplayTileData
+class TREASUREDCOVE_API UMCWorld_TileData : public UGameplayTileData
 {
 	GENERATED_BODY()
 	
 public:
-	
+	TArray<UObject*> BlockData;
 };

@@ -58,13 +58,13 @@ protected:
 
 	UFUNCTION()
 	void SpawnEnemies();
-	void SpawnedEnemyRemoved(AActor* RemovedActor, AActor* ResponsibleActor);
 
 	uint32 WaveCount;
 	uint32 TotalEnemiesToSpawn;
 	uint32 CurrentSpawnedEnemies;
 	uint32 TotalSpawnedEnemies;
 public:
+	void SpawnedEnemyRemoved(AActor* RemovedActor, AActor* ResponsibleActor);
 	/*  */
 	UFUNCTION(BlueprintCallable)
 	void StartWave();

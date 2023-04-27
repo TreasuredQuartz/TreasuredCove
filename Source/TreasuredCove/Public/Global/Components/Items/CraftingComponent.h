@@ -27,5 +27,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Crafting")
 	TArray<FCraftingRecipe> AvailableRecipes;
 
-		
+	UFUNCTION(BlueprintCallable, Category = "Gameplay|Crafting")
+	bool TryCrafting(TArray<FItemKey>& InRecipe) const;
+
+	void GetCraftableItems(TArray<UObject*>& OutItems) const;
+
+	void GetBaseItemClass(TSubclassOf<UObject>& OutClass) const;
+
+	TArray<UObject*> CraftableItems;
 };

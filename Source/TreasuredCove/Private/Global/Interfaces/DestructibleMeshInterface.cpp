@@ -4,7 +4,7 @@
 #include "DestructibleMeshInterface.h"
 
 // Add default functionality here for any IDestructibleMeshInterface functions that are not pure virtual.
-void IDestructibleMeshInterface::InflictDamageToMesh(float Damage, float Strength, FVector HitLoc)
+void IDestructibleMeshInterface::InflictDamageToMesh(float Damage, float Strength, const FVector& HitLoc)
 {
-
+	OnDamageInflicted(Damage, Strength, HitLoc);
 }

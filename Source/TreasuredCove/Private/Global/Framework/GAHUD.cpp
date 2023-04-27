@@ -36,7 +36,6 @@ void AGAHUD::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	
-	GA = Cast<UGAGameInstance>(GetGameInstance());
 }
 
 //
@@ -45,6 +44,7 @@ void AGAHUD::BeginPlay()
 	Super::BeginPlay();
 
 	PC = Cast<AGAPlayerController>(PlayerOwner);
+	GA = Cast<UGAGameInstance>(GetGameInstance());
 }
 
 //
@@ -263,9 +263,9 @@ void AGAHUD::OnMoveItem(uint8 From, uint8 To)
 }
 
 //
-void AGAHUD::OnDropItem(uint8 Slot)
+void AGAHUD::OnDropItemFromInventory(uint8 Slot)
 {
-	PC->OnDropItem(Slot);
+	PC->OnDropItemFromInventory(Slot);
 }
 
 void AGAHUD::SetCursorMoveOnly(bool CursorOnly)

@@ -128,11 +128,13 @@ void AGameplayManager::AddVoxelActor(FVector VoxelSpawnLocation, FIntVector Voxe
 			NewVoxel->SetChunkLineElements(ChunkLineElements);
 			NewVoxel->SetChunkIndex(VoxelIndex);
 			NewVoxel->SetCurrentLOD(CurrentLOD);
-			NewVoxel->GetRootComponent()->AttachToComponent(GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
+			// NewVoxel->GetRootComponent()->AttachToComponent(GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
 			// NewVoxel->GetRootComponent()->RegisterComponent();
 			// NewVoxel->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
 			// Register
 			UGameplayStatics::FinishSpawningActor(NewVoxel, FTransform(VoxelSpawnLocation));
+			NewVoxel->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
+			
 		}
 	}
 }
@@ -193,7 +195,7 @@ void AGameplayManager::AddChunk()
 				}
 				else {
 					GEngine->AddOnScreenDebugMessage(3, 10.f, FColor::Red, "Chunk updated!");
-					Chunks[ChunkCoords.IndexOfByKey(LocVector)]->UpdateChunk(LocVector);
+					Chunks[ChunkCoords.IndexOfByKey(LocVector)]->UpdateChunk(LocVector, 1);
 				}
 			}
 		}

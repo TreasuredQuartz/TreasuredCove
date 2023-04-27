@@ -19,8 +19,8 @@ UProceduralMiniMap::UProceduralMiniMap()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
-	PMesh =
-		CreateDefaultSubobject<UProceduralMeshComponent>(FName("Mini-Map Mesh"));
+	Mesh =
+		CreateDefaultSubobject<URuntimeMeshComponentStatic>(FName("Mini-Map Mesh"));
 
 	TestDirections =
 		TArray<FVector>{ FVector(0, 0, 1), FVector(0, 0, -1), 
@@ -246,10 +246,10 @@ void UProceduralMiniMap::UpdateMesh()
 		}
 	}//*/
 
-	PMesh->ClearAllMeshSections();
+	Mesh->ClearSection(0, 0);
 
-	PMesh->CreateMeshSection(0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents(), VertexBuffer.GetCollision());
-	PMesh->SetMaterial(0, VertexBuffer.GetMaterial());
+	Mesh->CreateSectionFromComponents(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
+	Mesh->SetMaterial(0, VertexBuffer.GetMaterial());
 }
 
 float UProceduralMiniMap::ApplyScale(int32 Size)

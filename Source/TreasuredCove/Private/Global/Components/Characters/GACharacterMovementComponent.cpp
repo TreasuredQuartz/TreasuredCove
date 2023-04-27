@@ -2,14 +2,20 @@
 
 
 #include "Global/Components/Characters/GACharacterMovementComponent.h"
-#include "GameFramework/Character.h"
 #include "GACharacter.h"
 #include "CustomMovementMode.h"
+#include "Components/CapsuleComponent.h"
+
+// Framework
+#include "GameFramework/Character.h"
 #include "GameFramework/InputSettings.h"
 #include "GameFramework/PlayerController.h"
-#include "Components/CapsuleComponent.h"
+
+// Engine
 #include "Kismet/KismetSystemLibrary.h"
 #include "Engine/World.h"
+#include "TimerManager.h"
+#include "DrawDebugHelpers.h"
 
 #pragma region Defaults
 FNetworkPredictionData_Client* UGACharacterMovementComponent::GetPredictionData_Client() const
@@ -27,6 +33,11 @@ FNetworkPredictionData_Client* UGACharacterMovementComponent::GetPredictionData_
 void UGACharacterMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DefaultGroundFriction = GroundFriction;
+	bDefaultOrientRotationToMovement = bOrientRotationToMovement;
+	bDefaultUseControllerRotationYaw = CharacterOwner->bUseControllerRotationYaw;
+	DefaultMeshRelativeLocation = CharacterOwner->GetMesh()->GetRelativeLocation();
 
 	// If the client's role is higher than a simulated proxy
 	// - A simulated proxy is another character not controlled by this client.
@@ -51,28 +62,91 @@ void UGACharacterMovementComponent::OnComponentDestroyed(bool bDestroyingHierarc
 
 void UGACharacterMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+	if (!HasValidData() || ShouldSkipUpdate(DeltaTime))
+	{
+		return;
+	}
+	
 	if (GetPawnOwner()->IsLocallyControlled())
 	{
-		if (bSprintKeyDown)
+		if (CanEverSprint())
 		{
-			FVector velocity2D = GetPawnOwner()->GetVelocity();
-			FVector forward2D = GetPawnOwner()->GetActorForwardVector();
-			velocity2D.Z = 0.0f;
-			forward2D.Z = 0.0f;
-			velocity2D.Normalize();
-			forward2D.Normalize();
+			if (bSprintKeyDown)
+			{
+				FVector velocity2D = GetPawnOwner()->GetVelocity();
+				FVector forward2D = GetPawnOwner()->GetActorForwardVector();
+				velocity2D.Z = 0.0f;
+				forward2D.Z = 0.0f;
+				velocity2D.Normalize();
+				forward2D.Normalize();
 
-			bWantsToSprint = FVector::DotProduct(velocity2D, forward2D) > 0.5f;
+				bWantsToSprint = FVector::DotProduct(velocity2D, forward2D) > 0.5f;
+			}
+			else
+			{
+				bWantsToSprint = false;
+			}
 		}
-		else
+
+		if (CanEverSlide())
 		{
-			bWantsToSprint = false;
+			if (IsSliding())
+			{
+				if (Velocity.Size() <= MaxWalkSpeedCrouched) StopSliding();
+
+				const bool bIsCrouching = IsCrouching();
+				if (!bIsCrouching)
+				{
+					StopSliding();
+				}
+
+				const FVector Force = CalculateFloorInfluence(CurrentFloor.HitResult.Normal);
+				AddForce(Force);
+			}
+			else if (bWantsToSlide && IsMovingOnGround())
+			{
+				StartSliding();
+			}
+
+			if (bConsecutiveSlidesLoseMomentum)
+			{
+				if (CurrentSlides > 0)
+				{
+					SlideConsecutiveResetDuration += DeltaTime;
+
+					if (SlideConsecutiveResetDuration >= SlideConsecutiveResetDelay)
+					{
+						ResetSliding();
+					}
+				}
+			}
 		}
 
 		// Update if required keys are down
 		bForwardKeysAreDown = AreRequiredKeysDown();
 	}
 
+	if (AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner))
+	{
+		GACharacter->bIsSprinting = bWantsToSprint;
+
+		if (GACharacter->bFirstPerson)
+		{
+			FVector CurLocation = GACharacter->GetMesh()->GetRelativeLocation();
+			FVector NewLocation = CurLocation;
+			if (IsCrouching())
+			{
+				NewLocation.Z = FMath::FInterpTo(CurLocation.Z, -GetCrouchedHalfHeight() * 2, DeltaTime, 10.f);
+			}
+			else
+			{
+				NewLocation.Z = FMath::FInterpTo(CurLocation.Z, DefaultMeshRelativeLocation.Z, DeltaTime, 10.f);
+			}
+
+			GACharacter->GetMesh()->SetRelativeLocation(NewLocation);
+		}
+	}
+	
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
@@ -94,48 +168,113 @@ void UGACharacterMovementComponent::UpdateFromCompressedFlags(uint8 flags)
 
 void UGACharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
 {
-	if (MovementMode == MOVE_Custom)
+	bPrevOrientRotationToMovement = bOrientRotationToMovement;
+	bPrevUseControllerRotationYaw = CharacterOwner->bUseControllerRotationYaw;
+	
+	switch (MovementMode)
 	{
+	case MOVE_Custom:
 		switch (CustomMovementMode)
 		{
 		case ECustomMovementMode::MOVE_WallRunning:
 			// Stop current Movement
-			StopMovementImmediately();
+			// StopMovementImmediately();
+			CharacterOwner->bUseControllerRotationYaw = true;
+			bOrientRotationToMovement = true;
 			break;
 		case ECustomMovementMode::MOVE_Climbing:
 			// UE_LOG(LogTemp, Warning, TEXT("Custom Movement Mode changed to Climbing."));
 			// Stop current Movement
 			StopMovementImmediately();
-			bPrevOrientRotationToMovement = bOrientRotationToMovement;
+			CharacterOwner->bUseControllerRotationYaw = false;
 			bOrientRotationToMovement = false;
 			break;
 		}
+		break;
+	default:
+		CharacterOwner->bUseControllerRotationYaw = bDefaultUseControllerRotationYaw;
+		bOrientRotationToMovement = bDefaultOrientRotationToMovement;
 	}
 
-	if (PreviousMovementMode == MOVE_Custom)
+	switch (PreviousMovementMode)
 	{
+	case MOVE_Custom:
 		switch (PreviousCustomMode)
 		{
 		// If we just finished wall running...
 		case ECustomMovementMode::MOVE_WallRunning:
-			break;
+		// If we just finished climbing...
 		case ECustomMovementMode::MOVE_Climbing:
-			bOrientRotationToMovement = bPrevOrientRotationToMovement;
+		default:
 			break;
 		}
+		break;
+	default:
+		break;
 	}
-
+	
 	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
 }
 
 // empty base implementation, intended for derived classes to override.
 void UGACharacterMovementComponent::OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity)
 {
-
+	Super::OnMovementUpdated(DeltaTime, OldLocation, OldVelocity);
 }
 #pragma endregion
 
 #pragma region PhysicsCalculators
+//void UGACharacterMovementComponent::StartNewPhysics(float DeltaTime, int32 Iterations)
+//{
+//	if ((deltaTime < MIN_TICK_TIME) || (Iterations >= MaxSimulationIterations) || !HasValidData())
+//	{
+//		return;
+//	}
+//
+//	if (UpdatedComponent->IsSimulatingPhysics())
+//	{
+//		UE_LOG(LogCharacterMovement, Log, TEXT("UCharacterMovementComponent::StartNewPhysics: UpdateComponent (%s) is simulating physics - aborting."), *UpdatedComponent->GetPathName());
+//		return;
+//	}
+//
+//	const bool bSavedMovementInProgress = bMovementInProgress;
+//	bMovementInProgress = true;
+//
+//	switch (MovementMode)
+//	{
+//	case MOVE_None:
+//		break;
+//	case MOVE_Walking:
+//		PhysWalking(deltaTime, Iterations);
+//		break;
+//	case MOVE_NavWalking:
+//		PhysNavWalking(deltaTime, Iterations);
+//		break;
+//	case MOVE_Falling:
+//		PhysFalling(deltaTime, Iterations);
+//		break;
+//	case MOVE_Flying:
+//		PhysFlying(deltaTime, Iterations);
+//		break;
+//	case MOVE_Swimming:
+//		PhysSwimming(deltaTime, Iterations);
+//		break;
+//	case MOVE_Custom:
+//		PhysCustom(deltaTime, Iterations);
+//		break;
+//	default:
+//		UE_LOG(LogCharacterMovement, Warning, TEXT("%s has unsupported movement mode %d"), *CharacterOwner->GetName(), int32(MovementMode));
+//		SetMovementMode(MOVE_None);
+//		break;
+//	}
+//
+//	bMovementInProgress = bSavedMovementInProgress;
+//	if (bDeferUpdateMoveComponent)
+//	{
+//		SetUpdatedComponent(DeferredUpdatedMoveComponent);
+//	}
+//}
+
 void UGACharacterMovementComponent::PhysCustom(float DeltaTime, int32 Iterations)
 {
 	// Phys functions should only run for characters with ROLE_Authority or ROLE_AutonumousProxy. However, Unreal calls PhysCustom in
@@ -167,79 +306,105 @@ void UGACharacterMovementComponent::PhysWallRunning(float DeltaTime, int32 Itera
 		return;
 	}
 
-	++Iterations;
-	WallRunDuration += DeltaTime;
-
-	// Make sure the required wall run keys are still down
-	if (!bForwardKeysAreDown)
-	{
-		EndWallRun();
-		return;
-	}
-
-	// Make sure we are next to a wall. Provide a vertical tolerance for the linetrace since it's possible the server has
-	// moved our character slightly since we've begun the wall run. In the event we're right at the top/bottom of a wall. we need this
-	// tolerance value so we don't Immediately fall off the wall
-	if (!IsNextToWall(LineTraceVerticalTolerance))
-	{
-		EndWallRun();
-		return;
-	}
-
-	// Set the owning player's new velocity based on the wall run direction
-	FVector newVelocity;
-
-	// Time steps taken from delta time
 	float remainingTime = DeltaTime;
-	float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
 
-	if (WallRunDuration < MaxWallRunDuration) 
+	// Perform the move
+	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) && CharacterOwner && (CharacterOwner->Controller || bRunPhysicsWithNoController || HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity() || (CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy)))
 	{
-		newVelocity = WallRunDirection * MaxWallRunSpeed;
-	}
-	else
-	{
-		if (WallRunSide == ENavType::Front)
+		if (!HasValidData())
 		{
-			EndWallRun();
-			BeginClimb();
 			return;
 		}
 
-		// Compute current gravity
-		const FVector Gravity = -GetPawnOwner()->GetGravityDirection() * GetGravityZ();
-		float GravityTime = timeTick;
+		++Iterations;
 
-		newVelocity = WallRunDirection;
-		newVelocity.X *= MaxWallRunSpeed;
-		newVelocity.Y *= MaxWallRunSpeed;
-		newVelocity.Z = Velocity.Z;
+		// Time steps taken from delta time
+		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
+		remainingTime -= timeTick;
+		WallRunDuration += timeTick;
 
-		// Apply gravity
-		newVelocity = NewFallVelocity(newVelocity, Gravity, GravityTime);
-	}
+		// Retain previous location value
+		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
 
-	Velocity = newVelocity;
-	const FVector Adjusted = Velocity * DeltaTime;
-	FHitResult Hit(1.f);
-
-	SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
-
-	if (!HasValidData())
-	{
-		return;
-	}
-
-	float subTimeTickRemaining = timeTick * (1.f - Hit.Time);
-
-	// WE HAVE TO CHECK AND CALL ProcessLanded() OURSELVES!!!!
-	// No wonder its not getting called on its own...
-	if ( Hit.bBlockingHit )
-	{
-		if (IsValidLandingSpot(UpdatedComponent->GetComponentLocation(), Hit))
+		// Make sure the required wall run keys are still down
+		if (!bForwardKeysAreDown || bWantsToCrouch)
 		{
-			remainingTime += subTimeTickRemaining;
-			ProcessLanded(Hit, remainingTime, Iterations);
+			EndWallRun();
+			StartNewPhysics(timeTick, --Iterations);
+			return;
+		}
+
+		// Make sure we are next to a wall. Provide a vertical tolerance for the linetrace since it's possible the server has
+		// moved our character slightly since we've begun the wall run. In the event we're right at the top/bottom of a wall. we need this
+		// tolerance value so we don't Immediately fall off the wall
+		if (!IsNextToWall(LineTraceVerticalTolerance))
+		{
+			EndWallRun();
+
+			if (WallRunSide == ENavType::Front)
+			{
+				BeginClimb();
+			}
+
+			StartNewPhysics(timeTick, --Iterations);
+			return;
+		}
+
+		// Apply acceleration
+		CalcVelocity(timeTick, GroundFriction, false, GetMaxBrakingDeceleration());
+		// Save new Velocity
+		const FVector MoveVelocity = Velocity;
+		// Set the owning player's new velocity based on the wall run direction
+		FVector newVelocity = WallRunDirection * MoveVelocity.Size();
+
+		if (WallRunDuration >= MaxWallRunDuration)
+		{
+			// Compute current gravity
+			const FVector Gravity = -GetPawnOwner()->GetGravityDirection() * GetGravityZ();
+			float GravityTime = timeTick;
+
+			// Apply gravity
+			newVelocity = NewFallVelocity(newVelocity, Gravity, GravityTime);
+		}
+
+		const FVector Delta = newVelocity * DeltaTime;
+		const bool bZeroDelta = Delta.IsNearlyZero();
+
+		if (bZeroDelta)
+		{
+			remainingTime = 0.f;
+		}
+		else
+		{
+			FHitResult Hit(1.f);
+			SafeMoveUpdatedComponent(Delta, UpdatedComponent->GetComponentQuat(), true, Hit);
+
+			float subTimeTickRemaining = timeTick * (1.f - Hit.Time);
+
+			// WE HAVE TO CHECK AND CALL ProcessLanded() OURSELVES!!!!
+			// No wonder its not getting called on its own...
+			if (Hit.bBlockingHit)
+			{
+				if (IsValidLandingSpot(UpdatedComponent->GetComponentLocation(), Hit))
+				{
+					remainingTime += subTimeTickRemaining;
+					ProcessLanded(Hit, remainingTime, Iterations);
+					return;
+				}
+				else 
+				{
+					EndWallRun();
+					WallRunCheck(FVector::ZeroVector, Hit);
+					ClimbCheck(FVector::ZeroVector, Hit);
+				}
+			}
+		}
+
+		// If we didn't move at all this iteration then abort (since future iterations will also be stuck).
+		if (UpdatedComponent->GetComponentLocation() == OldLocation)
+		{
+			EndWallRun();
+			StartNewPhysics(timeTick, Iterations);
 			return;
 		}
 	}
@@ -256,82 +421,115 @@ void UGACharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iteratio
 		return;
 	}
 
-	++Iterations;
+	float remainingTime = DeltaTime;
 
-	if (bClimbingLedge)
+	// Perform the move
+	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) && CharacterOwner && (CharacterOwner->Controller || bRunPhysicsWithNoController || HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity() || (CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy)))
 	{
-		ClimbLedge(DeltaTime, Iterations);
-		return;
-	}
+		++Iterations;
+		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
+		remainingTime -= timeTick;
 
-	// Compute move parameters
-	FindWall(UpdatedComponent->GetComponentLocation(), CurrentWall, NULL);
-	MoveAlongWall(DeltaTime, Iterations);
-}
+		// Retain previous location value
+		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
 
-void UGACharacterMovementComponent::MoveAlongWall(float DeltaTime, int32 Iterations)
-{
-	if (!CurrentWall.IsClimbableWall()) return;
-	// UE_LOG(LogTemp, Warning, TEXT("moving along wall."));
+		// Retain previous velocity value
+		const FVector OldVelocity = Velocity;
 
-	const FVector LastInputVector = GetLastInputVector().GetSafeNormal();
-	// Our input is zero, we don't move. No Momentum etc.
-	if (LastInputVector.IsNearlyZero()) return;
-
-	const FVector HorizontalDirection = ((FVector::UpVector ^ -CurrentWall.HitResult.ImpactNormal) * LastInputVector).GetSafeNormal();
-	FVector TraceLocation;
-	FVector TraceNormal;
-	FHitResult traceHit;
-	FHitResult hitResult;
-	const float PawnRadius = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius();
-
-	if (SweepTrace(hitResult, UpdatedComponent->GetComponentLocation(), UpdatedComponent->GetComponentLocation() + (LastInputVector * (PawnRadius + 20))))
-	{
-		if (LastInputVector.Z < -SMALL_NUMBER)
+		// Apply acceleration
+		if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
 		{
-			FHitResult Hit;
-			SafeMoveUpdatedComponent(hitResult.Location - UpdatedComponent->GetComponentLocation().GetSafeNormal() * MaxClimbSpeed, UpdatedComponent->GetComponentQuat(), true, Hit);
+			CalcVelocity(timeTick, GroundFriction, false, GetMaxBrakingDeceleration());
+		}
 
-			if (Hit.bBlockingHit) 
+		if (bClimbingLedge)
+		{
+			ClimbLedge(timeTick, Iterations);
+			return;
+		}
+
+		// Compute move parameters
+		const FVector MoveVelocity = Velocity;
+		const FVector Delta = timeTick * MoveVelocity;
+		const bool bZeroDelta = Delta.IsNearlyZero();
+		FHitResult Hit;
+
+		if (bZeroDelta)
+		{
+			remainingTime = 0.f;
+		}
+		else
+		{
+			MoveAlongWall(MoveVelocity, timeTick, &Hit);
+		}
+
+		// Update wall.
+		// StepUp might have already done it for us.
+		/*if (StepDownResult.bComputedWall)
+		{
+			CurrentWall = StepDownResult.WallResult;
+		}
+		else*/
+		if (Hit.bBlockingHit)
+		{
+			float subTimeTickRemaining = timeTick * (1.f - Hit.Time);
+
+			// WE HAVE TO CHECK AND CALL ProcessLanded() OURSELVES!!!!
+			// No wonder its not getting called on its own...
+			if (IsValidLandingSpot(UpdatedComponent->GetComponentLocation(), Hit))
 			{
-				float remainingTime = DeltaTime;
-				const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
-				remainingTime -= timeTick;
+				remainingTime += subTimeTickRemaining;
 				ProcessLanded(Hit, remainingTime, Iterations);
 				return;
 			}
 		}
-
-		return;
-		TraceLocation = hitResult.Location;
-		TraceNormal = hitResult.ImpactNormal;
-	}
-	else if (!hitResult.bBlockingHit)
-	{
-		if (LineTrace(traceHit, hitResult.TraceEnd, hitResult.TraceEnd + (PawnOwner->GetActorForwardVector() * (PawnRadius + 20))))
-		{
-			TraceLocation = traceHit.Location;
-			TraceNormal = traceHit.ImpactNormal;
-		}
 		else
 		{
-			if (LastInputVector.Z > 0)
+			// FindFloor(UpdatedComponent->GetComponentLocation(), CurrentFloor, bZeroDelta, NULL);
+			FindWall(UpdatedComponent->GetComponentLocation(), CurrentWall, NULL);
+
+			// If trace is not hitting a wall anymore
+			if (!CurrentWall.bBlockingHit)
 			{
-				BeginClimbLedge();
+				// If we were traveling up a wall before reaching the top
+				if (OldVelocity.Z > 0)
+				{
+					BeginClimbLedge();
+					StartNewPhysics(remainingTime, Iterations);
+					return;
+				}
+
+				EndClimb();
+				StartNewPhysics(remainingTime, Iterations);
+				return;
 			}
 		}
+		
+		// If we didn't move at all this iteration then abort (since future iterations will also be stuck).
+		if (UpdatedComponent->GetComponentLocation() == OldLocation)
+		{
+			remainingTime = 0.f;
+			break;
+		}
 	}
+}
 
-	const FVector DesiredDirection = ((TraceLocation + TraceNormal * (PawnRadius + 5)) - UpdatedComponent->GetComponentLocation()).GetSafeNormal();
-	const FVector newVelocity = DesiredDirection * MaxClimbSpeed;
-
+void UGACharacterMovementComponent::MoveAlongWall(const FVector& InVelocity, float DeltaSeconds, FHitResult* OutHit)
+{
+	if (!CurrentWall.IsClimbableWall()) return;
+	// UE_LOG(LogTemp, Warning, TEXT("moving along wall."));
+	
+	// Move along the current wall
+	const FVector Delta = (CurrentWall.HitResult.ImpactNormal ^ FVector::UpVector).Normalize() * InVelocity * DeltaSeconds;
 	FHitResult Hit(1.f);
-	const FVector Adjusted = newVelocity * DeltaTime;
-	const FRotator Rotation = ComputeOrientRotationToWall(DeltaTime, TraceNormal);
-	if (SafeMoveUpdatedComponent(Adjusted, Rotation.Quaternion(), true, Hit))
-	{
-		// UE_LOG(LogTemp, Warning, TEXT("Moving?"));
-	}
+	const FVector RampVector = ComputeWallMovementDelta(Delta, CurrentWall.HitResult, CurrentWall.bLineTrace);
+	const FRotator Rotation = ComputeOrientRotationToWall(DeltaSeconds, CurrentWall.HitResult.ImpactNormal);
+	SafeMoveUpdatedComponent(RampVector, Rotation, true, Hit);
+	float LastMoveTimeSlice = DeltaSeconds;
+	float subTimeTickRemaining = LastMoveTimeSlice * (1.f - Hit.Time);
+
+	// Send movement result out
+	*OutHit = Hit;
 }
 
 void UGACharacterMovementComponent::ClimbLedge(float DeltaTime, int32 Iterations)
@@ -344,23 +542,29 @@ void UGACharacterMovementComponent::ClimbLedge(float DeltaTime, int32 Iterations
 	{
 		bClimbingLedge = false;
 		EndClimb();
+		StartNewPhysics(DeltaTime, Iterations);
 		return;
 	}
 
 	FHitResult ForwardHit(1.0f);
-	SafeMoveUpdatedComponent(Forward * MaxClimbSpeed * DeltaTime, UpdatedComponent->GetComponentQuat(), true, ForwardHit);
+	const FRotator Rotation = ComputeOrientRotationToWall(DeltaTime, CurrentWall.HitResult.ImpactNormal);
+	SafeMoveUpdatedComponent(Forward * MaxClimbSpeed * DeltaTime, Rotation, true, ForwardHit);
 
 	if (ForwardHit.bBlockingHit)
 	{
 		FHitResult UpHit(1.0f);
-		SafeMoveUpdatedComponent(FVector::UpVector * MaxClimbSpeed * DeltaTime, UpdatedComponent->GetComponentQuat(), true, UpHit);
+		SafeMoveUpdatedComponent(FVector::UpVector * MaxClimbSpeed * DeltaTime, Rotation, true, UpHit);
+
+		if (UpHit.bBlockingHit)
+		{
+			return; // Something is preventing us from climbing upward.
+		}
 	}
 }
 
 void UGACharacterMovementComponent::ComputeWallDist(const FVector& CapsuleLocation, float LineDistance, float SweepDistance, FFindWallResult& OutWallResult, float SweepRadius, const FHitResult* ForwardSweepResult) const
 {
 	OutWallResult.Clear();
-
 	float PawnRadius, PawnHalfHeight;
 	CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleSize(PawnRadius, PawnHalfHeight);
 
@@ -402,7 +606,7 @@ void UGACharacterMovementComponent::ComputeWallDist(const FVector& CapsuleLocati
 
 	// Since we require a longer sweep than line trace, we don't want to run the line trace if the sweep missed everything.
 	// We do however want to try a line trace if the sweep was stuck in penetration.
-	if (!OutWallResult.bBlockingHit && !OutWallResult.HitResult.bStartPenetrating)
+	if (false)// !OutWallResult.bBlockingHit && !OutWallResult.HitResult.bStartPenetrating)
 	{
 		OutWallResult.WallDist = SweepDistance;
 		return;
@@ -411,13 +615,14 @@ void UGACharacterMovementComponent::ComputeWallDist(const FVector& CapsuleLocati
 	// Line trace
 	if (LineDistance > 0.f)
 	{
-		const float ShrinkHeight = PawnHalfHeight;
+		const float ShrinkRadius = PawnRadius;
 		const FVector LineTraceStart = CapsuleLocation;
-		const float TraceDist = LineDistance + ShrinkHeight;
-		const FVector Front = FVector(TraceDist, 0.f, 0.f);
-		QueryParams.TraceTag = SCENE_QUERY_STAT_NAME_ONLY(FloorLineTrace);
+		const float TraceDist = LineDistance + ShrinkRadius;
+		const FVector Front = CharacterOwner->GetActorForwardVector() * TraceDist;
+		// QueryParams.TraceTag = SCENE_QUERY_STAT_NAME_ONLY(FloorLineTrace);
 
 		FHitResult Hit(1.f);
+		DrawDebugLine(GetWorld(), LineTraceStart, LineTraceStart + Front, FColor::Black);
 		bBlockingHit = GetWorld()->LineTraceSingleByChannel(Hit, LineTraceStart, LineTraceStart + Front, CollisionChannel, QueryParams, ResponseParam);
 
 		if (bBlockingHit)
@@ -426,8 +631,8 @@ void UGACharacterMovementComponent::ComputeWallDist(const FVector& CapsuleLocati
 			{
 				// Reduce hit distance by ShrinkHeight because we started the trace higher than the base.
 				// We allow negative distances here, because this allows us to pull out of penetrations.
-				const float MaxPenetrationAdjust = FMath::Max(MAX_FLOOR_DIST, PawnRadius);
-				const float LineResult = FMath::Max(-MaxPenetrationAdjust, Hit.Time * TraceDist - ShrinkHeight);
+				const float MaxPenetrationAdjust = FMath::Max(MAX_FLOOR_DIST, PawnHalfHeight);
+				const float LineResult = FMath::Max(-MaxPenetrationAdjust, Hit.Time * TraceDist - ShrinkRadius);
 
 				OutWallResult.bBlockingHit = true;
 				if (LineResult <= LineDistance && IsClimbable(Hit))
@@ -454,6 +659,15 @@ void UGACharacterMovementComponent::FindWall(const FVector& CapsuleLocation, FFi
 
 	check(CharacterOwner->GetCapsuleComponent());
 
+	// Increase height check slightly if walking, to prevent floor height adjustment from later invalidating the floor result.
+	const float HeightCheckAdjust = (IsMovingOnWall() ? MAX_FLOOR_DIST + UE_KINDA_SMALL_NUMBER : -MAX_FLOOR_DIST);
+
+	float WallSweepTraceDist = FMath::Max(MAX_FLOOR_DIST, MaxStepHeight + HeightCheckAdjust);
+	float WallLineTraceDist = WallSweepTraceDist;
+
+	ComputeWallDist(CapsuleLocation, WallLineTraceDist, WallSweepTraceDist, OutWallResult, CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius(), ForwardSweepResult);
+	/*
+
 	FHitResult hitResult;
 	auto lineTrace = [&](const FVector& start, const FVector& end)
 	{
@@ -464,10 +678,15 @@ void UGACharacterMovementComponent::FindWall(const FVector& CapsuleLocation, FFi
 	{
 		OutWallResult.SetFromLineTrace(hitResult, 2.0f, true);
 	}
+	else OutWallResult.bClimbableWall = false;
+
+	*/
 }
 
 FVector UGACharacterMovementComponent::ComputeWallMovementDelta(const FVector& Delta, const FHitResult& RampHit, const bool bHitFromLineTrace) const
 {
+	// ComputeGroundMovementDelta()
+
 	const FVector WallNormal = RampHit.ImpactNormal;
 	const FVector ContactNormal = RampHit.Normal;
 
@@ -475,8 +694,14 @@ FVector UGACharacterMovementComponent::ComputeWallMovementDelta(const FVector& D
 	{
 		// Compute a vector that moves parallel to the surface, by projecting the horizontal movement direction onto the ramp.
 		const float WallDotDelta = (WallNormal | Delta);
-		return FVector(-WallDotDelta / WallNormal.X, Delta.Y, Delta.Z);
+		FVector RampMovement(-WallDotDelta / WallNormal.X, Delta.Y, Delta.Z);
+
+		if (true)
+			return RampMovement.GetSafeNormal() * Delta.Size();
+		else
+			return RampMovement;
 	}
+
 	return Delta;
 }
 
@@ -495,9 +720,34 @@ FRotator UGACharacterMovementComponent::ComputeOrientRotationToWall(float DeltaT
 	const FRotator Rotation = RotMatrix.Rotator();
 
 	const FRotator Current = UpdatedComponent->GetComponentRotation();
-	return Current != Rotation ? (Current + ((Rotation - Current).GetNormalized() * DeltaTime)).GetNormalized() : Current;
+	return Current.Equals(Rotation) ? (Current + ((Rotation - Current).GetNormalized() * DeltaTime * 10)).GetNormalized() : Rotation;
+}
+
+FVector UGACharacterMovementComponent::CalculateFloorInfluence(const FVector& InSlope) const
+{
+	if (InSlope == FVector::UpVector)
+	{
+		return FVector::ZeroVector;
+	}
+
+	const FVector SlideDirection = FVector::CrossProduct(InSlope, FVector::CrossProduct(InSlope, FVector::UpVector));
+	const float SlopeIntensity = FMath::Clamp<float>(1 - FVector::DotProduct(InSlope, FVector::UpVector), 0, 1);
+
+	return SlideDirection * (SlideAcceleration * SlopeIntensity);
 }
 #pragma endregion
+
+bool UGACharacterMovementComponent::IsSprinting() const
+{
+	AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner);
+	return GACharacter && GACharacter->bIsSprinting;
+}
+
+bool UGACharacterMovementComponent::IsSliding() const
+{
+	AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner);
+	return GACharacter && GACharacter->bIsSliding;
+}
 
 bool UGACharacterMovementComponent::IsMovingOnWall() const
 {
@@ -521,17 +771,20 @@ float UGACharacterMovementComponent::GetMaxSpeed() const
 	case MOVE_Walking:
 	case MOVE_NavWalking:
 	{
-		if (IsCrouching())
+		if (IsSliding())
+		{
+			return MaxSlideSpeed;
+		}
+		else if (IsCrouching())
 		{
 			return MaxWalkSpeedCrouched;
 		}
+		else if (IsSprinting())
+		{
+			return MaxSprintSpeed;
+		}
 		else
 		{
-			if (bWantsToSprint)
-			{
-				return MaxSprintSpeed;
-			}
-
 			return MaxWalkSpeed;
 		}
 	}
@@ -542,6 +795,15 @@ float UGACharacterMovementComponent::GetMaxSpeed() const
 	case MOVE_Flying:
 		return MaxFlySpeed;
 	case MOVE_Custom:
+		switch (CustomMovementMode)
+		{
+		case MOVE_WallRunning:
+			return MaxWallRunSpeed;
+		case MOVE_Climbing:
+			return MaxClimbSpeed;
+		default:
+			return MaxCustomMovementSpeed;
+		}
 		return MaxCustomMovementSpeed;
 	case MOVE_None:
 	default:
@@ -551,15 +813,110 @@ float UGACharacterMovementComponent::GetMaxSpeed() const
 
 float UGACharacterMovementComponent::GetMaxAcceleration() const
 {
-	if (IsMovingOnGround() && bWantsToSprint)
+	switch (MovementMode)
 	{
-		return SprintAcceleration;
+	case MOVE_Walking:
+	case MOVE_NavWalking:
+	{
+		if (IsSprinting())
+		{
+			return SprintAcceleration;
+		}
 	}
+	case MOVE_Custom:
+		switch (CustomMovementMode)
+		{
+		case MOVE_WallRunning:
+		default:
+			return UCharacterMovementComponent::GetMaxAcceleration();
+		}
+	case MOVE_None:
+	default:
+		return UCharacterMovementComponent::GetMaxAcceleration();
+	};
 
 	return UCharacterMovementComponent::GetMaxAcceleration();
 }
 
+float UGACharacterMovementComponent::GetMaxBrakingDeceleration() const
+{
+	// Super::GetMaxBrakingDeceleration()
+
+	switch (MovementMode)
+	{
+	case MOVE_Walking:
+	case MOVE_NavWalking:
+		if (IsSliding()) return BrakingDecelerationSliding;
+		else return BrakingDecelerationWalking;
+	case MOVE_Falling:
+		return BrakingDecelerationFalling;
+	case MOVE_Swimming:
+		return BrakingDecelerationSwimming;
+	case MOVE_Flying:
+		return BrakingDecelerationFlying;
+	case MOVE_Custom:
+		switch (CustomMovementMode)
+		{
+		case MOVE_WallRunning:
+			return 1024.f;
+		case MOVE_Climbing:
+			return BrakingDecelerationClimbing;
+		default:
+			return 0.f;
+		}
+	case MOVE_None:
+	default:
+		return 0.f;
+	}
+}
+
 #pragma region MovementRequests
+bool UGACharacterMovementComponent::CanSlide() const
+{
+	AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner);
+	return CanEverSlide() && IsMovingOnGround() && GACharacter && GACharacter->CanSlide() && GACharacter->bIsSprinting;
+}
+
+void UGACharacterMovementComponent::StartSliding()
+{
+	SetMovementMode(MOVE_Walking);
+
+	if (AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner))
+	{
+		if (!GACharacter->CanSlide()) return;
+		GACharacter->OnBeginSlide();
+	}
+
+	bWantsToSlide = false;
+	SlideConsecutiveResetDuration = 0.0f;
+	++CurrentSlides;
+	Velocity = CharacterOwner->GetActorForwardVector() * 
+		(Velocity.Size() + 
+		(MaxSprintSpeed *
+		(bConsecutiveSlidesLoseMomentum ? (1.0f / CurrentSlides) : 1)));
+	// GroundFriction = SlideGroundFriction;
+	// bUseSeparateBrakingFriction = false;
+	bCanWalkOffLedgesWhenCrouching = true;
+}
+
+void UGACharacterMovementComponent::StopSliding()
+{
+	if (AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner))
+	{
+		GACharacter->OnEndSlide();
+	}
+
+	bWantsToSlide = false;
+	GroundFriction = DefaultGroundFriction;
+	// bUseSeparateBrakingFriction = true;
+	bCanWalkOffLedgesWhenCrouching = false;
+}
+
+void UGACharacterMovementComponent::ResetSliding()
+{
+	CurrentSlides = 0;
+}
+
 void UGACharacterMovementComponent::StartSprinting()
 {
 	bSprintKeyDown = true;
@@ -572,12 +929,17 @@ void UGACharacterMovementComponent::StopSprinting()
 
 bool UGACharacterMovementComponent::BeginWallRun()
 {
-	if (bForwardKeysAreDown)
+	if (bForwardKeysAreDown && Velocity.Size() >= MaxWalkSpeed)
 	{
 		// Convenience if statement for locally checked GACharacter cast
 		if (AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner))
-			if (!GACharacter->CanWallRun())
-				return false;
+			if (GACharacter->CanWallRun())
+			{
+				if (GACharacter->bIsSliding)
+					StopSliding();
+				GACharacter->OnBeginWallRun();
+			}
+			else return false;
 
 		SetMovementMode(EMovementMode::MOVE_Custom, ECustomMovementMode::MOVE_WallRunning);
 		WallRunDuration = 0.0f;
@@ -589,6 +951,8 @@ bool UGACharacterMovementComponent::BeginWallRun()
 
 void UGACharacterMovementComponent::EndWallRun()
 {
+	if (AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner)) GACharacter->OnEndWallRun();
+
 	// Set the movement mode back to falling
 	SetMovementMode(EMovementMode::MOVE_Falling);
 	WallRunDuration = 0.0f;
@@ -758,14 +1122,22 @@ bool UGACharacterMovementComponent::SweepTrace(FHitResult& Hit, const FVector& s
 
 void UGACharacterMovementComponent::OnActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
 {
-	WallRunCheck(NormalImpulse, Hit);
-	ClimbCheck(NormalImpulse, Hit);
+	if (OtherActor && OtherActor->GetRootComponent() && OtherActor->GetRootComponent()->GetCollisionObjectType() == ECC_Pawn) return;
+
+	// Section
+	{
+		WallRunCheck(NormalImpulse, Hit);
+		ClimbCheck(NormalImpulse, Hit);
+	}
 }
 
 void UGACharacterMovementComponent::WallRunCheck(const FVector& NormalImpulse, const FHitResult& Hit)
 {
-	if (IsClimbing()) return;
-	if (IsWallRunning()) return;
+	if (AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner))
+		if (!GACharacter->CanWallRun())
+			return;
+	if (!CanEverWallRun()) return;
+	if (IsMovingOnWall()) return;
 	if (!CanSurfaceBeWallRan(Hit.ImpactNormal)) return;
 	FindWallRunDirectionAndSide(Hit.ImpactNormal, WallRunDirection, WallRunSide);
 	if (IsFalling())
@@ -783,9 +1155,11 @@ void UGACharacterMovementComponent::WallRunCheck(const FVector& NormalImpulse, c
 
 void UGACharacterMovementComponent::ClimbCheck(const FVector& NormalImpulse, const FHitResult& Hit)
 {
-	if (IsWallRunning()) return;
-	if (IsClimbing()) return;
-	if (!IsFalling()) return;
+	if (AGACharacter* GACharacter = Cast<AGACharacter>(CharacterOwner))
+		if (!GACharacter->CanClimb())
+			return;
+	if (!CanEverClimb()) return;
+	if (IsMovingOnWall() || !IsFalling() || IsCrouching()) return;
 	if (!IsInFrontOfWall()) return;
 	WallRunDirection = FVector::UpVector;
 	WallRunSide = ENavType::Front;
@@ -850,7 +1224,7 @@ bool UGACharacterMovementComponent::IsNextToWall(float vertical_tolerance)
 		break;
 	}
 	const FVector traceStart = GetPawnOwner()->GetActorLocation() + (WallRunDirection * 20.0f);
-	const FVector traceEnd = traceStart + (FVector::CrossProduct(WallRunDirection, crossVector) * 50);
+	const FVector traceEnd = traceStart + (FVector::CrossProduct(WallRunDirection, crossVector) * 70);
 	FHitResult hitResult;
 
 	// Create a helper lambda for performing the line trace
@@ -893,51 +1267,48 @@ bool UGACharacterMovementComponent::IsNextToWall(float vertical_tolerance)
 bool UGACharacterMovementComponent::CanAttemptJump() const
 {
 	return IsJumpAllowed() &&
-		(IsMovingOnGround() || IsFalling() || IsWallRunning() || IsClimbing()); // Falling included for double-jump and non-zero jump hold time, but validated by character.
+		(IsMovingOnGround() || IsFalling() || IsMovingOnWall()); // Falling included for double-jump and non-zero jump hold time, but validated by character.
 }
 
 bool UGACharacterMovementComponent::DoJump(bool bReplayingMoves)
 {
 	if (CharacterOwner && CharacterOwner->CanJump())
 	{
-		if (IsWallRunning())
+		if (!bConstrainToPlane || FMath::Abs(PlaneConstraintNormal.Z) != 1.f)
 		{
-			FVector Axis;
-			switch (WallRunSide) 
+			if (IsWallRunning())
 			{
-			case ENavType::Front:
-				Velocity = ((FVector::ZeroVector - PawnOwner->GetActorForwardVector()) + FVector::UpVector) * JumpZVelocity;
+				FVector Axis;
+				switch (WallRunSide)
+				{
+				case ENavType::Front:
+					Velocity = ((FVector::ZeroVector - PawnOwner->GetActorForwardVector()) + FVector::UpVector) * JumpZVelocity;
+					EndWallRun();
+					SetMovementMode(MOVE_Falling);
+					return true;
+				case ENavType::Left:
+					Axis = FVector(0, 0, 1);
+					break;
+				case ENavType::Right:
+					Axis = FVector(0, 0, -1);
+					break;
+				}
+
+				Velocity += (WallRunDirection.Cross(Axis) + FVector::UpVector) * JumpZVelocity;
+				EndWallRun();
 				SetMovementMode(MOVE_Falling);
 				return true;
-			case ENavType::Left:
-				Axis = FVector(0, 0, 1);
-				break;
-			case ENavType::Right:
-				Axis = FVector(0, 0, -1);
-				break;
 			}
 
-			Velocity += (WallRunDirection.Cross(Axis) + FVector::UpVector) * JumpZVelocity;
-			SetMovementMode(MOVE_Falling);
-			return true;
-		}
-
-		if (IsClimbing())
-		{
-			Velocity += ((FVector::ZeroVector - PawnOwner->GetActorForwardVector()) + FVector::UpVector) * JumpZVelocity;
-			SetMovementMode(MOVE_Falling);
-			return true;
-		}
-
-		if (IsCrouching())
-		{
-			Velocity += (FVector::UpVector * JumpZVelocity * 10);
-			SetMovementMode(MOVE_Falling);
-			return true;
+			if (IsClimbing())
+			{
+				Velocity += ((FVector::ZeroVector - PawnOwner->GetActorForwardVector()) + FVector::UpVector) * JumpZVelocity;
+				EndClimb();
+				SetMovementMode(MOVE_Falling);
+				return true;
+			}
 		}
 	}
-
-	
 
 	return Super::DoJump(bReplayingMoves);
 }
@@ -946,10 +1317,61 @@ void UGACharacterMovementComponent::ProcessLanded(const FHitResult& Hit, float r
 {
 	// If we landed while wall running, make sure we stop wall running
 	if (IsWallRunning()) EndWallRun();
+
+	// if we landed while climbing, make sure we stop climbing
 	else if (IsClimbing()) EndClimb();
+
+	// If we land and want to slide, then we slide. Otherwise return to walking
+	if (bWantsToSlide) StartSliding();
+	
 	SetMovementMode(MOVE_Walking);
 
 	Super::ProcessLanded(Hit, remainingTime, Iterations);
+}
+#pragma endregion
+
+#pragma region CrouchOverrides
+void UGACharacterMovementComponent::Crouch(bool bClientSimulation)
+{
+	Super::Crouch(bClientSimulation);
+
+	// Check for a change in crouch state. Players toggle crouch by changing bWantsToCrouch.
+	const bool bIsCrouching = IsCrouching();
+	if (bIsCrouching)
+	{
+		if (CanSlide())
+		{
+			StartSliding();
+		}
+		else if (IsFalling())
+		{
+			bWantsToSlide = true;
+		}
+	}
+}
+
+void UGACharacterMovementComponent::UnCrouch(bool bClientSimulation)
+{
+	bWantsToSlide = false;
+
+	if (IsMovingOnGround())
+	{
+		if (Velocity.Size() <= MaxWalkSpeed)
+		{
+			Super::UnCrouch(bClientSimulation);
+		}
+	}
+	else
+	{
+		Super::UnCrouch(bClientSimulation);
+	}
+
+	// Check for a change in crouch state. Players toggle crouch by changing bWantsToCrouch.
+	const bool bIsCrouching = IsCrouching();
+	if (!bIsCrouching && IsSliding())
+	{
+		StopSliding();
+	}
 }
 #pragma endregion
 

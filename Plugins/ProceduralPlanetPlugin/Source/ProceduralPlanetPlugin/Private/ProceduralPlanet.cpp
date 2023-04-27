@@ -7,6 +7,9 @@
 
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Camera/CameraComponent.h"
+#include "Components/RuntimeMeshComponentStatic.h"
+
+#include "UnrealEditorSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/Engine.h"
@@ -16,6 +19,8 @@
 // Sets default values
 AProceduralPlanet::AProceduralPlanet() :
 	bIsValid(false),
+	LODCheckPeriod(0.5f),
+	TimeSinceLastLODCheck(999999.f),
 	playerLocation(FVector::ZeroVector)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -76,10 +81,18 @@ void AProceduralPlanet::PostEditChangeChainProperty(struct FPropertyChangedChain
 	Super::PostEditChangeChainProperty(e);
 }
 
-// Allows Tick in Editor
+// This ultimately is what controls whether or not it can even tick at all in the editor view port. 
+// But, it is EVERY view port so it still needs to be blocked from preview windows and junk.
 bool AProceduralPlanet::ShouldTickIfViewportsOnly() const
 {
-	return true;
+	if (GetWorld() != nullptr && GetWorld()->WorldType == EWorldType::Editor /*&& UseEditorTick*/)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 #endif
 
@@ -101,9 +114,23 @@ void AProceduralPlanet::BeginPlay()
 // Called every frame
 void AProceduralPlanet::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+#if WITH_EDITOR
+	if (GetWorld() != nullptr && GetWorld()->WorldType == EWorldType::Editor)
+	{
+		EditorTick(DeltaTime);
+	}
+	else
+#endif
+	{
+		checkCurrentView(DeltaTime);
+		Super::Tick(DeltaTime);
+	}
+}
 
-	checkCurrentView();
+// Called every frame inside editor with a valid editor-type world. "Level Editor" for instance
+void AProceduralPlanet::EditorTick(float DeltaTime)
+{
+	checkCurrentView(DeltaTime);
 }
 
 void AProceduralPlanet::OnValidate()
@@ -119,6 +146,7 @@ void AProceduralPlanet::GeneratePlanet()
 {
 	Initialize();
 	GenerateMesh();
+	GenerateHeight();
 	GenerateMaterial();
 }
 
@@ -140,7 +168,7 @@ void AProceduralPlanet::Initialize()
 		{
 			if (auto Client = (FLevelEditorViewportClient*)(Viewport->GetClient()))
 			{
-				playerLocation = UKismetMathLibrary::ComposeTransforms(GetActorTransform(), FTransform(FRotator::ZeroRotator, Client->GetViewLocation(), FVector::OneVector)).GetLocation();
+				playerLocation = Client->GetViewLocation();
 			}
 		}
 	}
@@ -149,27 +177,27 @@ void AProceduralPlanet::Initialize()
 	ShapeGenerator.UpdateSettings(Settings.ShapeSettings);
 	MaterialGenerator.UpdateSettings(Settings.MaterialSettings);
 
-	if (Meshs.Num() <= 0) Meshs.SetNum(6);
+	if (RuntimeMeshs.Num() <= 0) RuntimeMeshs.SetNum(6);
 	Landscapes.SetNum(6);
 
 	for (int i = 0; i < 6; ++i)
 	{
-		if (Meshs[i] == nullptr)
+		if (RuntimeMeshs[i] == nullptr)
 		{
-			UProceduralMeshComponent* meshComp = 
-				NewObject<UProceduralMeshComponent>(this, FName("Landscape_PMesh_%s" + FString::FromInt(i)));
+			URuntimeMeshComponentStatic* meshComp =
+				NewObject<URuntimeMeshComponentStatic>(this, FName("Landscape_RMesh_%s" + FString::FromInt(i)));
 			FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 
 			meshComp->SetupAttachment(RootComponent);
 			meshComp->RegisterComponent();
-			Meshs[i] = meshComp;
+			RuntimeMeshs[i] = meshComp;
 		}
 
-		if (Landscapes[i] == nullptr)
-			Landscapes[i] = NewObject<UPlanetLandscape>(this, FName("Landscape_Object_%s" + FString::FromInt(i)));
+		if (Landscapes[i] == nullptr) Landscapes[i] = NewObject<UPlanetLandscape>(this, FName("Landscape_Object_%s" + FString::FromInt(i)));
 
-		Landscapes[i]->Initialize(ShapeGenerator, Settings.ShapeSettings.MeshSettings, 
-			*Meshs[i], Directions[i]);
+		Landscapes[i]->Initialize(ShapeGenerator, Settings.ShapeSettings.MeshSettings,
+			*RuntimeMeshs[i], Directions[i]);
+		Landscapes[i]->PlanetLocation = GetActorLocation();
 	}
 }
 
@@ -180,8 +208,6 @@ void AProceduralPlanet::GenerateMesh()
 		if (Landscape != nullptr)
 			Landscape->ConstructMesh(playerLocation);
 	}
-
-	GenerateHeight();
 
 	// MaterialGenerator.UpdateElevation(ShapeGenerator.elevationMinMax);
 	/*
@@ -203,7 +229,7 @@ void AProceduralPlanet::GenerateHeight()
 
 void AProceduralPlanet::GenerateMaterial()
 {
-	for (UProceduralMeshComponent* Mesh : Meshs)
+	for (URuntimeMeshComponentStatic* Mesh : RuntimeMeshs)
 	{
 		if (Mesh && Settings.MaterialSettings.Material_Parent)
 		{
@@ -215,28 +241,73 @@ void AProceduralPlanet::GenerateMaterial()
 
 void AProceduralPlanet::CheckLOD()
 {
-	for (auto* Landscape : Landscapes)
+	int32 i = 0;
+	for (UPlanetLandscape* Landscape : Landscapes)
 	{
-		if (Landscape != nullptr) Landscape->OnCameraLocationUpdated(playerLocation);
+		if (Landscape != nullptr)
+		{
+			Landscape->OnCameraLocationUpdated(playerLocation);
+		}
+		++i;
 	}
+
+	GenerateHeight();
+	GenerateMaterial();
 }
 
-void AProceduralPlanet::checkCurrentView()
+void AProceduralPlanet::checkCurrentView(float DeltaTime)
 {
+	TimeSinceLastLODCheck += DeltaTime;
+
+	// Don't check every frame
+	if (TimeSinceLastLODCheck < LODCheckPeriod)
+		return;
+
+	TimeSinceLastLODCheck = 0.f;
+
 #if WITH_EDITOR
 	if (GEditor)
 	{
+		if (true)
+		{
+			if (UUnrealEditorSubsystem* ESystem = GEditor->GetEditorSubsystem<UUnrealEditorSubsystem>())
+			{
+				FVector Loc = FVector::ZeroVector;
+				FRotator Rot = FRotator::ZeroRotator;
+
+				if (!ESystem->GetLevelViewportCameraInfo(Loc, Rot))
+				{
+					// UE_LOG(LogTemp, Warning, TEXT("UPlanet: \n -GetLevelViewportCameraInfo failed! \n\n"));
+				}
+				else
+				{
+					// Int vector uses integer division, so remainder is lost.
+					const FIntVector oldPlayerLocation = FIntVector(playerLocation) / 500; // Player cordinates in relative chunks
+					const FIntVector newPlayerLocation = FIntVector(Loc) / 500;
+					if (oldPlayerLocation != newPlayerLocation) // Only change corrdinates if player is 500m away from their previous location
+					{
+						playerLocation = Loc;
+						// UE_LOG(LogTemp, Warning, TEXT("UPlanet: \n -Camera location Changed! \n --%s \n\n"), *playerLocation.ToString());
+						CheckLOD();
+					}
+				}
+			}
+
+			return;
+		}
+
 		if (const auto& Viewport = GEditor->GetActiveViewport())
 		{
 			if (auto Client = (FLevelEditorViewportClient*)(Viewport->GetClient()))
 			{
-				const FVector Loc =
-					UKismetMathLibrary::ConvertTransformToRelative(FTransform(FRotator::ZeroRotator, Client->GetViewLocation(), FVector::OneVector), GetActorTransform()).GetLocation();
+				const FVector Loc = Client->GetViewLocation();
 				const FRotator Rot = Client->GetViewRotation();
 
-				if (playerLocation != Loc)
+				// Int vector uses integer division, so remainder is lost.
+				// const FIntVector PlayerChunkCoords = FIntVector(Loc) / 500; // Player cordinates in relative chunks
+				if (playerLocation != Loc) // Only change corrdinates if player is 500m away from their previous location
 				{
-					// UE_LOG(LogTemp, Warning, TEXT("UPlanet: \n -Camera location Changed! \n --%s"), *playerLocation.ToString());
+					// UE_LOG(LogTemp, Warning, TEXT("UPlanet: \n -Camera location Changed! \n --%s \n\n"), *playerLocation.ToString());
 					playerLocation = Loc;
 					CheckLOD();
 				}
@@ -244,10 +315,21 @@ void AProceduralPlanet::checkCurrentView()
 		}
 	}
 #else
-	LODCamera->SetWorldLocation(UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraLocation());
-	LODCamera->SetWorldRotation(UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraRotation());
 #endif
-	
+
+	// Never moves
+	/*auto world = GetWorld();
+	if (world == nullptr)
+		return;
+
+	auto viewLocations = world->ViewLocationsRenderedLastFrame;
+	if (viewLocations.Num() == 0)
+		return;
+
+	FVector playerLocation = viewLocations[0];
+	CheckLOD();*/
+
+	// LODCamera has been depreciated
 	/*if (LODCamera)
 	{
 		const FVector Temp = LODCamera->GetComponentTransform().GetLocation();
