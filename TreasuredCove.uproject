@@ -26,7 +26,7 @@
 		},
 		{
 			"Name": "DlgSystem",
-			"Enabled": false,
+			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/6d0255a60be340dfa1c556503cc57eb3"
 		},
 		{
@@ -74,6 +74,15 @@
 		{
 			"Name": "AdvancedSessions",
 			"Enabled": true
+		},
+		{
+			"Name": "ChaosVehiclesPlugin",
+			"Enabled": true
+		},
+		{
+			"Name": "SenseSystem",
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher: //ue/marketplace/content/28a0c4ba00bf4eee8c17e52b7b2c8d52"
 		}
 	]
 }
