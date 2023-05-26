@@ -4,7 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "LoadoutItemInfo.h"
 #include "MultiplayerLoadoutManager.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSuccess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFailure);
 
 class UMultiplayerLoadout;
 
@@ -29,57 +33,65 @@ public:
 	FText GetLoadoutName();
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
 	void SetLoadoutName(FText InName);
+	UFUNCTION(BlueprintPure, Category = "Loadout")
+	int32 GetSpentPoints();
 
 	UFUNCTION(BlueprintPure, Category = "Loadout")
-	FName GetPrimary();
+	FLoadoutItemInfo GetPrimary();
 	UFUNCTION(BlueprintPure, Category = "Loadout")
-	FName GetSecondary();
+	FLoadoutItemInfo GetSecondary();
 	UFUNCTION(BlueprintPure, Category = "Loadout")
-	TArray<FName> GetPrimaryAttachments();
+	TArray<FLoadoutItemInfo> GetPrimaryAttachments();
 	UFUNCTION(BlueprintPure, Category = "Loadout")
-	TArray<FName> GetSecondaryAttachments();
+	TArray<FLoadoutItemInfo> GetSecondaryAttachments();
 	UFUNCTION(BlueprintPure, Category = "Loadout")
-	TArray<FName> GetPerks();
+	TArray<FLoadoutItemInfo> GetPerks();
 	UFUNCTION(BlueprintPure, Category = "Loadout")
-	TArray<FName> GetStrikePackages();
+	TArray<FLoadoutItemInfo> GetStrikePackages();
 
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool AddPrimary(FName InPrimary, int32 InCost);
+	bool AddPrimary(UPARAM(Ref) FLoadoutItemInfo& InPrimary);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool AddPrimaryAttachment(FName InPrimaryAttachment, int32 InCost);
+	bool AddPrimaryAttachment(UPARAM(Ref) FLoadoutItemInfo& InPrimaryAttachment);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool AddSecondary(FName InSecondary, int32 InCost);
+	bool AddSecondary(UPARAM(Ref) FLoadoutItemInfo& InSecondary);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool AddSecondaryAttachment(FName InSecondaryAttachment, int32 InCost);
+	bool AddSecondaryAttachment(UPARAM(Ref) FLoadoutItemInfo& InSecondaryAttachment);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool AddLethal(FName InLethal, int32 InCost);
+	bool AddLethal(UPARAM(Ref) FLoadoutItemInfo& InLethal);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool AddTactical(FName InTactical, int32 InCost);
+	bool AddTactical(UPARAM(Ref) FLoadoutItemInfo& InTactical);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool AddPerk(FName InPerk, int32 InCost);
+	bool AddPerk(UPARAM(Ref) FLoadoutItemInfo& InPerk);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool AddStrikePackage(FName InStrikePackage, int32 InCost);
+	bool AddStrikePackage(UPARAM(Ref) FLoadoutItemInfo& InStrikePackage);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool AddWildcard(FName InWildCard, int32 InCost);
+	bool AddWildcard(UPARAM(Ref) FLoadoutItemInfo& InWildCard);
 
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool RemovePrimary(int32 InCost);
+	bool RemovePrimary();
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool RemovePrimaryAttachment(FName InPrimaryAttachment, int32 InCost);
+	bool RemovePrimaryAttachment(UPARAM(Ref) FLoadoutItemInfo& InPrimaryAttachment);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool RemoveSecondary(int32 InCost);
+	bool RemoveSecondary();
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool RemoveSecondaryAttachment(FName InSecondaryAttachment, int32 InCost);
+	bool RemoveSecondaryAttachment(UPARAM(Ref) FLoadoutItemInfo& InSecondaryAttachment);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool RemoveLethal(FName InLethal, int32 InCost);
+	bool RemoveLethal(UPARAM(Ref) FLoadoutItemInfo& InLethal);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool RemoveTactical(FName InTactical, int32 InCost);
+	bool RemoveTactical(UPARAM(Ref) FLoadoutItemInfo& InTactical);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool RemovePerk(FName InPerk, int32 InCost);
+	bool RemovePerk(UPARAM(Ref) FLoadoutItemInfo& InPerk);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool RemoveStrikePackage(FName InStrikePackage, int32 InCost);
+	bool RemoveStrikePackage(UPARAM(Ref) FLoadoutItemInfo& InStrikePackage);
 	UFUNCTION(BlueprintCallable, Category = "Loadout")
-	bool RemoveWildcard(FName InWildCard, int32 InCost);
+	bool RemoveWildcard(UPARAM(Ref) FLoadoutItemInfo& InWildCard);
+
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnSuccess OnSuccess;
+	UPROPERTY(BlueprintAssignable)
+	FOnFailure OnFailure;
 };
 
 // 9mm $0.21 - $0.23 a round

@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "BlueprintDataDefinitions.h"
+#include "GameFramework/SaveGame.h"
 #include "GISS_Multiplayer.generated.h"
 
+class USaveGame;
 class UMultiplayerLoadout;
 class UMultiplayerLoadoutManager;
 
@@ -15,20 +17,7 @@ struct FAccountAttributes
 {
 	GENERATED_BODY()
 public:
-	FAccountAttributes() :
-		DisplayName(FText()),
-		ClanName(FText()),
-		Title(FText()),
-		Experience(0),
-		Level(0),
-		Prestige(0),
-		RankIcon(nullptr),
-		Background(nullptr),
-		Portrait(nullptr),
-		EmblemIcon(nullptr),
-		EquippedCallingCards(),
-		Loadouts()
-	{};
+	FAccountAttributes();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
@@ -58,6 +47,8 @@ public:
 	TArray<UMaterialInterface*> EquippedCallingCards;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
 	TArray<UMultiplayerLoadout*> Loadouts;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer")
+	TArray<UObject*> Perks;
 };
 
 /**
@@ -68,6 +59,9 @@ class TREASUREDCOVE_API UGISS_Multiplayer : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	
+private:
+	USaveGame* SaveGame;
+
 private:
 	UPROPERTY()
 	FAccountAttributes AccountAttributes;
@@ -97,6 +91,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
 	void SetCustomLoadouts(UPARAM(ref)TArray<UMultiplayerLoadout*>& InCustomLoadouts);
 
+	UFUNCTION(BlueprintCallable)
+	void SaveCustomLoadoutChanges();
+
+	UFUNCTION(BlueprintCallable)
+	void OnSavedCustomLoadoutChanges(const FString& InString, const int32 InIndex, bool Succeded);
+
+	UFUNCTION(BlueprintCallable)
+	void LoadCustomLoadouts(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData);
+
 	UFUNCTION(BlueprintPure, Category = "Multiplayer")
 	UMultiplayerLoadout* GetCurrentLoadout();
 
@@ -105,4 +108,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Multiplayer")
 	UMultiplayerLoadoutManager* GetLoadoutManager();
+
+public:
 };

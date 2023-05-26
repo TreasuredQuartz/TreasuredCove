@@ -397,24 +397,25 @@ void UAircraftMovementComponent::ReplicateMoveToServer(float DeltaTime, const FV
 	// Find the oldest (unacknowledged) important move (OldMove).
 	// Don't include the last move because it may be combined with the next new move.
 	// A saved move is interesting if it differs significantly from the last acknowledged move
-	FSavedMovePtr OldMove = NULL;
-	if (ClientData->LastAckedMove.IsValid())
+	
+	// FSavedMovePtr OldMove = NULL;
+	// if (ClientData->LastAckedMove.IsValid())
 	{
-		const int32 NumSavedMoves = ClientData->SavedMoves.Num();
+		const int32 NumSavedMoves = 0; // = ClientData->SavedMoves.Num();
 		for (int32 i = 0; i < NumSavedMoves - 1; i++)
 		{
-			const FSavedMovePtr& CurrentMove = ClientData->SavedMoves[i];
-			if (CurrentMove->IsImportantMove(ClientData->LastAckedMove))
+			// const FSavedMovePtr& CurrentMove = ClientData->SavedMoves[i];
+			// if (CurrentMove->IsImportantMove(ClientData->LastAckedMove))
 			{
-				OldMove = CurrentMove;
+				// OldMove = CurrentMove;
 				break;
 			}
 		}
 	}
 
 	//	// Get a SavedMove object to store the movement in.
-	FSavedMovePtr NewMovePtr = ClientData->CreateSavedMove();
-	FSavedMove_Vehicle* const NewMove = NewMovePtr.Get();
+	// FSavedMovePtr NewMovePtr = ClientData->CreateSavedMove();
+	FSavedMove_Vehicle* const NewMove = nullptr; // = NewMovePtr.Get();
 	if (NewMove == nullptr)
 	{
 		return;
@@ -425,15 +426,15 @@ void UAircraftMovementComponent::ReplicateMoveToServer(float DeltaTime, const FV
 
 	// see if the two moves could be combined
 	// do not combine moves which have different TimeStamps (before and after reset).
-	if (const FSavedMove_Vehicle* PendingMove = ClientData->PendingMove.Get())
+	if (const FSavedMove_Vehicle* PendingMove = nullptr)// ClientData->PendingMove.Get())
 	{
-		if (PendingMove->CanCombineWith(NewMovePtr, VehicleOwner, ClientData->MaxMoveDeltaTime * VehicleOwner->GetActorTimeDilation(*MyWorld)))
+		// if (PendingMove->CanCombineWith(NewMovePtr, VehicleOwner, ClientData->MaxMoveDeltaTime * VehicleOwner->GetActorTimeDilation(*MyWorld)))
 		{
 			// SCOPE_CYCLE_COUNTER(STAT_VehicleMovementCombineNetMove);
 
 			// Only combine and move back to the start location if we don't move back in to a spot that would make us collide with something new.
 			const FVector OldStartLocation = PendingMove->GetRevertedLocation();
-			const bool bAttachedToObject = (NewMovePtr->StartAttachParent != nullptr);
+			// const bool bAttachedToObject = (NewMovePtr->StartAttachParent != nullptr);
 			// if (bAttachedToObject || !OverlapTest(OldStartLocation, PendingMove->StartRotation.Quaternion(), UpdatedComponent->GetCollisionObjectType(), GetPawnCapsuleCollisionShape(SHRINK_None), VehicleOwner))
 			{
 				// Avoid updating Mesh bones to physics during the teleport back, since PerformMovement() will update it right away anyway below.
@@ -444,7 +445,7 @@ void UAircraftMovementComponent::ReplicateMoveToServer(float DeltaTime, const FV
 				FScopedMovementUpdate ScopedMovementUpdate(UpdatedComponent, EScopedUpdate::DeferredUpdates);
 				UE_LOG(LogNetPlayerMovement, VeryVerbose, TEXT("CombineMove: add delta %f + %f and revert from %f %f to %f %f"), DeltaTime, PendingMove->DeltaTime, UpdatedComponent->GetComponentLocation().X, UpdatedComponent->GetComponentLocation().Y, OldStartLocation.X, OldStartLocation.Y);
 
-				NewMove->CombineWith(PendingMove, VehicleOwner, PC, OldStartLocation);
+				// NewMove->CombineWith(PendingMove, VehicleOwner, PC, OldStartLocation);
 
 				if (PC)
 				{
@@ -457,13 +458,13 @@ void UAircraftMovementComponent::ReplicateMoveToServer(float DeltaTime, const FV
 				NewMove->SetInitialPosition(VehicleOwner);
 
 				// Remove pending move from move list. It would have to be the last move on the list.
-				if (ClientData->SavedMoves.Num() > 0 && ClientData->SavedMoves.Last() == ClientData->PendingMove)
+				// if (ClientData->SavedMoves.Num() > 0 && ClientData->SavedMoves.Last() == ClientData->PendingMove)
 				{
 					const bool bAllowShrinking = false;
-					ClientData->SavedMoves.Pop(bAllowShrinking);
+					// ClientData->SavedMoves.Pop(bAllowShrinking);
 				}
-				ClientData->FreeMove(ClientData->PendingMove);
-				ClientData->PendingMove = nullptr;
+				// ClientData->FreeMove(ClientData->PendingMove);
+				// ClientData->PendingMove = nullptr;
 				PendingMove = nullptr; // Avoid dangling reference, it's deleted above.
 			}
 			// else
@@ -471,7 +472,7 @@ void UAircraftMovementComponent::ReplicateMoveToServer(float DeltaTime, const FV
 				UE_LOG(LogNetPlayerMovement, Verbose, TEXT("Not combining move [would collide at start location]"));
 			}
 		}
-		else
+		// else
 		{
 			UE_LOG(LogNetPlayerMovement, Verbose, TEXT("Not combining move [not allowed by CanCombineWith()]"));
 		}
@@ -491,8 +492,8 @@ void UAircraftMovementComponent::ReplicateMoveToServer(float DeltaTime, const FV
 	// Add NewMove to the list
 	if (VehicleOwner->IsReplicatingMovement())
 	{
-		check(NewMove == NewMovePtr.Get());
-		ClientData->SavedMoves.Push(NewMovePtr);
+		// check(NewMove == NewMovePtr.Get());
+		// ClientData->SavedMoves.Push(NewMovePtr);
 
 		//		const bool bCanDelayMove = (VehicleMovementCVars::NetEnableMoveCombining != 0) && CanDelaySendingMove(NewMovePtr);
 		//
@@ -541,11 +542,11 @@ void UAircraftMovementComponent::ReplicateMoveToServer(float DeltaTime, const FV
 				// Send move to server if this Vehicle is replicating movement
 		if (bSendServerMove)
 		{
-			CallServerMovePacked(NewMove, ClientData->PendingMove.Get(), OldMove.Get());
+			// CallServerMovePacked(NewMove, ClientData->PendingMove.Get(), OldMove.Get());
 		}
 	}
 
-	ClientData->PendingMove = NULL;
+	// ClientData->PendingMove = NULL;
 }
 
 void UAircraftMovementComponent::CallServerMovePacked(const FSavedMove_Vehicle* NewMove, const FSavedMove_Vehicle* PendingMove, const FSavedMove_Vehicle* OldMove)
@@ -2094,19 +2095,19 @@ void FNetworkPredictionData_Client_Vehicle::AckMove(int32 AckedMoveIndex, UAircr
 {
 }
 
-FSavedMovePtr FNetworkPredictionData_Client_Vehicle::AllocateNewMove()
-{
-	return FSavedMovePtr();
-}
+//FSavedMovePtr FNetworkPredictionData_Client_Vehicle::AllocateNewMove()
+//{
+//	return FSavedMovePtr();
+//}
 
-void FNetworkPredictionData_Client_Vehicle::FreeMove(const FSavedMovePtr& Move)
-{
-}
+//void FNetworkPredictionData_Client_Vehicle::FreeMove(const FSavedMovePtr& Move)
+//{
+//}
 
-FSavedMovePtr FNetworkPredictionData_Client_Vehicle::CreateSavedMove()
-{
-	return FSavedMovePtr();
-}
+//FSavedMovePtr FNetworkPredictionData_Client_Vehicle::CreateSavedMove()
+//{
+//	return FSavedMovePtr();
+//}
 
 float FNetworkPredictionData_Client_Vehicle::UpdateTimeStampAndDeltaTime(float DeltaTime, AGAVehicle& VehicleOwner, UAircraftMovementComponent& AircraftMovementComponent)
 {

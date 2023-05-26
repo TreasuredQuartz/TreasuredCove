@@ -8,7 +8,7 @@
 #include "AircraftMovementComponent.generated.h"
 
 /** Shared pointer for easy memory management of FSavedMove_Character, for accumulating and replaying network moves. */
-typedef TSharedPtr<class FSavedMove_Vehicle> FSavedMovePtr;
+// typedef TSharedPtr<class FSavedMove_Vehicle> FSavedMovePtr;
 
 /**
  * 
@@ -380,7 +380,7 @@ public:
 	virtual void SetInitialPosition(AGAVehicle* V);
 
 	/** Returns true if this move is an "important" move that should be sent again if not acked by the server */
-	virtual bool IsImportantMove(const FSavedMovePtr& LastAckedMove) const;
+	// virtual bool IsImportantMove(const FSavedMovePtr& LastAckedMove) const;
 
 	/** Returns starting position if we were to revert the move, either absolute StartLocation, or StartRelativeLocation offset from MovementBase's current location (since we want to try to move forward at this time). */
 	virtual FVector GetRevertedLocation() const;
@@ -395,10 +395,10 @@ public:
 	virtual void PostUpdate(AGAVehicle* V, EPostUpdateMode PostUpdateMode);
 
 	/** Returns true if this move can be combined with NewMove for replication without changing any behavior */
-	virtual bool CanCombineWith(const FSavedMovePtr& NewMove, AGAVehicle* InVehicle, float MaxDelta) const;
+	// virtual bool CanCombineWith(const FSavedMovePtr& NewMove, AGAVehicle* InVehicle, float MaxDelta) const;
 
 	/** Combine this move with an older move and update relevant state. */
-	virtual void CombineWith(const FSavedMove_Vehicle* OldMove, AGAVehicle* InVehicle, APlayerController* PC, const FVector& OldStartLocation);
+	// virtual void CombineWith(const FSavedMove_Vehicle* OldMove, AGAVehicle* InVehicle, APlayerController* PC, const FVector& OldStartLocation);
 
 	/** Called before ClientUpdatePosition uses this SavedMove to make a predictive correction	 */
 	virtual void PrepMoveFor(AGAVehicle* V);
@@ -468,10 +468,10 @@ public:
 	/** Last World timestamp (undilated, real time) at which we received a server ack for a move. This could be either a good move or a correction from the server. */
 	float LastReceivedAckRealTime;
 
-	TArray<FSavedMovePtr> SavedMoves;		// Buffered moves pending position updates, orderd oldest to newest. Moves that have been acked by the server are removed.
-	TArray<FSavedMovePtr> FreeMoves;		// freed moves, available for buffering
-	FSavedMovePtr PendingMove;				// PendingMove already processed on client - waiting to combine with next movement to reduce client to server bandwidth
-	FSavedMovePtr LastAckedMove;			// Last acknowledged sent move.
+	// TArray<FSavedMovePtr> SavedMoves;		// Buffered moves pending position updates, orderd oldest to newest. Moves that have been acked by the server are removed.
+	// TArray<FSavedMovePtr> FreeMoves;		// freed moves, available for buffering
+	// FSavedMovePtr PendingMove;				// PendingMove already processed on client - waiting to combine with next movement to reduce client to server bandwidth
+	// FSavedMovePtr LastAckedMove;			// Last acknowledged sent move.
 
 	int32 MaxFreeMoveCount;					// Limit on size of free list
 	int32 MaxSavedMoveCount;				// Limit on the size of the saved move buffer
@@ -555,13 +555,13 @@ public:
 	void AckMove(int32 AckedMoveIndex, UAircraftMovementComponent& AircraftMovementComponent);
 
 	/** Allocate a new saved move. Subclasses should override this if they want to use a custom move class. */
-	virtual FSavedMovePtr AllocateNewMove();
+	// virtual FSavedMovePtr AllocateNewMove();
 
 	/** Return a move to the free move pool. Assumes that 'Move' will no longer be referenced by anything but possibly the FreeMoves list. Clears PendingMove if 'Move' is PendingMove. */
-	virtual void FreeMove(const FSavedMovePtr& Move);
+	// virtual void FreeMove(const FSavedMovePtr& Move);
 
 	/** Tries to pull a pooled move off the free move list, otherwise allocates a new move. Returns NULL if the limit on saves moves is hit. */
-	virtual FSavedMovePtr CreateSavedMove();
+	// virtual FSavedMovePtr CreateSavedMove();
 
 	/** Update CurentTimeStamp from passed in DeltaTime.
 		It will measure the accuracy between passed in DeltaTime and how Server will calculate its DeltaTime.

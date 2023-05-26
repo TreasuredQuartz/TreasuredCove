@@ -13,279 +13,327 @@ FText UMultiplayerLoadout::GetName()
 	return Name;
 }
 
-FName UMultiplayerLoadout::GetPrimary() const
+void UMultiplayerLoadout::CalculatePoints()
+{
+	int32 Sum = 0;
+
+	if (Primary.IsValid())
+	{
+		Sum += Primary.LoadoutCost;
+		for (FLoadoutItemInfo& Item : PrimaryAttachments)
+		{
+			Sum += Item.LoadoutCost;
+		}
+	}
+
+	if (Secondary.IsValid())
+	{
+		Sum += Secondary.LoadoutCost;
+		for (FLoadoutItemInfo& Item : SecondaryAttachments)
+		{
+			Sum += Item.LoadoutCost;
+		}
+	}
+
+	for (FLoadoutItemInfo& Lethal : Lethals)
+	{
+		Sum += Lethal.LoadoutCost;
+	}
+	for (FLoadoutItemInfo& Tactical : Tacticals)
+	{
+		Sum += Tactical.LoadoutCost;
+	}
+	for (FLoadoutItemInfo& Perk : Perks)
+	{
+		Sum += Perk.LoadoutCost;
+	}
+	for (FLoadoutItemInfo& StrikePackage : StrikePackages)
+	{
+		Sum += StrikePackage.LoadoutCost;
+	}
+	for (FLoadoutItemInfo& WildCard : WildCards)
+	{
+		Sum += WildCard.LoadoutCost;
+	}
+
+	CurrentPoints = Sum;
+}
+
+int32 UMultiplayerLoadout::GetSpentPoints()
+{
+	return CurrentPoints;
+}
+
+
+
+FLoadoutItemInfo UMultiplayerLoadout::GetPrimary() const
 {
 	return Primary;
 }
 
-TArray<FName> UMultiplayerLoadout::GetPrimaryAttachments() const
+TArray<FLoadoutItemInfo> UMultiplayerLoadout::GetPrimaryAttachments() const
 {
 	return PrimaryAttachments;
 }
 
-FName UMultiplayerLoadout::GetSecondary() const
+FLoadoutItemInfo UMultiplayerLoadout::GetSecondary() const
 {
 	return Secondary;
 }
 
-TArray<FName> UMultiplayerLoadout::GetSecondaryAttachments() const
+TArray<FLoadoutItemInfo> UMultiplayerLoadout::GetSecondaryAttachments() const
 {
 	return SecondaryAttachments;
 }
 
-TArray<FName> UMultiplayerLoadout::GetLethals() const
+TArray<FLoadoutItemInfo> UMultiplayerLoadout::GetLethals() const
 {
 	return Lethals;
 }
 
-TArray<FName> UMultiplayerLoadout::GetTacticals() const
+TArray<FLoadoutItemInfo> UMultiplayerLoadout::GetTacticals() const
 {
 	return Tacticals;
 }
 
-TArray<FName> UMultiplayerLoadout::GetPerks() const
+TArray<FLoadoutItemInfo> UMultiplayerLoadout::GetPerks() const
 {
 	return Perks;
 }
 
-TArray<FName> UMultiplayerLoadout::GetStrikePackages() const
+TArray<FLoadoutItemInfo> UMultiplayerLoadout::GetStrikePackages() const
 {
 	return StrikePackages;
 }
 
-TArray<FName> UMultiplayerLoadout::GetWildcards() const
+TArray<FLoadoutItemInfo> UMultiplayerLoadout::GetWildcards() const
 {
 	return WildCards;
 }
 
 
 
-
-bool UMultiplayerLoadout::AddPrimary(FName InPrimary, int32 InCost)
+bool UMultiplayerLoadout::AddPrimary(FLoadoutItemInfo& InPrimary)
 {
 	// We should call RemovePrimary first
-	if (!Primary.IsNone()) return false;
+	if (!Primary.IsValid()) return false;
 	// InPrimary should not be null
-	if (InPrimary.IsNone()) return false;
+	if (InPrimary.IsValid()) return false;
 
 	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 && CurrentPoints + InCost > TotalPoints) return false;
+	if (InPrimary.LoadoutCost <= 0 && CurrentPoints + InPrimary.LoadoutCost > TotalPoints) return false;
 	Primary = InPrimary;
-	CurrentPoints += InCost;
+	PrimaryAttachments.Empty(6);
+
+	CalculatePoints();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::AddPrimaryAttachment(FName InPrimaryAttachment, int32 InCost)
+bool UMultiplayerLoadout::AddPrimaryAttachment(FLoadoutItemInfo& InPrimaryAttachment)
 {
 	//
-	if (!InPrimaryAttachment.IsNone()) return false;
+	if (!InPrimaryAttachment.IsValid()) return false;
 	
 	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 || CurrentPoints + InCost > TotalPoints) return false;
-	CurrentPoints += InCost;
+	if (InPrimaryAttachment.LoadoutCost <= 0 || CurrentPoints + InPrimaryAttachment.LoadoutCost > TotalPoints) return false;
+	CurrentPoints += InPrimaryAttachment.LoadoutCost;
+	PrimaryAttachments.Add(InPrimaryAttachment);
 
 	return true;
 }
 
-bool UMultiplayerLoadout::AddSecondary(FName InSecondary, int32 InCost)
+bool UMultiplayerLoadout::AddSecondary(FLoadoutItemInfo& InSecondary)
 {
 	// We should call RemoveSecondary first
-	if (!Secondary.IsNone()) return false;
+	if (!Secondary.IsValid()) return false;
 	// InSecondary should not be null
-	if (InSecondary.IsNone()) return false;
+	if (InSecondary.IsValid()) return false;
 
 	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 && CurrentPoints + InCost > TotalPoints) return false;
+	if (InSecondary.LoadoutCost <= 0 && CurrentPoints + InSecondary.LoadoutCost > TotalPoints) return false;
 	Secondary = InSecondary;
-	CurrentPoints += InCost;
+	SecondaryAttachments.Empty(6);
+
+	CalculatePoints();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::AddSecondaryAttachment(FName InSecondaryAttachment, int32 InCost)
+bool UMultiplayerLoadout::AddSecondaryAttachment(FLoadoutItemInfo& InSecondaryAttachment)
 {
+	if (!InSecondaryAttachment.IsValid()) return false;
+
 	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 || CurrentPoints + InCost > TotalPoints) return false;
-	CurrentPoints += InCost;
+	if (InSecondaryAttachment.LoadoutCost <= 0 || CurrentPoints + InSecondaryAttachment.LoadoutCost > TotalPoints) return false;
+
+	SecondaryAttachments.Add(InSecondaryAttachment);
+	CurrentPoints += InSecondaryAttachment.LoadoutCost;
 
 	return true;
 }
 
-bool UMultiplayerLoadout::AddLethal(FName InLethal, int32 InCost)
+bool UMultiplayerLoadout::AddLethal(FLoadoutItemInfo& InLethal)
 {
 	// Only valid lethals should be passed through
-	if (InLethal.IsNone()) return false;
+	if (InLethal.IsValid()) return false;
 	
 	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 && CurrentPoints + InCost > TotalPoints) return false;
+	if (InLethal.LoadoutCost <= 0 && CurrentPoints + InLethal.LoadoutCost > TotalPoints) return false;
 	Lethals.Add(InLethal);
-	CurrentPoints += InCost;
+	CurrentPoints += InLethal.LoadoutCost;
 
 	return true;
 }
 
-bool UMultiplayerLoadout::AddTactical(FName InTactical, int32 InCost)
+bool UMultiplayerLoadout::AddTactical(FLoadoutItemInfo& InTactical)
 {
 	// Only valid lethals should be passed through
-	if (InTactical.IsNone()) return false;
+	if (InTactical.IsValid()) return false;
 
 	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 && CurrentPoints + InCost > TotalPoints) return false;
+	if (InTactical.LoadoutCost <= 0 && CurrentPoints + InTactical.LoadoutCost > TotalPoints) return false;
 	Tacticals.Add(InTactical);
-	CurrentPoints += InCost;
+	CurrentPoints += InTactical.LoadoutCost;
 
 	return true;
 }
 
-bool UMultiplayerLoadout::AddPerk(FName InPerk, int32 InCost)
+bool UMultiplayerLoadout::AddPerk(FLoadoutItemInfo& InPerk)
 {
 	// Only valid lethals should be passed through
-	if (InPerk.IsNone()) return false;
+	if (InPerk.IsValid()) return false;
 
 	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 && CurrentPoints + InCost > TotalPoints) return false;
+	if (InPerk.LoadoutCost <= 0 && CurrentPoints + InPerk.LoadoutCost > TotalPoints) return false;
 	Perks.Add(InPerk);
-	CurrentPoints += InCost;
+	CurrentPoints += InPerk.LoadoutCost;
 
 	return true;
 }
 
-bool UMultiplayerLoadout::AddStrikePackage(FName InStrikePackage, int32 InCost)
+bool UMultiplayerLoadout::AddStrikePackage(FLoadoutItemInfo& InStrikePackage)
 {
 	// Only valid strikepackages should be passed through
-	if (InStrikePackage.IsNone()) return false;
+	if (InStrikePackage.IsValid()) return false;
 
 	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 && CurrentPoints + InCost > TotalPoints) return false;
+	if (InStrikePackage.LoadoutCost <= 0 && CurrentPoints + InStrikePackage.LoadoutCost > TotalPoints) return false;
 	StrikePackages.Add(InStrikePackage);
-	CurrentPoints += InCost;
+	CurrentPoints += InStrikePackage.LoadoutCost;
 
 	return true;
 }
 
-bool UMultiplayerLoadout::AddWildcard(FName InWildCard, int32 InCost)
+bool UMultiplayerLoadout::AddWildcard(FLoadoutItemInfo& InWildCard)
 {
 	// Only valid wildcards should be passed through
-	if (InWildCard.IsNone()) return false;
+	if (InWildCard.IsValid()) return false;
 
 	return true;
 }
 
 
 
-bool UMultiplayerLoadout::RemovePrimary(int32 InCost)
+bool UMultiplayerLoadout::RemovePrimary()
 {
 	// Primary already removed
-	if (!Primary.IsNone()) return false;
-
-	// We should be getting refunded
-	if (InCost <= 0) return false;
+	if (!Primary.IsValid()) return false;
 	
-	Primary = FName();
-	CurrentPoints = CurrentPoints - InCost >= 0 ? CurrentPoints - InCost : 0;
+	Primary.InValidate();
+	PrimaryAttachments.Empty(6);
+
+	CalculatePoints();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::RemovePrimaryAttachment(FName InPrimaryAttachment, int32 InCost)
+bool UMultiplayerLoadout::RemovePrimaryAttachment(FLoadoutItemInfo& InPrimaryAttachment)
 {
 	// Valid names should be passed
-	if (InPrimaryAttachment.IsNone()) return false;
+	if (InPrimaryAttachment.IsValid()) return false;
 
-	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 || CurrentPoints - InCost < 0) return false;
-	CurrentPoints -= InCost;
+	CurrentPoints -= InPrimaryAttachment.LoadoutCost;
+	InPrimaryAttachment.InValidate();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::RemoveSecondary(int32 InCost)
+bool UMultiplayerLoadout::RemoveSecondary()
 {
 	// Secondary already removed
-	if (!Secondary.IsNone()) return false;
-	// We should be getting refunded
-	if (InCost <= 0) return false;
+	if (!Secondary.IsValid()) return false;
 
-	Secondary = FName();
-	CurrentPoints = CurrentPoints - InCost >= 0 ? CurrentPoints - InCost : 0;
+	Secondary.InValidate();
+	SecondaryAttachments.Empty(6);
+
+	CalculatePoints();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::RemoveSecondaryAttachment(FName InSecondaryAttachment, int32 InCost)
+bool UMultiplayerLoadout::RemoveSecondaryAttachment(FLoadoutItemInfo& InSecondaryAttachment)
 {
 	// Valid names should be passed
-	if (InSecondaryAttachment.IsNone()) return false;
+	if (InSecondaryAttachment.IsValid()) return false;
 
-	// Cost should be positive and current points should not go over total points
-	if (InCost <= 0 || CurrentPoints - InCost < 0) return false;
-	CurrentPoints -= InCost;
+	CurrentPoints -= InSecondaryAttachment.LoadoutCost;
+	InSecondaryAttachment.InValidate();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::RemoveLethal(FName InLethal, int32 InCost)
+bool UMultiplayerLoadout::RemoveLethal(FLoadoutItemInfo& InLethal)
 {
 	// There are no lethals to remove or we do not have the lethal equipped
 	if (Lethals.IsEmpty() || !Lethals.Contains(InLethal)) return false;
-	// We should be getting refunded
-	if (InCost <= 0) return false;
 
-	Lethals.RemoveSwap(InLethal);
-	CurrentPoints = CurrentPoints - InCost >= 0 ? CurrentPoints - InCost : 0;
+	CurrentPoints -= InLethal.LoadoutCost;
+	InLethal.InValidate();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::RemoveTactical(FName InTactical, int32 InCost)
+bool UMultiplayerLoadout::RemoveTactical(FLoadoutItemInfo& InTactical)
 {
 	// There are no Tacticals to remove or we do not have the Tactical equipped
 	if (Tacticals.IsEmpty() || !Tacticals.Contains(InTactical)) return false;
-	// We should be getting refunded
-	if (InCost <= 0) return false;
 
-	Tacticals.RemoveSwap(InTactical);
-	CurrentPoints = CurrentPoints - InCost >= 0 ? CurrentPoints - InCost : 0;
+	CurrentPoints -= InTactical.LoadoutCost;
+	InTactical.InValidate();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::RemovePerk(FName InPerk, int32 InCost)
+bool UMultiplayerLoadout::RemovePerk(FLoadoutItemInfo& InPerk)
 {
 	// There are no Perks to remove or we do not have the Perk equipped
 	if (Perks.IsEmpty() || !Perks.Contains(InPerk)) return false;
-	// We should be getting refunded
-	if (InCost <= 0) return false;
 
-	Perks.RemoveSwap(InPerk);
-	CurrentPoints = CurrentPoints - InCost >= 0 ? CurrentPoints - InCost : 0;
+	CurrentPoints -= InPerk.LoadoutCost;
+	InPerk.InValidate();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::RemoveStrikePackage(FName InStrikePackage, int32 InCost)
+bool UMultiplayerLoadout::RemoveStrikePackage(FLoadoutItemInfo& InStrikePackage)
 {
 	// There are no StrikePackages to remove or we do not have the StrikePackage equipped
 	if (StrikePackages.IsEmpty() || !StrikePackages.Contains(InStrikePackage)) return false;
-	// We should be getting refunded
-	if (InCost <= 0) return false;
 
-	StrikePackages.RemoveSwap(InStrikePackage);
-	CurrentPoints = CurrentPoints - InCost >= 0 ? CurrentPoints - InCost : 0;
+	CurrentPoints -= InStrikePackage.LoadoutCost;
+	InStrikePackage.InValidate();
 
 	return true;
 }
 
-bool UMultiplayerLoadout::RemoveWildcard(FName InWildCard, int32 InCost)
+bool UMultiplayerLoadout::RemoveWildcard(FLoadoutItemInfo& InWildCard)
 {
 	// There are no WildCards to remove or we do not have the WildCard equipped
-	if (WildCards.IsEmpty() || !StrikePackages.Contains(InWildCard)) return false;
-	// We should be getting refunded
-	if (InCost <= 0) return false;
+	if (WildCards.IsEmpty() || !WildCards.Contains(InWildCard)) return false;
 
-	WildCards.RemoveSwap(InWildCard);
-	CurrentPoints = CurrentPoints - InCost >= 0 ? CurrentPoints - InCost : 0;
+	CurrentPoints -= InWildCard.LoadoutCost;
+	InWildCard.InValidate();
 
 	return true;
 }

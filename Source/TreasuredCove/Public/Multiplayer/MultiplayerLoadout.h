@@ -4,10 +4,8 @@
 
 #include "CoreMinimal.h"
 // #include "UObject/NoExportTypes.h"
+#include "LoadoutItemInfo.h"
 #include "MultiplayerLoadout.generated.h"
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSuccess);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFailure);
 
 /**
  * 
@@ -27,66 +25,63 @@ private:
 	int32 CurrentPoints = 0;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
-	FName Primary;
+	FLoadoutItemInfo Primary;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
-	TArray<FName> PrimaryAttachments;
+	TArray<FLoadoutItemInfo> PrimaryAttachments;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
-	FName Secondary;
+	FLoadoutItemInfo Secondary;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
-	TArray<FName> SecondaryAttachments;
+	TArray<FLoadoutItemInfo> SecondaryAttachments;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
-	TArray<FName> Lethals;
+	TArray<FLoadoutItemInfo> Lethals;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
-	TArray<FName> Tacticals;
+	TArray<FLoadoutItemInfo> Tacticals;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
-	TArray<FName> Perks;
+	TArray<FLoadoutItemInfo> Perks;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
-	TArray<FName> StrikePackages;
+	TArray<FLoadoutItemInfo> StrikePackages;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
-	TArray<FName> WildCards;
+	TArray<FLoadoutItemInfo> WildCards;
 
 public:
 	void SetName(FText InName);
 	FText GetName();
+	void CalculatePoints();
+	int32 GetSpentPoints();
 
 public:
-	bool AddPrimary(FName InPrimary, int32 InCost);
-	bool AddPrimaryAttachment(FName InPrimaryAttachment, int32 InCost);
-	bool AddSecondary(FName InSecondary, int32 InCost);
-	bool AddSecondaryAttachment(FName InSecondaryAttachment, int32 InCost);
-	bool AddLethal(FName InLethal, int32 InCost);
-	bool AddTactical(FName InTactical, int32 InCost);
-	bool AddPerk(FName InPerk, int32 InCost);
-	bool AddStrikePackage(FName InStrikePackage, int32 InCost);
-	bool AddWildcard(FName InWildCard, int32 InCost);
+	bool AddPrimary(FLoadoutItemInfo& InPrimary);
+	bool AddPrimaryAttachment(FLoadoutItemInfo& InPrimaryAttachment);
+	bool AddSecondary(FLoadoutItemInfo& InSecondary);
+	bool AddSecondaryAttachment(FLoadoutItemInfo& InSecondaryAttachment);
+	bool AddLethal(FLoadoutItemInfo& InLethal);
+	bool AddTactical(FLoadoutItemInfo& InTactical);
+	bool AddPerk(FLoadoutItemInfo& InPerk);
+	bool AddStrikePackage(FLoadoutItemInfo& InStrikePackage);
+	bool AddWildcard(FLoadoutItemInfo& InWildCard);
 
-	bool RemovePrimary(int32 InCost);
-	bool RemovePrimaryAttachment(FName InPrimaryAttachment, int32 InCost);
-	bool RemoveSecondary(int32 InCost);
-	bool RemoveSecondaryAttachment(FName InSecondaryAttachment, int32 InCost);
-	bool RemoveLethal(FName InLethal, int32 InCost);
-	bool RemoveTactical(FName InTactical, int32 InCost);
-	bool RemovePerk(FName InPerk, int32 InCost);
-	bool RemoveStrikePackage(FName InStrikePackage, int32 InCost);
-	bool RemoveWildcard(FName InWildCard, int32 InCost);
-
-public:
-	FName GetPrimary() const;
-	TArray<FName> GetPrimaryAttachments() const;
-	FName GetSecondary() const;
-	TArray<FName> GetSecondaryAttachments() const;
-	TArray<FName> GetLethals() const;
-	TArray<FName> GetTacticals() const;
-	TArray<FName> GetPerks() const;
-	TArray<FName> GetStrikePackages() const;
-	TArray<FName> GetWildcards() const;
-
+	bool RemovePrimary();
+	bool RemovePrimaryAttachment(FLoadoutItemInfo& InPrimaryAttachment);
+	bool RemoveSecondary();
+	bool RemoveSecondaryAttachment(FLoadoutItemInfo& InSecondaryAttachment);
+	bool RemoveLethal(FLoadoutItemInfo& InLethal);
+	bool RemoveTactical(FLoadoutItemInfo& InTactical);
+	bool RemovePerk(FLoadoutItemInfo& InPerk);
+	bool RemoveStrikePackage(FLoadoutItemInfo& InStrikePackage);
+	bool RemoveWildcard(FLoadoutItemInfo& InWildCard);
 
 public:
-	UPROPERTY(BlueprintAssignable)
-	FOnSuccess OnSuccess;
-	UPROPERTY(BlueprintAssignable)
-	FOnFailure OnFailure;
+	FLoadoutItemInfo GetPrimary() const;
+	TArray<FLoadoutItemInfo> GetPrimaryAttachments() const;
+	FLoadoutItemInfo GetSecondary() const;
+	TArray<FLoadoutItemInfo> GetSecondaryAttachments() const;
+	TArray<FLoadoutItemInfo> GetLethals() const;
+	TArray<FLoadoutItemInfo> GetTacticals() const;
+	TArray<FLoadoutItemInfo> GetPerks() const;
+	TArray<FLoadoutItemInfo> GetStrikePackages() const;
+	TArray<FLoadoutItemInfo> GetWildcards() const;
+
+
 };

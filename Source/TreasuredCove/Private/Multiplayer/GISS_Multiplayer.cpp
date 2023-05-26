@@ -4,7 +4,27 @@
 #include "Multiplayer/GISS_Multiplayer.h"
 #include "MultiplayerLoadout.h"
 #include "MultiplayerLoadoutManager.h"
+
 #include "AdvancedIdentityLibrary.h"
+#include "SGMultiplayerLoadouts.h"
+#include "kismet/GameplayStatics.h"
+
+FAccountAttributes::FAccountAttributes() :
+	DisplayName(FText()),
+	ClanName(FText()),
+	Title(FText()),
+	Experience(0),
+	Level(0),
+	Prestige(0),
+	RankIcon(nullptr),
+	Background(nullptr),
+	Portrait(nullptr),
+	EmblemIcon(nullptr),
+	EquippedCallingCards(),
+	Loadouts()
+{
+	Loadouts.Init(NewObject<UMultiplayerLoadout>(), 5);
+};
 
 void UGISS_Multiplayer::InitializeUserAccountAttributes(UPARAM(ref)FBPUserOnlineAccount& AccountInfo)
 {
@@ -49,6 +69,14 @@ void UGISS_Multiplayer::InitializeUserAccountAttributes(UPARAM(ref)FBPUserOnline
 	case EBlueprintResultSwitch::OnFailure:
 		break;
 	}
+	
+	GetLoadoutManager()->OnSuccess.AddDynamic(this, &UGISS_Multiplayer::SaveCustomLoadoutChanges);
+
+	// Set up the delegate.
+	FAsyncLoadGameFromSlotDelegate LoadedDelegate;
+	// USomeUObjectClass::LoadGameDelegateFunction is a void function that takes the following parameters: const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData
+	LoadedDelegate.BindUObject(this, &UGISS_Multiplayer::LoadCustomLoadouts);
+	UGameplayStatics::AsyncLoadGameFromSlot("CustomLoadouts", 0, LoadedDelegate);
 }
 
 void UGISS_Multiplayer::GetUserAccountAttributes(FAccountAttributes& Attributes)
@@ -73,12 +101,10 @@ void UGISS_Multiplayer::GetDefaultLoadouts(TArray<UMultiplayerLoadout*>& OutDefa
 
 void UGISS_Multiplayer::SetDefaultLoadouts(TArray<TSubclassOf<UMultiplayerLoadout>>& InDefaultLoadoutClasses)
 {
-	AccountAttributes.Loadouts.Reserve(5);
-
-	for (const auto& Loadout : InDefaultLoadoutClasses)
+	for (int i = 0; i < InDefaultLoadoutClasses.Num(); ++i)
 	{
-		UMultiplayerLoadout* NewLoadout = NewObject<UMultiplayerLoadout>(this, Loadout);
-		AccountAttributes.Loadouts.Add(NewLoadout);
+		UMultiplayerLoadout* NewLoadout = NewObject<UMultiplayerLoadout>(this, InDefaultLoadoutClasses[i]);
+		AccountAttributes.Loadouts[i] = NewLoadout;
 	}
 }
 
@@ -99,13 +125,44 @@ void UGISS_Multiplayer::GetCustomLoadouts(TArray<UMultiplayerLoadout*>& OutCusto
 
 void UGISS_Multiplayer::SetCustomLoadouts(TArray<UMultiplayerLoadout*>& InCustomLoadouts)
 {
-	AccountAttributes.Loadouts.Reserve(5 + InCustomLoadouts.Num());
+	AccountAttributes.Loadouts.Append(InCustomLoadouts);
+}
 
-	for (const auto& Loadout : InCustomLoadouts)
+
+
+void UGISS_Multiplayer::SaveCustomLoadoutChanges()
+{
+	if (USGMultiplayerLoadouts* SaveGameInstance = Cast<USGMultiplayerLoadouts>(UGameplayStatics::CreateSaveGameObject(USGMultiplayerLoadouts::StaticClass())))
 	{
-		AccountAttributes.Loadouts.Add(Loadout);
+		// Set up the (optional) delegate.
+		FAsyncSaveGameToSlotDelegate SavedDelegate;
+		// USomeUObjectClass::SaveGameDelegateFunction is a void function that takes the following parameters: const FString& SlotName, const int32 UserIndex, bool bSuccess
+		SavedDelegate.BindUObject(this, &UGISS_Multiplayer::OnSavedCustomLoadoutChanges);
+
+		// Set data on the savegame object.
+		TArray<UMultiplayerLoadout*> Loadouts;
+		GetCustomLoadouts(Loadouts);
+		SaveGameInstance->CustomLoadouts = Loadouts;
+
+		// Start async save process.
+		UGameplayStatics::AsyncSaveGameToSlot(SaveGameInstance, "CustomLoadouts", 0, SavedDelegate);
 	}
 }
+
+void UGISS_Multiplayer::OnSavedCustomLoadoutChanges(const FString& InString, const int32 InIndex, bool Succeded)
+{
+
+}
+
+void UGISS_Multiplayer::LoadCustomLoadouts(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData)
+{
+	if (USGMultiplayerLoadouts* Data = Cast<USGMultiplayerLoadouts>(LoadedGameData))
+	{
+		SetCustomLoadouts(Data->CustomLoadouts);
+	}
+}
+
+
 
 UMultiplayerLoadout* UGISS_Multiplayer::GetCurrentLoadout()
 {
