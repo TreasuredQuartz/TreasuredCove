@@ -60,7 +60,7 @@ A combination of Star Wars Battlefront and old Call-Of-Duty titles.
 
 Will feature a Create-A-Class system with 30 perks that each have their own challenges to achieve a Pro-Version.
 
-[![Perk Selection Screen]()](https://youtu.be/-KVA4OhRrvk)
+[![Perk Selection Screen](./Static/img/UltimatePerkSystem.PNG)](https://youtu.be/-KVA4OhRrvk)
 
 ### Programming
 #### Third-Party Plugins
