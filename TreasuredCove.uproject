@@ -1,21 +1,34 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.1",
+	"EngineAssociation": "5.2",
 	"Category": "",
 	"Description": "",
 	"Modules": [
 		{
 			"Name": "TreasuredCove",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
+			"LoadingPhase": "PreDefault",
 			"AdditionalDependencies": [
 				"Engine",
 				"CoreUObject",
 				"GameplayAbilities",
+				"GenericGraphRuntime",
 				"UMG",
 				"GameplayTowns",
 				"ProceduralMeshComponent",
-				"Water"
+				"SenseSystem",
+				"Water",
+				"CableComponent"
+			]
+		},
+		{
+			"Name": "TreasuredCoveEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit",
+			"AdditionalDependencies": [
+				"GenericGraphEditor",
+				"UnrealEd",
+				"CoreUObject"
 			]
 		}
 	],
@@ -83,6 +96,10 @@
 			"Name": "SenseSystem",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher: //ue/marketplace/content/28a0c4ba00bf4eee8c17e52b7b2c8d52"
+		},
+		{
+			"Name": "GenericGraph",
+			"Enabled": true
 		}
 	]
 }
