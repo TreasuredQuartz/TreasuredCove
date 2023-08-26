@@ -18,8 +18,8 @@ public:
 		Triangles(TArray<int32>()),
 		Normals(TArray<FVector>()),
 		UVs(TArray<FVector2D>()),
+		VertexColors(TArray<FLinearColor>()),
 		Tangents(TArray<struct FRuntimeMeshTangent>()),
-		VertexColors(TArray<FColor>()),
 		Material(nullptr)
 	{}
 
@@ -33,9 +33,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FVector2D> UVs;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<struct FRuntimeMeshTangent> Tangents;
+	TArray<FLinearColor> VertexColors;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FColor> VertexColors;
+	TArray<struct FRuntimeMeshTangent> Tangents;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterialInterface* Material;
 
@@ -50,12 +50,25 @@ public:
 		Triangles.Empty();
 		Normals.Empty();
 		UVs.Empty();
-		Tangents.Empty();
 		VertexColors.Empty();
+		Tangents.Empty();
 		Material = nullptr;
 		bEnableCollision = false;
 		ElementID = 0;
 		NumTriangles = 0;
+	}
+
+	void Append(FProceduralMeshSection& Other)
+	{
+		Triangles.Append(Other.Triangles);
+		Vertices.Append(Other.Vertices);
+		Normals.Append(Other.Normals);
+		UVs.Append(Other.UVs);
+		VertexColors.Append(Other.VertexColors);
+		Tangents.Append(Other.Tangents);
+
+		ElementID += Other.NumTriangles;
+		NumTriangles = ElementID;
 	}
 
 	// UFUNCTION(BlueprintCallable, CallInEditor)

@@ -11,6 +11,7 @@
 #include "TownSystemInterface.h"
 #include "GameFramework/Character.h"
 #include "Abilities/GameplayAbility.h"
+#include "InputActionValue.h"
 
 #include "DialogueComponent.h"
 
@@ -36,6 +37,7 @@ class AGAActor;
 class AGAWeapon;
 class AGAPlayerController;
 class AGAAIController;
+class UGAInputConfigData;
 class AGravityWidget;
 class UAbilitySet;
 class UGAWidget;
@@ -47,6 +49,7 @@ class AGameplayBuilding;
 
 class APhysicsConstraintActor;
 class UGameplayAbilityBase;
+class UInputMappingContext;
 
 class UComboComponent;
 class UCraftingComponent;
@@ -67,7 +70,6 @@ class USensorBase;
 
 class UParticleSystemComponent;
 class UProceduralMeshComponent;
-
 class UWidgetComponent;
 
 UENUM(BlueprintType)
@@ -125,19 +127,23 @@ public:
 
 #pragma region PrivateMembers
 private:
-	bool bInitialized = false;
-	bool bIsPaused = false;
+	uint8 bInitialized:1;
+	uint8 bIsPaused:1;
 	UPROPERTY()
-	bool bShouldUpdateConstructionScript = false;
-	bool bShouldUpdatePhysicalAnimation = false;
-	UPROPERTY(BlueprintReadOnly, Meta=(AllowPrivateAccess = "true"))
-	bool bIsDead = false;
-	bool bCanJump = true;
-	bool bCanSlide = true;
-	bool bCanWallRun = true;
-	bool bCanClimb = true;
+	uint8 bShouldUpdateConstructionScript:1;
+	uint8 bShouldUpdatePhysicalAnimation:1;
+	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
+	uint8 bIsDead:1;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanJump:1;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanSlide:1;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanWallRun:1;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanClimb:1;
 
-	uint8 Shadowed : 1;
+	uint8 bShadowed:1;
 
 	// int MaxJumps; JumpMaxCount		Character Movement Component Variables
 	// int CurJumps; JumpCurrentCount	Character Movement Component Variables
@@ -155,12 +161,10 @@ private:
 	FTimerHandle WallRunTimerHandle;
 	FTimerHandle CameraTiltTimerHandle;
 	FTimerHandle PhysicalAnimationHandle;
-
 	FTimerHandle MenuUpTimerHandle;
 	FTimerHandle MenuDownTimerHandle;
 	FTimerHandle MenuRightTimerHandle;
 	FTimerHandle MenuLeftTimerHandle;
-
 	FTimerHandle InputTimerHandle;
 
 	AActor* Sun;
@@ -176,7 +180,6 @@ private:
 	TArray<FVector> Normals;
 	TArray<FVector2D> UVs;
 	TArray<int32> Tris;
-
 	TArray<int> MaxActiveMenuSlots;
 	TArray<int> MaxSubMenuSlots;
 	TArray<FAICharacterInfo> AwareOfCharacters;
@@ -214,6 +217,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
 	UDataTable* InitialStatsTable;
 
+	UPROPERTY(replicated)
 	TArray< FGameplayAbilitySpecHandle > ActiveAbilityHandles;
 	TArray< FGameplayAbilitySpecHandle > PassiveHandles;
 
@@ -225,9 +229,9 @@ protected:
 
 public:
 	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Inventory|Equipment")
+	UPROPERTY(replicated, EditAnywhere, BlueprintReadWrite, Category = "Character|Inventory|Equipment")
 	AGAActor* HeldItem;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Inventory|Equipment")
+	UPROPERTY(replicated, EditAnywhere, BlueprintReadWrite, Category = "Character|Inventory|Equipment")
 	AGAActor* StowedItem;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Inventory|Equipment")
 	AGAActor* Armor;
@@ -241,6 +245,23 @@ protected:
 #pragma endregion
 
 #pragma region InputHandling
+protected:
+	// Enhanced Player Input Mapping
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	UInputMappingContext* InputMapping;
+
+	// Enhanced Unarmed Input Mapping
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	UInputMappingContext* Unarmed_InputMapping;
+
+	// Input Configuration Data
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	UGAInputConfigData* InputActions;
+
+	// Unarmed Input Configuration Data
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
+	UGAInputConfigData* Unarmed_InputActions;
+
 	// In single player terms,
 	// All AI Controlled characters are seperated from
 	// Player controlled ones.
@@ -310,6 +331,28 @@ protected:
 
 	//////////////////////////////////////////////////////
 
+	// Called when player-controlled from WASD or controller right analog
+	void Move(const FInputActionValue& Value);
+	// Called when player-controlled from the mouse or controller left analog
+	void Look(const FInputActionValue& Value);
+	// Called when player-controlled from the space bar or controller bottom face button
+	void Jump_Input(const FInputActionValue& Value);
+	// Called when player-controlled from the ctrl key or controller right face button
+	void Crouch_Input(const FInputActionValue& Value);
+	// Called when player-controlled from the shift key or controller analog press
+	void Sprint_Input(const FInputActionValue& Value);
+	// Called when player-controlled from the F key or controller top face button
+	void Switch_Input(const FInputActionValue& Value);
+
+	// Called when "MoveForawrd" passed a value
+	void MoveForward(float Val);
+	// Called when "MoveRight" passed a value
+	void MoveRight(float Val);
+	// Called when "LookUp" is passed a value
+	void LookUp(float Val);
+	// Called when "LookRight" is passed a value
+	void LookRight(float Val);
+
 	// Called when "Jump" is pressed
 	void BeginJump();
 	// Called when "Jump" is released
@@ -322,14 +365,7 @@ protected:
 	void BeginCrouch();
 	// Called when "Crouch" is released
 	void EndCrouch();
-	// Called when "MoveForawrd" passed a value
-	void MoveForward(float Val);
-	// Called when "MoveRight" passed a value
-	void MoveRight(float Val);
-	// Called when "LookUp" is passed a value
-	void LookUp(float Val);
-	// Called when "LookRight" is passed a value
-	void LookRight(float Val);
+
 	// Called to update AI Sight component
 	void UpdateSightRotation();
 #pragma endregion
@@ -350,7 +386,7 @@ public:
 	void OnBeginWallRun();
 	// Called from MovementComponent when no longer wall running
 	void OnEndWallRun();
-	// 
+	// Called from Tick to clamp velocity
 	void ClampHorizontalVelocity();
 	// Visual effect only for wall running rn
 	void BeginCameraTilt();
@@ -359,10 +395,12 @@ public:
 	void UpdateCameraTilt(float progress);
 	// Visual effect only for wall running rn
 	void EndCameraTilt();
+	UFUNCTION(BlueprintCallable)
+	void ChangeViewpoint(bool bInFirstPerson);
 	// Changes between first person and third person camera types
 	// @TODO Add enum camera type
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void ChangeCameraType(bool bInFirstPerson);
+	UFUNCTION(BlueprintNativeEvent)
+	void OnChangeCameraType(bool bInFirstPerson);
 
 	UFUNCTION()
 	FTransform GetPawnSenseTransform();
@@ -382,6 +420,8 @@ public:
 	bool bToggleQuickSelect = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
 	bool bToggleSprint = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
+	bool bLockedViewpoint = false;
 
 	uint8 LookUpperLimit = 80;
 	int8 InvertUpDown = -1;
@@ -441,7 +481,6 @@ public:
 	// Attributes to save
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
 	TArray<FSavedAttribute> AttributesToSave;
-
 #pragma region Components
 public:
 	//
@@ -603,6 +642,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// Called on clients when controller is replicated
 	virtual void OnRep_Controller() override;
+	//
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 	/**	End Pawn Interface			*/
 #pragma endregion
@@ -613,6 +654,13 @@ public:
 
 	// Called when attempting to jump. Overridden to allow jump while crouched
 	virtual bool CanJumpInternal_Implementation() const override;
+	// Called after successfully validating a jump then performing one
+	virtual void OnJumped_Implementation() override;
+
+	// Called from Movement Component to correct Mesh location to match capsule.
+	virtual void OnStartCrouch(float, float) override;
+	// Called from Movement Component to correct Mesh location to match capsule.
+	virtual void OnEndCrouch(float, float) override;
 
 	/* End Character Interface		*/
 #pragma endregion

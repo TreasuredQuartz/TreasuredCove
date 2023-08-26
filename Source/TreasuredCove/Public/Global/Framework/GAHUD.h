@@ -135,6 +135,12 @@ public:
 	// User Interface Pass Functions
 	//---------------------------------
 
+	UFUNCTION(BlueprintCallable, Category = "Pausing")
+	void EnterPauseStudio();
+
+	UFUNCTION(BlueprintCallable, Category = "Pausing")
+	void ExitPauseStudio();
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
 	void ConfirmPressed();
 
@@ -233,6 +239,9 @@ public:
 
 	//
 	AGAPlayerController* PC;
+
+	//
+	class UPauseAreaComponent* PauseArea;
 
 	//
 	bool bIsInMenu;

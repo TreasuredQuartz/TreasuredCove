@@ -3,6 +3,8 @@
 #include "GAHUD.h"
 #include "GAPlayerController.h"
 #include "GAGameInstance.h"
+#include "PauseAreaComponent.h"
+
 #include "GameFramework/PlayerInput.h"
 
 #define CURSOR_DRAW_OFFSET 3
@@ -276,4 +278,30 @@ void AGAHUD::SetCursorMoveOnly(bool CursorOnly)
 	}
 
 	PlayerOwner->SetIgnoreLookInput(CursorOnly);
+}
+
+void AGAHUD::EnterPauseStudio()
+{
+	if (!GetOwningPawn())
+	{
+		return;
+	}
+
+	if (PauseArea)
+	{
+		PauseArea->EnterPauseArea_Client();
+	}
+	else
+	{
+		PauseArea = Cast<UPauseAreaComponent>(GetOwningPawn()->GetComponentByClass(UPauseAreaComponent::StaticClass()));
+		if (PauseArea) PauseArea->EnterPauseArea_Client();
+	}
+}
+
+void AGAHUD::ExitPauseStudio()
+{
+	if (PauseArea)
+	{
+		PauseArea->ExitPauseArea();
+	}
 }

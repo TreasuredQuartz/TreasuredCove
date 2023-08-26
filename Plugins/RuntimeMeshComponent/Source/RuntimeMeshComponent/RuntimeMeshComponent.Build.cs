@@ -7,7 +7,7 @@ public class RuntimeMeshComponent : ModuleRules
 {
     public RuntimeMeshComponent(ReadOnlyTargetRules rules) : base(rules)
     {
-        bEnforceIWYU = true;
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         bLegacyPublicIncludePaths = false;
 
 #if UE_4_23_OR_LATER

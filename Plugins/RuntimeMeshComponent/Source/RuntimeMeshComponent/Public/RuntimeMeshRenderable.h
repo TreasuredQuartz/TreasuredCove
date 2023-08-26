@@ -434,7 +434,7 @@ public:
 			FPackedRGBA16N TempTangentX = *((FPackedRGBA16N*)&Data[EntryIndex * sizeof(FPackedRGBA16N)]);
 			FPackedRGBA16N TempTangentZ = *((FPackedRGBA16N*)&Data[(EntryIndex + 1) * sizeof(FPackedRGBA16N)]);
 			OutTangentX = TempTangentX.ToFVector3f();
-			OutTangentY = GenerateYAxisf<FPackedRGBA16N>(TempTangentX, TempTangentZ); //TODO : fix this to use FVector3f as base
+			OutTangentY = GenerateYAxisf<FPackedRGBA16N>(TempTangentX, TempTangentZ);
 			OutTangentZ = TempTangentZ.ToFVector3f();
 		}
 		else

@@ -564,7 +564,7 @@ void UAircraftMovementComponent::CallServerMovePacked(const FSavedMove_Vehicle* 
 	UNetConnection* NetConnection = VehicleOwner->GetNetConnection();
 
 #if UE_WITH_IRIS
-	if (UPackageMap* PackageMap = UE::Private::GetIrisPackageMapToCaptureReferences(NetConnection, &PackedBits.ObjectReferences))
+	if (UPackageMap* PackageMap = nullptr/*UE::Private::GetIrisPackageMapToCaptureReferences(NetConnection, &PackedBits.ObjectReferences)*/)
 	{
 		ServerMoveBitWriter.PackageMap = PackageMap;
 	}
@@ -625,7 +625,7 @@ void UAircraftMovementComponent::ServerMovePacked_ServerReceive(const FVehicleSe
 	ServerMoveBitReader.SetData((uint8*)PackedBits.DataBits.GetData(), NumBits);
 
 #if UE_WITH_IRIS
-	if (UPackageMap* PackageMap = UE::Private::GetIrisPackageMapToReadReferences(VehicleOwner->GetNetConnection(), &PackedBits.ObjectReferences))
+	if (UPackageMap* PackageMap = nullptr/*UE::Private::GetIrisPackageMapToReadReferences(VehicleOwner->GetNetConnection(), &PackedBits.ObjectReferences)*/)
 	{
 		ServerMoveBitReader.PackageMap = PackageMap;
 	}

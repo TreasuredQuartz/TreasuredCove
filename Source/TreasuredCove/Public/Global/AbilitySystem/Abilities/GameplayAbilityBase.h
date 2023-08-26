@@ -19,16 +19,11 @@ class TREASUREDCOVE_API UGameplayAbilityBase : public UGameplayAbility
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
-	UMaterialInterface* UIMaterial;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	FName AbilityName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	FText AbilityDescription;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	TArray<TSubclassOf<UGameplayAbilityBase>> RequiredAbilities;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	TArray<FRequiredAttribute> RequiredAttributes;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	UTexture2D* AbilityTexture;
 
 	// Returns helpful struct containing ability info
 	UFUNCTION(BlueprintCallable, Category = "GA_Base")

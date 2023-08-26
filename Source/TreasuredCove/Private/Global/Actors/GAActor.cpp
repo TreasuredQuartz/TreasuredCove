@@ -141,3 +141,29 @@ void AGAActor::UseMelee_Implementation()
 	if (CurrentActiveAbilityHandles.IsValidIndex(3) && CurrentActiveAbilityHandles[3].IsValid()) AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[3]);
 }
 
+void AGAActor::OnPickedUp_Implementation()
+{
+	bPickedUp = true;
+	SetActorEnableCollision(false);
+}
+
+void AGAActor::OnDropped_Implementation()
+{
+	bPickedUp = false;
+	SetOwner(nullptr);
+	DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+}
+
+void AGAActor::OnEquipped_Implementation()
+{
+	bEquipped = true;
+	IntializeAbilitySystem();
+}
+
+void AGAActor::OnUnEquipped_Implementation()
+{
+	bEquipped = false;
+}
+

@@ -95,6 +95,22 @@ public:
 	}
 };
 
+enum class EWalkingGait : uint8
+{
+	GAIT_Walk,
+	GAIT_Sprint,
+	GAIT_Crouch,
+	GAIT_Prone,
+};
+
+enum class ESwimmingGait : uint8
+{
+	GAIT_SurfaceSwim,
+	GAIT_UnderwaterSwim,
+	GAIT_WallSwim,
+};
+
+
 /** This class is being designed in tandem with ReidsChannel (YouTube)
  * The WallRunning logic comes from his tutorial but it has been moved from the ACharacter to here.
  */
@@ -107,12 +123,25 @@ class TREASUREDCOVE_API UGACharacterMovementComponent : public UCharacterMovemen
 	
 #pragma region Defaults
 private:
+	// Wading Members
+	uint8 bIsWading:1;
+	float WaterLevelZ = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Walking|Prone", Meta = (AllowPrivateAccess = "true"))
+	float MaxWadingSpeedReduction = 0.5;
+
+	// Prone Members
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Walking|Prone", Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanProne:1;
+	uint8 bIsProne:1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Walking|Prone", Meta = (AllowPrivateAccess = "true"))
+	float MaxProneSpeed = 100.f;
+
 	// Sprinting members
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sprinting", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Walking|Sprinting", Meta = (AllowPrivateAccess = "true"))
 	uint8 bCanSprint:1;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sprinting", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Walking|Sprinting", Meta = (AllowPrivateAccess = "true"))
 	float MaxSprintSpeed = 800.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sprinting", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Walking|Sprinting", Meta = (AllowPrivateAccess = "true"))
 	float SprintAcceleration = 2000.0f;
 
 	// Sliding members
@@ -123,13 +152,22 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
 	float MaxSlideSpeed = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
-	float SlideAcceleration = 500000.0f;
+	float SlideInitialForce = 5000.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
-	float SlideGroundFriction = 0.5f;
+	float SlideAcceleration = 1000.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	float SlideGroundFriction = 1.3f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
 	float BrakingDecelerationSliding = 800.f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
 	float SlideConsecutiveResetDelay = 3.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	float SlideGravityMultiplier = 2.0f;
+
+	// Rolling Members
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Sliding", Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanRoll:1;
+	uint8 bIsRolling:1;
 
 	// Wall running members
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Wall Run", Meta = (AllowPrivateAccess = "true"))
@@ -150,6 +188,8 @@ private:
 	float MaxClimbSpeed = 200.f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Climbing", Meta = (AllowPrivateAccess = "true"))
 	float BrakingDecelerationClimbing = 4096;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Climbing", Meta = (AllowPrivateAccess = "true"))
+	float LedgeMaxHeight = 45.f;
 #pragma endregion
 
 #pragma region Overrides
@@ -169,6 +209,8 @@ public:
 	virtual void UpdateFromCompressedFlags(uint8 flags) override;
 	virtual void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 	virtual void PhysCustom(float DeltaTime, int32 Iterations) override;
+	virtual bool IsMovingOnGround() const override;
+	
 	// BEGIN Jumping
 	virtual bool CanAttemptJump() const override;
 	virtual bool DoJump(bool bReplayingMoves) override;
@@ -186,12 +228,34 @@ public:
 
 #pragma region NewFunctions
 public:
+	/** Returns location of controlled actor's "feet" meaning center of bottom of collision bounding box */
+	virtual FVector GetActorHeadLocation() const { return UpdatedComponent ? (UpdatedComponent->GetComponentLocation() + FVector(0, 0, UpdatedComponent->Bounds.BoxExtent.Z)) : FNavigationSystem::InvalidLocation; }
 	// Returns true if the movement mode is custom and matches the provided custom movement mode
 	bool IsCustomMovementMode(uint8 custom_movement_mode) const;
 	// Helper function performs GetWorld()->SingleLineTrace() by visibility 
 	bool LineTrace(FHitResult& Hit, const FVector& start, const FVector& end) const;
 	// Helper function performs GetWorld()->SweepSingleByChannel() by visibility using owner's primitive cylinder
 	bool SweepTrace(FHitResult& Hit, const FVector& start, const FVector& end) const;
+	// Sets the gait for the walking movement mode. (walk, sprint, crouch, etc)
+	void SetMovementGait_Walking(uint8 NewGait);
+	// Returns evaluation of common booleans required for performing movement physics
+	bool PhysValidator(float remainingTime, int32 Iterations);
+#pragma endregion
+
+#pragma region SwimmingRelated
+
+#pragma region Wading
+public:
+	// 
+	UFUNCTION(BlueprintCallable, Category = "Character|Movement")
+	void EnterWater(float InWaterLevelZ);
+	//
+	UFUNCTION(BlueprintCallable, Category = "Character|Movement")
+	void ExitWater();
+	//
+	float GetSubmergenceRatio() const;
+
+#pragma endregion
 #pragma endregion
 
 #pragma region Sliding
@@ -200,9 +264,10 @@ public:
 	FORCEINLINE bool CanEverSlide() const { return bCanSlide; };
 	//
 	bool CanSlide() const;
-	// 
+	// Called when trying to crouch while moving faster than crouch speed or after jumping.
+	// Adds an Impulse
 	void StartSliding();
-	//
+	// Called after a jump during a slide or when slowed down to walking speed.
 	void StopSliding();
 	// Sets CurrentSlides to 0
 	void ResetSliding();
@@ -210,6 +275,8 @@ public:
 	bool IsSliding() const;
 	// Find acceleration based off of current slope
 	FVector CalculateFloorInfluence(const FVector& InSlope) const;
+	// Velocity Calculator for sliding
+	void PhysSliding(float DeltaTime, int32 Iterations);
 #pragma endregion
 
 #pragma region Sprinting
@@ -235,6 +302,28 @@ public:
 	void ComputeWallDist(const FVector& CapsuleLocation, float LineDistance, float SweepDistance, FFindWallResult& OutWallResult, float SweepRadius, const FHitResult* ForwardSweepResult = NULL) const;
 	//
 	void FindWall(const FVector& CapsuleLocation, FFindWallResult& OutWallResult, bool bCanUseCachedLocation, const FHitResult* ForwardSweepResult = NULL) const;
+	//
+	bool IsStepUpTooHigh(const FHitResult& Hit) const;
+
+#pragma region Ledges
+public:
+	// Checks for short walls we run may into
+	void CatchLedgeCheck();
+	// Checks for short walls we can vault
+	void VaultCheck(const FVector& NormalImpulse, const FHitResult& Hit);
+	// For Running onto a ledge after vertically wall-running up a wall
+	void RunUpLedge(float DeltaTime, int32 Iterations);
+	// For moving onto a ledge while climbing
+	// void ClimbUpLedge();
+	// For crossing a short wall while walking/running
+	void VaultOverLedge();
+	//
+	void StartVaulting();
+	//
+	void StopVaulting();
+	// 
+	void PhysVaulting(float DeltaTime, int32 Iterations);
+#pragma endregion
 
 #pragma region WallRunning
 public:
@@ -246,10 +335,10 @@ public:
 	FORCEINLINE bool CanEverWallRun() const { return bCanWallRun; };
 	// Requests that the player begins wall running
 	UFUNCTION(BlueprintCallable, Category = "Character|Movement")
-	bool BeginWallRun();
+	void StartWallRunning();
 	// Ends the characters wall run
 	UFUNCTION(BlueprintCallable, Category = "Character|Movement")
-	void EndWallRun();
+	void StopWallRunning();
 	// Reutrns true if the keys required for wall running are down
 	bool AreRequiredKeysDown() const;
 	// Returns true if the player is next to a wall that can be wall run
@@ -275,9 +364,9 @@ public:
 	//
 	FORCEINLINE bool CanEverClimb() const { return bCanClimb; };
 	// Requests the player to start climbing
-	bool BeginClimb();
+	void StartClimbing();
 	// Called to set Movement mode off of climbing
-	void EndClimb();
+	void StopClimbing();
 	// Called when climbing vertically and a ledge is detected
 	void BeginClimbLedge();
 	// Returns true if the player is in front of a wall
@@ -296,6 +385,13 @@ public:
 	bool IsClimbable(const FHitResult& Hit) const;
 	// Checks if we are meet specific conditions to start climbing
 	void ClimbCheck(const FVector& NormalImpulse, const FHitResult& Hit);
+#pragma endregion
+
+#pragma region Hanging
+	//
+	void HangCheck();
+	//
+	bool IsHanging() const;
 #pragma endregion
 #pragma endregion
 
@@ -333,6 +429,8 @@ private:
 
 	// The value at begin play
 	FVector DefaultMeshRelativeLocation = FVector::ZeroVector;
+	// Location set at the start of a vault that the character will move toward.
+	FVector VaultEndLocation = FVector::ZeroVector;
 	// The direction the character is currently wall running in.
 	FVector WallRunDirection;
 	// The side of the wall the player is running on.

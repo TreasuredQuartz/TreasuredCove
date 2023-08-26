@@ -30,9 +30,7 @@ FAbilityInfo UGameplayAbilityBase::GetAbilityInfo()
 		}
 	}
 
-	return FAbilityInfo(CooldownDuration, Cost, AbilityCostType,
-			UIMaterial, GetClass(), RequiredAbilities,
-			RequiredAttributes, AbilityName, AbilityDescription);
+	return FAbilityInfo(GetClass(), AbilityName, AbilityDescription, AbilityTexture, CooldownDuration, Cost, AbilityCostType);
 }
 
 void UGameplayAbilityBase::UICooldown()

@@ -46,8 +46,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// Adds specified text at specified location
-	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "FloatingText")
-	void AddFootprint_Client(const FVector& WorldLocation, int PhysSurfaceType);
+	UFUNCTION(BlueprintCallable, Category = "FloatingText")
+	void AddFootprint(const FVector& WorldLocation, int PhysSurfaceType);
 
 	// Callable function to destroy all currently active text actors (On Death for instance)
 	UFUNCTION()

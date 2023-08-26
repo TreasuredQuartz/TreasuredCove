@@ -34,16 +34,18 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// These skill trees are created and added on Begin Play
-	UPROPERTY(EditAnywhere, Category = "Abilities")
-	TMap<FString, TSubclassOf<UGASkillTree>> InitialSkillTreeClasses;
+	/*UPROPERTY(EditAnywhere, Category = "Abilities")
+	TMap<FString, TSubclassOf<UGASkillTree>> InitialSkillTreeClasses;*/
 
 	// These are the actual skill tree objects which may be empty.
-	UPROPERTY(BlueprintReadWrite, Category = "Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	TMap<FString, UGASkillTree*> SkillTrees;
 
 	// This will add a new skill tree at runtime to this component
 	void AddSkillList(FString Category, UGASkillTree* SkillTree);
 	void AddSkillList(FString Category, TSubclassOf<UGASkillTree> SkillTreeClass);
+
+	void AquireSkillList(UGASkillTree* SkillTree);
 
 	// Delegate bound function that gets called by created skill trees.
 	UFUNCTION()

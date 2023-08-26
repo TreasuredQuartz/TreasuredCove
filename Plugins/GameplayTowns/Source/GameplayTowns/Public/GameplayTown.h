@@ -44,19 +44,20 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	// Town System Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Towns", meta = (AllowPrivateAccess = "true"))
-	UTownSystemComponent* TownSystem;
+	// Resources
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Towns")
+	TMap<FName, int32> Resources;
 
 	// 
 	// TSubclassOf<AGameplayTownManager> TownManagerClass;
 	// AGameplayTownManager* TownManager;
 
 	// State of the town to spawn
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Gameplay|Towns", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay|Towns")
 	TSubclassOf<AGameplayTownState> TownStateClass;
+
 	// State of the town
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Towns", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Towns")
 	AGameplayTownState* TownState;
 
 	// Job Sites

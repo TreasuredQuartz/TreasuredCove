@@ -70,26 +70,31 @@ void UFloatingItemInfoComponent::TickComponent(float DeltaTime, ELevelTick TickT
 		FHitResult Hit;
 		const FVector Start = CameraLocation;
 		const FVector End = Start + (CameraRotation.Vector() * 250);
-		if (World->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_GameTraceChannel1))
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(GetOwner());
+		if (World->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_GameTraceChannel1, Params))
 		{
 			if (AGAWeapon* HitWeapon = Cast<AGAWeapon>(Hit.GetActor()))
 			{
-				bLookingAtPickup = true;
-				PopupLocation = HitWeapon->GetActorLocation() + (HitWeapon->GetActorForwardVector() * 50);
-				// PopupLocation.Z = Hit.Location.Z >= PopupLocation.Z ? Hit.Location.Z : PopupLocation.Z;
-				if (WeaponPickup != HitWeapon)
+				if (!HitWeapon->IsPickedUp())
 				{
-					if (WeaponPickup)
+					bLookingAtPickup = true;
+					PopupLocation = HitWeapon->GetActorLocation() + (HitWeapon->GetActorForwardVector() * 50);
+					// PopupLocation.Z = Hit.Location.Z >= PopupLocation.Z ? Hit.Location.Z : PopupLocation.Z;
+					if (WeaponPickup != HitWeapon)
 					{
-						RemovePopup();
+						if (WeaponPickup)
+						{
+							RemovePopup();
+						}
+
+						WeaponPickup = HitWeapon;
+
+						FGAItemInfo PickupInfo;
+						WeaponPickup->GetItemInfo(PickupInfo);
+
+						AddPopup_Client(PickupInfo.Name, PopupLocation);
 					}
-
-					WeaponPickup = HitWeapon;
-
-					FGAItemInfo PickupInfo;
-					WeaponPickup->GetItemInfo(PickupInfo);
-
-					AddPopup_Client(PickupInfo.Name, PopupLocation);
 				}
 			}
 		}

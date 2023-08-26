@@ -10,7 +10,10 @@
 UENUM(BlueprintType)
 enum ECustomMovementMode
 {
-	MOVE_WallRunning		UMETA(DisplayName = "WallRunning"),
+	MOVE_Vaulting			UMETA(DisplayName = "Vaulting"),
 	MOVE_Climbing			UMETA(DisplayName = "Climbing"),
+	MOVE_Hanging			UMETA(DisplayName = "Hanging"),
+	MOVE_WallRunning		UMETA(DisplayName = "WallRunning"),
+	MOVE_Sliding			UMETA(DisplayName = "Sliding"),
 	// MOVE_MAX				UMETA(Hidden),						// error: redefinition; previous definition was 'enumerator'
 };

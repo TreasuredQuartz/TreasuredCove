@@ -28,7 +28,7 @@
 	],
 	"Plugins": [
 		{
-			"Name": "RuntimeMeshComponent",
+			"Name": "RealtimeMeshComponent",
 			"Enabled": true
 		},
 		{

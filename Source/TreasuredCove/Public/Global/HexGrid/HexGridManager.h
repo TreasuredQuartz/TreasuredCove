@@ -18,11 +18,6 @@ public:
 	AHexGridManager();
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
-	// uint8 RandomSeed;
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
-	// uint8 RenderRange;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
 	// uint8 GridWidth;
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
 	// uint8 GridHeight;
@@ -34,21 +29,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
 	double OddHorizontalOffset;
 
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
-	// uint8 TileSize;
-
 	virtual void OnConstruction(const FTransform& Transform) override;
-	// virtual void OnConstruction_DoOnce() override;
-
-	// UFUNCTION(BlueprintCallable, Category = "HexGrid")
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void AddChunk() override;
+	virtual AGameplayVoxel* AddVoxelActor(FVector VoxelSpawnLocation, FIntVector inVoxelIndex, int32 CurrentLOD) override;
 
-	// UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "HexGrid")
-	// AHexGrid* AddHexGrid(const FVector2D& Location);
 protected:
 
 public:	
-
+	UFUNCTION(BlueprintPure, Category = "")
+	AHexGrid* GetGridAtIndex(int32 InIndex);
 };

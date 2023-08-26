@@ -25,7 +25,8 @@ private:
 	FVector LastActorLocation;
 
 	// The trail actor to spawn at runtime.
-	TSubclassOf<AMovementTrailActor> TrailClasses;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MovementTrail", meta=(AllowPrivateAccess="true"))
+	TSubclassOf<AMovementTrailActor> TrailClass;
 
 	// Referrences to currently spawned actors
 	TArray<AMovementTrailActor*> TrailActors;
@@ -34,7 +35,11 @@ public:
 	// Sets default values for this actor's properties
 	UMovementTrailComponent();
 
+	UFUNCTION(BlueprintCallable, Category="MovementTrail")
 	void SetSpawnActors(bool InShouldSpawn);
+
+	UFUNCTION()
+	void OnTrailDestroyed(AActor* DestroyedActor);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

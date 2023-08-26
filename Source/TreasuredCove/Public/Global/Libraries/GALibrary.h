@@ -72,4 +72,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Voxel")*/
 	UFUNCTION(BlueprintCallable, Category = "Voxel")
 	static int32 CreateFace(FProceduralMeshSection& MeshSection, const UGameplayTileData* InTileData, const FVector& InLocation, int32 InIndex, int32 CurTriangleNum, int32 InVoxelSize, int32 InScale);
+
+	UFUNCTION(BlueprintCallable, Category = "Voxel")
+	static int32 CreateFaceFromTransform(FProceduralMeshSection& MeshSection, const UGameplayTileData* InTileData, const FTransform& InTransform, int32 InIndex, int32 CurTriangleNum, int32 InVoxelSize);
 };

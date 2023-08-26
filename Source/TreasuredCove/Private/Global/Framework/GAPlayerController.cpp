@@ -9,48 +9,53 @@
 #include "DlgManager.h"
 #include "Engine/Engine.h"
 
-//void AGAPlayerController::SetupInputComponent()
-//{
-//	Super::SetupInputComponent();
-//
-//	InputComponent->BindAction("Pause", IE_Pressed, this, &AGAPlayerController::BeginPause);
-//	// InputComponent->BindAction("Pause", IE_Released, this, &AGAPlayerController::EndPause);
-//}
+void AGAPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	InputComponent->BindAction("Pause", IE_Pressed, this, &AGAPlayerController::BeginPause);
+	// InputComponent->BindAction("Pause", IE_Released, this, &AGAPlayerController::EndPause_Client);
+
+	Player = Cast<AGACharacter>(this->GetCharacter());
+}
+
+bool AGAPlayerController::CanAccessHUD()
+{
+	HUD = GetHUD<AGAHUD>();
+
+	return (
+		!HUD ||										// HUD shouldn't be a nullptr
+		IsLocalController()							// HUD should never be accessed on a non-owning machine.
+		);
+}
 
 void AGAPlayerController::ShouldDisableInput(bool ShouldDisable)
 {
+	Player = Cast<AGACharacter>(this->GetCharacter());
 	if (Player)
 	{
-		Player = Cast<AGACharacter>(this->GetCharacter());
-	}
-
-	if (ShouldDisable)
-	{
-		Player->DisableInput(this);
-	}
-	else
-	{
-		Player->EnableInput(this);
+		if (ShouldDisable)
+		{
+			Player->DisableInput(this);
+		}
+		else
+		{
+			Player->EnableInput(this);
+		}
 	}
 }
 
 //
-void AGAPlayerController::AddAbilityToUI(FAbilityInfo AbilityInfo, EAbilityType AbilityType, FGameplayAbilitySpecHandle InHandle, bool bFromItem)
+void AGAPlayerController::AddAbilityToUI_Client_Implementation(FAbilityInfo AbilityInfo, EAbilityType AbilityType, FGameplayAbilitySpecHandle InHandle, bool bFromItem)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->AddAbilityToUI(AbilityInfo, AbilityType, InHandle, bFromItem);
 }
 
-void AGAPlayerController::RemoveAbilityFromUI(FGameplayAbilitySpecHandle InHandle)
+void AGAPlayerController::RemoveAbilityFromUI_Client_Implementation(FGameplayAbilitySpecHandle InHandle)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->RemoveAbilityFromUI(InHandle);
 }
@@ -67,152 +72,110 @@ void AGAPlayerController::OnControllerChanged(bool bIsConnected)
 */
 
 //
-void AGAPlayerController::OnDeath()
+void AGAPlayerController::OnDeath_Client_Implementation()
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-		HUD->OnDeath();
-	}
+	if (!CanAccessHUD()) return;
 
+	HUD->OnDeath();
 }
 
 //
-void AGAPlayerController::OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
+void AGAPlayerController::OnDamaged_Client_Implementation(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-		HUD->OnDamaged(DeltaAmount);
-	}
+	if (!CanAccessHUD()) return;
 
+	HUD->OnDamaged(DeltaAmount);
 }
 
 //
-void AGAPlayerController::OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
+void AGAPlayerController::OnHealed_Client_Implementation(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-		HUD->OnHealed(DeltaAmount);
-	}
+	if (!CanAccessHUD()) return;
 
+	HUD->OnHealed(DeltaAmount);
 }
 
 #pragma region PlayerInformation
 //
-void AGAPlayerController::OnHealthModified(float Health, float MaxHealth)
+void AGAPlayerController::OnHealthModified_Client_Implementation(float Health, float MaxHealth)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-		HUD->OnHealthModified(Health, MaxHealth);
-	}
+	if (!CanAccessHUD()) return;
 
+	HUD->OnHealthModified(Health, MaxHealth);
 }
 
 //
-void AGAPlayerController::OnStaminaModified(float Stamina, float MaxStamina)
+void AGAPlayerController::OnStaminaModified_Client_Implementation(float Stamina, float MaxStamina)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnStaminaModified(Stamina, MaxStamina);
 }
 
 //
-void AGAPlayerController::OnManaModified(float Mana, float MaxMana)
+void AGAPlayerController::OnManaModified_Client_Implementation(float Mana, float MaxMana)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnManaModified(Mana, MaxMana);
 }
 
 //
-void AGAPlayerController::OnExperienceModified(float Experience, float MaxExperience)
+void AGAPlayerController::OnExperienceModified_Client_Implementation(float Experience, float MaxExperience)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnExperienceModified(Experience, MaxExperience);
 }
 
 //
-void AGAPlayerController::OnStatModified(float Charisma, float Constitution, float Dexterity, float Intelligence, float Strength, float Wisdom)
+void AGAPlayerController::OnStatModified_Client_Implementation(float Charisma, float Constitution, float Dexterity, float Intelligence, float Strength, float Wisdom)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnStatModified(Charisma, Constitution, Dexterity, Intelligence, Strength, Wisdom);
 }
 
 //
-void AGAPlayerController::OnCurrentWeaponAmmoModified(float Ammo, float MaxAmmo)
+void AGAPlayerController::OnCurrentWeaponAmmoModified_Client_Implementation(float Ammo, float MaxAmmo)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnCurrentWeaponAmmoModified(Ammo, MaxAmmo);
 }
 
 //
-void AGAPlayerController::OnAmmoStockModified(FBullet Bullet)
+void AGAPlayerController::OnAmmoStockModified_Client_Implementation(FBullet Bullet)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnAmmoStockModified(Bullet);
 }
 
-void AGAPlayerController::OnDesiredLocationCleared()
+void AGAPlayerController::OnDesiredLocationCleared_Client_Implementation()
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnDesiredLocationCleared();
 }
 
-void AGAPlayerController::OnDesiredLocationSet(FVector DesiredLocation)
+void AGAPlayerController::OnDesiredLocationSet_Client_Implementation(FVector DesiredLocation)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnDesiredLocationSet(DesiredLocation);
 }
 
-void AGAPlayerController::OnUpdateCurrentBuilding(FName CurrentBuildingName)
+void AGAPlayerController::OnUpdateCurrentBuilding_Client_Implementation(FName CurrentBuildingName)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnUpdateCurrentBuilding(CurrentBuildingName);
 }
 
-void AGAPlayerController::OnUpdateTargetBuilding(FName TargetBuildingName)
+void AGAPlayerController::OnUpdateTargetBuilding_Client_Implementation(FName TargetBuildingName)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OnUpdateTargetBuilding(TargetBuildingName);
 }
@@ -221,22 +184,16 @@ void AGAPlayerController::OnUpdateTargetBuilding(FName TargetBuildingName)
 /** User Interface */
 
 #pragma region UIInputHandling
-void AGAPlayerController::ReturnMainMenu()
+void AGAPlayerController::ReturnMainMenu_Client_Implementation()
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->OpenMainMenu();
 }
 
 void AGAPlayerController::BeginPause()
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	if (!bIsPaused) {
 		bIsPaused = true;
@@ -247,18 +204,15 @@ void AGAPlayerController::BeginPause()
 		HUD->OpenPauseMenu();
 	}
 	else {
-		EndPause();
+		EndPause_Client();
 	}
 }
 
-void AGAPlayerController::EndPause()
+void AGAPlayerController::EndPause_Client_Implementation()
 {
-	bIsPaused = false;
+	if (!CanAccessHUD()) return;
 
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	bIsPaused = false;
 	bShowMouseCursor = false;
 
 	//FInputModeGameOnly InputMode;
@@ -266,72 +220,51 @@ void AGAPlayerController::EndPause()
 	HUD->ClosePauseMenu();
 }
 
-void AGAPlayerController::ConfirmPressed()
+void AGAPlayerController::ConfirmPressed_Client_Implementation()
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->ConfirmPressed();
 }
 
-void AGAPlayerController::ConfirmReleased()
+void AGAPlayerController::ConfirmReleased_Client_Implementation()
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->ConfirmReleased();
 }
 
-void AGAPlayerController::ReturnPressed()
+void AGAPlayerController::ReturnPressed_Client_Implementation()
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->ReturnPressed();
 }
 
-void AGAPlayerController::ReturnReleased()
+void AGAPlayerController::ReturnReleased_Client_Implementation()
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->ReturnReleased();
 }
 
-void AGAPlayerController::RecieveNavRequest(ENavType NavType)
+void AGAPlayerController::RecieveNavRequest_Client_Implementation(ENavType NavType)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->SendNavigationRequest(NavType);
 }
 
-void AGAPlayerController::RecieveTabRequest(bool bNavRight)
+void AGAPlayerController::RecieveTabRequest_Client_Implementation(bool bNavRight)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	HUD->SendTabRequest(bNavRight);
 }
 
-void AGAPlayerController::CursorMoveUp(float Val)
+void AGAPlayerController::CursorMoveUp_Client_Implementation(float Val)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	float X = 0;
 	float Y = 0;
@@ -346,12 +279,9 @@ void AGAPlayerController::CursorMoveUp(float Val)
 	SetMouseLocation(Val, Y);
 }
 
-void AGAPlayerController::CursorMoveRight(float Val)
+void AGAPlayerController::CursorMoveRight_Client_Implementation(float Val)
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
 
 	float X = 0;
 	float Y = 0;
@@ -368,81 +298,59 @@ void AGAPlayerController::CursorMoveRight(float Val)
 #pragma endregion
 
 #pragma region ItemHandling
-void AGAPlayerController::OnMenuUpdated(FVector2D MenuSelection)
+void AGAPlayerController::OnMenuUpdated_Client_Implementation(FVector2D MenuSelection)
 {
-	HUD = Cast<AGAHUD>(GetHUD());
+	if (!CanAccessHUD()) return;
 
-	if (HUD)
-	{
-		HUD->OnMenuUpdated(MenuSelection);
-	}
-
+	HUD->OnMenuUpdated(MenuSelection);
 }
 
-void AGAPlayerController::SetItemPriority(bool Priority)
+void AGAPlayerController::SetItemPriority_Client_Implementation(bool Priority)
 {
-	HUD = Cast<AGAHUD>(GetHUD());
+	if (!CanAccessHUD()) return;
 
-	if (HUD)
-	{
-		HUD->SetItemPriority(Priority);
-	}
-
+	HUD->SetItemPriority(Priority);
 }
 
 /** Inventory */
 
 //
-void AGAPlayerController::NotifyCanInteract(FName ItemName, bool CanPickup)
+void AGAPlayerController::NotifyCanInteract_Client_Implementation(FName ItemName, bool CanPickup)
 {
-	HUD = Cast<AGAHUD>(GetHUD());
-	if (HUD)
-	{
-		HUD->NotifyCanInteract(ItemName, CanPickup);
-	}
-
+	if (!CanAccessHUD()) return;
+	
+	HUD->NotifyCanInteract(ItemName, CanPickup);
 }
 
 //
-void AGAPlayerController::OnPickupItem(FGAItemInfo& ItemInfo)
+void AGAPlayerController::OnPickupItem_Client_Implementation(const FGAItemInfo& ItemInfo)
 {
-	HUD = Cast<AGAHUD>(GetHUD());
-	if (HUD)
-	{
-		HUD->OnPickupItem(ItemInfo);
-	}
+	if (!CanAccessHUD()) return;
 
+	HUD->OnPickupItem(ItemInfo);
 }
 
-void AGAPlayerController::OnAddItemToRepository(const FItemKey& Item)
+void AGAPlayerController::OnAddItemToRepository_Client_Implementation(const FItemKey& Item)
 {
-	HUD = Cast<AGAHUD>(GetHUD());
-	if (HUD)
-	{
-		HUD->OnPickupItemIntoRepository(Item);
-	}
-
+	if (!CanAccessHUD()) return;
+	
+	HUD->OnPickupItemIntoRepository(Item);
 }
 
 //
-void AGAPlayerController::OnEquipItem(UObject* Item, FGAItemInfo& ItemInfo)
+void AGAPlayerController::OnEquipItem_Client_Implementation(UObject* Item, const FGAItemInfo& ItemInfo)
 {
-	HUD = Cast<AGAHUD>(GetHUD());
-	if (HUD)
-	{
-		HUD->OnEquipItem(Item, ItemInfo);
-	}
+	if (!CanAccessHUD()) return;
+
+	HUD->OnEquipItem(Item, ItemInfo);
 }
 
 //
-void AGAPlayerController::OnStowedItem(FGAItemInfo& ItemInfo)
+void AGAPlayerController::OnStowedItem_Client_Implementation(const FGAItemInfo& ItemInfo)
 {
-	HUD = Cast<AGAHUD>(GetHUD());
-	if (HUD)
-	{
-		HUD->OnStowedItem(ItemInfo);
-	}
-
+	if (!CanAccessHUD()) return;
+		
+	HUD->OnStowedItem(ItemInfo);
 }
 
 //
@@ -453,7 +361,6 @@ void AGAPlayerController::OnEquipItemFromInventory(uint8 Slot)
 	{
 		Player->EquipItemFromInventory(Slot);
 	}
-
 }
 
 //
@@ -464,7 +371,6 @@ void AGAPlayerController::OnStowItemFromInventory(uint8 Slot)
 	{
 		Player->StowItemFromInventory(Slot);
 	}
-
 }
 
 //
@@ -475,7 +381,6 @@ void AGAPlayerController::OnAddEquippedItemToInventory()
 	{
 		Player->AddEquippedItemToInventory();
 	}
-
 }
 
 //
@@ -486,7 +391,6 @@ void AGAPlayerController::OnAddStowedItemToInventory()
 	{
 		Player->AddStowedItemToInventory();
 	}
-
 }
 
 //
@@ -499,12 +403,10 @@ void AGAPlayerController::OnMoveItem(uint8 From, uint8 To)
 	}
 }
 
-void AGAPlayerController::OnDropItem()
+void AGAPlayerController::OnDropItem_Client_Implementation()
 {
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
+	if (!CanAccessHUD()) return;
+
 	HUD->OnDropItem();
 }
 
@@ -522,14 +424,11 @@ void AGAPlayerController::OnDropItemFromInventory(uint8 Slot)
 /** Dialogue */
 
 
-void AGAPlayerController::StartDialogue(UDlgDialogue* Dialogue, UObject* OtherParticipant)
+void AGAPlayerController::StartDialogue_Client_Implementation(UDlgDialogue* Dialogue, UObject* OtherParticipant)
 {
+	if (!CanAccessHUD()) return;
+
 	ActiveContext = UDlgManager::StartDialogue2(Dialogue, OtherParticipant, GetPawn());
-	
-	if (HUD)
-	{
-		HUD = Cast<AGAHUD>(GetHUD());
-	}
 
 	HUD->OnDialogueStarted();
 }
@@ -547,6 +446,7 @@ void AGAPlayerController::SelectDialogueOption(int32 Index)
 		ActiveContext = nullptr;
 	}
 
+	if (!CanAccessHUD()) return;
+
 	HUD->OnDialogueStarted();
-	
 }

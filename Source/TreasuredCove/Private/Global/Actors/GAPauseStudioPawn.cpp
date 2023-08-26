@@ -15,23 +15,21 @@ AGAPauseStudioPawn::AGAPauseStudioPawn()
 void AGAPauseStudioPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
 void AGAPauseStudioPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AGAPauseStudioPawn::OnEnter_Implementation()
 {
-
+	this->SetActorHiddenInGame(false);
 }
 
 void AGAPauseStudioPawn::OnExit_Implementation()
 {
-
+	this->SetActorHiddenInGame(true);
 }
 
