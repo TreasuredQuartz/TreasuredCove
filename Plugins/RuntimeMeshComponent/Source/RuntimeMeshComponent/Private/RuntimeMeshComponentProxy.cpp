@@ -151,7 +151,7 @@ void FRuntimeMeshComponentSceneProxy::CreateMeshBatch(FMeshBatch& MeshBatch, con
 	FMaterialRenderProxy* MaterialRenderProxy = Material->GetRenderProxy();
 
 	MeshBatch.VertexFactory = &Section.Buffers->VertexFactory;
-	MeshBatch.Type = bWantsAdjacencyInfo ? PT_12_ControlPointPatchList : PT_TriangleList;
+	MeshBatch.Type = bWantsAdjacencyInfo ? PT_TriangleList : PT_TriangleList;
 	MeshBatch.CastShadow = Section.bCastsShadow;
 
 	MeshBatch.LODIndex = LODIndex;
@@ -550,7 +550,7 @@ void FRuntimeMeshComponentSceneProxy::GetDynamicRayTracingInstances(struct FRayT
 
 					RayTracingInstance.Materials.Add(MeshBatch);
 #if ENGINE_MAJOR_VERSION == 5
-					RayTracingInstance.BuildInstanceMaskAndFlags(GMaxRHIFeatureLevel);
+					// RayTracingInstance.BuildInstanceMaskAndFlags(GMaxRHIFeatureLevel);
 #else
 					RayTracingInstance.BuildInstanceMaskAndFlags();
 #endif

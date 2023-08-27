@@ -564,11 +564,11 @@ void UAircraftMovementComponent::CallServerMovePacked(const FSavedMove_Vehicle* 
 	UNetConnection* NetConnection = VehicleOwner->GetNetConnection();
 
 #if UE_WITH_IRIS
-	if (UPackageMap* PackageMap = UE::Private::GetIrisPackageMapToCaptureReferences(NetConnection, &PackedBits.ObjectReferences))
+	/*if (UPackageMap* PackageMap = UE::Private::GetIrisPackageMapToCaptureReferences(NetConnection, &PackedBits.ObjectReferences))
 	{
 		ServerMoveBitWriter.PackageMap = PackageMap;
 	}
-	else
+	else*/
 #endif
 	{
 		// Extract the net package map used for serializing object references.
@@ -625,11 +625,11 @@ void UAircraftMovementComponent::ServerMovePacked_ServerReceive(const FVehicleSe
 	ServerMoveBitReader.SetData((uint8*)PackedBits.DataBits.GetData(), NumBits);
 
 #if UE_WITH_IRIS
-	if (UPackageMap* PackageMap = UE::Private::GetIrisPackageMapToReadReferences(VehicleOwner->GetNetConnection(), &PackedBits.ObjectReferences))
+	/*if (UPackageMap* PackageMap = UE::Private::GetIrisPackageMapToReadReferences(VehicleOwner->GetNetConnection(), &PackedBits.ObjectReferences))
 	{
 		ServerMoveBitReader.PackageMap = PackageMap;
 	}
-	else
+	else*/
 #endif
 	{
 		ServerMoveBitReader.PackageMap = PackedBits.GetPackageMap();

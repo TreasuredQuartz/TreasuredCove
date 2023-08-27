@@ -38,6 +38,7 @@ public class RuntimeMeshComponent : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "RenderCore",
+                "Renderer",
                 "RHI",
                 "NavigationSystem",
 #if UE_4_23_OR_LATER

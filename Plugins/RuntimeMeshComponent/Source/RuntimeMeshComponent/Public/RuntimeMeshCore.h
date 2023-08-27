@@ -9,6 +9,7 @@
 #include "Logging//LogMacros.h"
 #include "HAL/CriticalSection.h"
 #include "StaticMeshResources.h"
+#include "Templates/AreTypesEqual.h"
 #include "RuntimeMeshCore.generated.h"
 
 
