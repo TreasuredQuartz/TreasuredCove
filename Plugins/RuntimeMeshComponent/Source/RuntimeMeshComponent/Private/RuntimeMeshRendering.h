@@ -7,6 +7,7 @@
 
 #include "RuntimeMeshCore.h"
 #include "RuntimeMeshRenderable.h"
+#include "RHIResourceUpdates.h"
 #include "RuntimeMeshComponentPlugin.h" // For RuntimeMeshLog
 #include "Containers/ResourceArray.h"
 
