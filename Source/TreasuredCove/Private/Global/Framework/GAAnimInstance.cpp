@@ -51,7 +51,7 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 
 	// Camera mode
 	bFirstPerson =
-		Character->bFirstPerson;
+		Character->IsLocallyControlled() ? Character->bFirstPerson : false;
 
 	// Multiply by weapon's Twist/Turn multiplier
 	if (bFirstPerson)
@@ -140,17 +140,7 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		FRotator(AimYaw, AimPitch, 0);
 
 	CharacterItem =
-		Character->HeldItem;
-
-	if (CharacterMovementMode < MOVE_Falling && Speed > 0 && Character->GetVelocity().ForwardVector.X >= 0)
-	{
-		// Walking or NavWalking
-		Character->bUseControllerRotationYaw = true;
-	}
-	else
-	{
-		Character->bUseControllerRotationYaw = bFirstPerson;
-	}
+		nullptr; // Character->HeldItem;
 
 	if (!GetSkelMeshComponent())
 	{
@@ -169,7 +159,7 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 	USkeletalMeshComponent* ItemMesh =
 		nullptr; // CharacterItem->Mesh;
 	
-	if (ItemMesh)
+	if (false /*ItemMesh*/)
 	{
 		FVector Location = ItemMesh->GetSocketLocation(FName("second_grip"));
 		FRotator Rotation = ItemMesh->GetSocketRotation(FName("second_grip"));
@@ -441,7 +431,7 @@ void UGAAnimInstance::IKPlacements_Hanging(float DeltaTime)
 
 void UGAAnimInstance::IKPlacements_AimItem(float DeltaTime)
 {
-	if (!CharacterItem || !bFirstPerson)
+	if (!CharacterItem || !bFirstPerson || true)
 	{
 		ResetArmIK();
 		return;
@@ -455,8 +445,8 @@ void UGAAnimInstance::IKPlacements_AimItem(float DeltaTime)
 	const FVector& End = Start + (ControlDirection.Vector() * 10000);
 	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Blue);
-	DrawDebugPoint(GetWorld(), Hit.bBlockingHit ? Hit.Location : End, 20.f, Hit.bBlockingHit ? FColor::Green : FColor::Red);
+	// DrawDebugLine(GetWorld(), Start, End, FColor::Blue);
+	// DrawDebugPoint(GetWorld(), Hit.bBlockingHit ? Hit.Location : End, 20.f, Hit.bBlockingHit ? FColor::Green : FColor::Red);
 
 	FRotator LookAtRotation_r = (UKismetMathLibrary::FindLookAtRotation(Grip_r, Hit.bBlockingHit ? Hit.Location : End));
 	const FRotator& LookAtRotation_l = (UKismetMathLibrary::FindLookAtRotation(Grip_l, Hit.bBlockingHit ? Hit.Location : End));
@@ -479,7 +469,7 @@ void UGAAnimInstance::IKPlacements_AimItem(float DeltaTime)
 	FRotator OutRotation;
 	FVector OutLocation;
 
-	GetSkelMeshComponent()->TransformToBoneSpace(FName("grip_l"), CharacterItem->GetSupportingHandOffset().GetLocation(), GetSkelMeshComponent()->GetSocketRotation(FName("grip_l")), LeftHandEffectorLocation, OutRotation);
+	// GetSkelMeshComponent()->TransformToBoneSpace(FName("grip_l"), CharacterItem->GetSupportingHandOffset().GetLocation(), GetSkelMeshComponent()->GetSocketRotation(FName("grip_l")), LeftHandEffectorLocation, OutRotation);
 	// RightHandEffectorLocation = CharacterItem->GetHeldHandOffset().GetLocation();
 }
 

@@ -4,28 +4,24 @@
 #include "GameplayAbilityBase.h"
 
 FAbilityInfo::FAbilityInfo()
-	: Class(nullptr)
-	, Name("")
+	: Name("")
+	, Class(nullptr)
 	, Description(FText())
-	, UIMaterial(nullptr)
+	, Texture(nullptr)
 	, Cooldown(0)
 	, Cost(0)
 	, CostType(EAbilityCostType::Health)
-	, RequiredAbilities({nullptr})
 {
 }
 
-FAbilityInfo::FAbilityInfo(float InCoolDown, float InCost, EAbilityCostType InAbilityCostType,
-	UMaterialInterface* InMaterial, TSubclassOf<UGameplayAbilityBase> InAbilityClass, TArray<TSubclassOf<UGameplayAbilityBase>> InRequiredAbilities,
-	TArray<FRequiredAttribute> InRequiredAttributes, FName InAbilityName, FText InAbilityDescription)
-	: Class(InAbilityClass)
-	, Name(InAbilityName)
+FAbilityInfo::FAbilityInfo(TSubclassOf<UGameplayAbilityBase> InAbilityClass, FName InAbilityName, FText InAbilityDescription, UTexture2D* InTexture,
+	float InCoolDown, float InCost, EAbilityCostType InAbilityCostType)
+	: Name(InAbilityName)
+	, Class(InAbilityClass)
 	, Description(InAbilityDescription)
-	, UIMaterial(InMaterial)
+	, Texture(InTexture)
 	, Cooldown(InCoolDown)
 	, Cost(InCost)
 	, CostType(InAbilityCostType)
-	, RequiredAbilities(InRequiredAbilities)
-	, RequiredAttributes(InRequiredAttributes)
 {
 }

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
+#include "GenericGraph.h"
 #include "GASkillTree.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAquired, TSubclassOf<class UGameplayAbilityBase>, Ability);
@@ -20,17 +20,16 @@ class UGASkillTreeNode;
  * 
  */
 UCLASS(Blueprintable)
-class TREASUREDCOVE_API UGASkillTree : public UObject
+class TREASUREDCOVE_API UGASkillTree : public UGenericGraph
 {
 	GENERATED_BODY()
 
+public:
 	UGASkillTree();
-private:
-	int Size;
 
 public:
-	UPROPERTY(Instanced, EditAnywhere, BlueprintReadWrite)
-	UGASkillTreeNode* Root;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDataTable* SkillTable;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UWidget> Widget;
@@ -41,27 +40,15 @@ public:
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	// struct FGASkillTreeStyleStruct Style;
 public:
-	int GetSize()
-	{
-		return Size;
-	}
-
-	int GetHeight();
-
 	void AddPoint()
 	{
 		++Points;
 	}
 
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Abilities")
-	UGASkillTreeNode* GetRoot()
-	{
-		return Root;
-	}
-
 	UFUNCTION(BlueprintCallable)
-	void OnSkillAquired(FString Category, UGASkillTreeNode* Node);
-	void BindOnSkillAquiredToAll(UGASkillTreeNode* Parent);
+	void OnSkillAquired(FString Category, UGASkillTreeNode* Node, uint8 SkillIndex);
+	void BindOnSkillAquired(UGASkillTreeNode* InNode);
+	void BindOnSkillAquiredToAll();
 
 	// Called on owning skill tree components when added after NewObject<>() is called.
 	void Initialize();

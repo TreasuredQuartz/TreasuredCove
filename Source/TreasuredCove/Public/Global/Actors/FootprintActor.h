@@ -72,8 +72,10 @@ public:
 	void OnSensed(const USensorBase* Sensor, int32 Channel, EOnSenseEvent SenseEvent);
 
 	// Called when Heard
-	UFUNCTION(BlueprintNativeEvent, Category = "Footprint")
+	// UFUNCTION(Client, Unreliable, Category = "Footprint")
 	void OnHeard();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Footprint", meta = (displayname = "OnHeard"))
+	void OnHeard_BP();
 
 	// Called when Seen
 	UFUNCTION(BlueprintNativeEvent, Category = "Footprint")

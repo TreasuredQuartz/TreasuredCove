@@ -5,6 +5,7 @@
 #include "Engine/Engine.h"
 #include "RenderingThread.h"
 
+#include "RHIResourceUpdates.h"
 #include "RuntimeMeshCore.h"
 #include "RuntimeMeshRenderable.h"
 #include "RuntimeMeshComponentPlugin.h" // For RuntimeMeshLog

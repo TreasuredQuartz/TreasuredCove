@@ -17,42 +17,24 @@ public:
 	// Sets default values for this actor's properties
 	AGameplayTownState();
 
+private:
+	class AGameplayTown* Town;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	bool bShouldCalcSpeed;
-
-	float TownTime;
-	float InitialTownTime;
-	float TownSpeed;
-	float DefaultTownSpeed;
-	// float TownSpeedMultiplier;
-
-	int DaysPassed;
-	int Milliseconds;
-	int Seconds;
-	int Minutes;
-	int Hours;
-	int Days;
-	int Months;
-	int Years;
-	int Centuries;
-	int Eras;
-
-	TArray<int> TownDate;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay Town")
+	class UGameplayClockComponent* ClockComponent;
 	TMap<FName, float> Resources;
 
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void InitDate();
+	void SetTown(AGameplayTown* Town);
 
-	void SetClock();
-	void SetCalendar();
-	void EventUpdateTownSpeed(float SpeedMultiplier);
-
-	FOnTownSpeedModified OnTownSpeedModified;
+	// Town we represent
+	AGameplayTown* GetTown() const { return Town; };
 };

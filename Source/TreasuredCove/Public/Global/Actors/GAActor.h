@@ -42,6 +42,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAActor|Animation", meta = (AllowPrivateAccess = true))
 	UBillboardComponent* SupportingHandOffset;
 
+	// Whether the item is on the ground or a character has it on their person or in their inventory.
+	uint8 bPickedUp:1;
+	uint8 bEquipped:1;
+
 public:	
 	// Sets default values for this actor's properties
 	AGAActor();
@@ -55,6 +59,11 @@ public:
 	// For animation blueprint off hand offset from default animation
 	virtual FTransform GetSupportingHandOffset() const;
 
+	// For State Checking
+	bool IsPickedUp() const { return bPickedUp; };
+
+	// For State Checking
+	bool IsEquipped() const { return bEquipped; };
 public:
 	/**	Begin UObject Interface	*/
 
@@ -93,10 +102,18 @@ public:
 
 	/** Begin Item Interface */
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	UFUNCTION(BlueprintNativeEvent, Category = "Item")
 	void OnPickedUp();
-	UFUNCTION(BlueprintImplementableEvent, Category = "Item")
+	virtual void OnPickedUp_Implementation();
+	UFUNCTION(BlueprintNativeEvent, Category = "Item")
 	void OnDropped();
+	virtual void OnDropped_Implementation();
+	UFUNCTION(BlueprintNativeEvent, Category = "Item")
+	void OnEquipped();
+	void OnEquipped_Implementation();
+	UFUNCTION(BlueprintNativeEvent, Category = "Item")
+	void OnUnEquipped();
+	void OnUnEquipped_Implementation();
 
 	/** End Item Interface */
 protected:

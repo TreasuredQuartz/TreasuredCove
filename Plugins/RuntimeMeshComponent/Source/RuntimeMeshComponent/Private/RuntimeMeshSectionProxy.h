@@ -6,6 +6,7 @@
 #include "Components/MeshComponent.h"
 #include "RuntimeMeshRendering.h"
 #include "RuntimeMeshRenderable.h"
+#include "RHIDefinitions.h"
 
 struct FRuntimeMeshSectionNullBufferElement
 {
@@ -188,7 +189,7 @@ struct FRuntimeMeshSectionProxy
 	void CreateMeshBatch(FMeshBatch& MeshBatch, bool bShouldCastShadow, bool bWantsAdjacencyInfo) const
 	{
 		MeshBatch.VertexFactory = &Buffers->VertexFactory;
-		MeshBatch.Type = bWantsAdjacencyInfo ? PT_12_ControlPointPatchList : PT_TriangleList;
+		MeshBatch.Type = bWantsAdjacencyInfo ? /*PT_12_ControlPointPatchList*/ PT_TriangleList : PT_TriangleList;
 		
 		MeshBatch.CastShadow = bShouldCastShadow;
 	

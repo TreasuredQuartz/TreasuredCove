@@ -9,6 +9,8 @@
 #include "Logging//LogMacros.h"
 #include "HAL/CriticalSection.h"
 #include "StaticMeshResources.h"
+#include "RHICommandList.h"
+#include "Templates/AreTypesEqual.h"
 #include "RuntimeMeshCore.generated.h"
 
 
@@ -173,14 +175,14 @@ public:
 * @param ZAxis - z axis (normal)
 * @return sign of determinant either -1 or +1 
 */
-FORCEINLINE float GetBasisDeterminantSign( const FVector3f& XAxis, const FVector3f& YAxis, const FVector3f& ZAxis )
+FORCEINLINE float GetBasisDeterminantSign(const FVector3f& XAxis, const FVector3f& YAxis, const FVector3f& ZAxis)
 {
 	FMatrix44f Basis(
-		FPlane4f(XAxis,0),
-		FPlane4f(YAxis,0),
-		FPlane4f(ZAxis,0),
-		FPlane4f(0,0,0,1)
-		);
+		FPlane4f(XAxis, 0),
+		FPlane4f(YAxis, 0),
+		FPlane4f(ZAxis, 0),
+		FPlane4f(0, 0, 0, 1)
+	);
 	return (Basis.Determinant() < 0) ? -1.0f : +1.0f;
 }
 
@@ -190,11 +192,11 @@ FORCEINLINE float GetBasisDeterminantSign( const FVector3f& XAxis, const FVector
  * @param ZAxis - z axis (normal), the sign of the determinant is stored in ZAxis.W
  * @return y axis (binormal)
  */
-template<typename VectorType>
-FORCEINLINE FVector3f GenerateYAxisf(const VectorType& XAxis, const VectorType& ZAxis)
+template<typename T>
+FORCEINLINE FVector3f GenerateYAxisf(const T& XAxis, const T& ZAxis)
 {
-	static_assert(	ARE_TYPES_EQUAL(VectorType, FPackedNormal) ||
-					ARE_TYPES_EQUAL(VectorType, FPackedRGBA16N), "ERROR: Must be FPackedNormal or FPackedRGBA16N");
+	static_assert(	ARE_TYPES_EQUAL(T, FPackedNormal) ||
+					ARE_TYPES_EQUAL(T, FPackedRGBA16N), "ERROR: Must be FPackedNormal or FPackedRGBA16N");
 	FVector3f x = XAxis.ToFVector3f();
 	FVector4f z = ZAxis.ToFVector4f();
 	return (FVector3f(z) ^ x) * z.W;

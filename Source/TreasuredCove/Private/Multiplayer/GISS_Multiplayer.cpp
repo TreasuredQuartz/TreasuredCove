@@ -21,9 +21,13 @@ FAccountAttributes::FAccountAttributes() :
 	Portrait(nullptr),
 	EmblemIcon(nullptr),
 	EquippedCallingCards(),
-	Loadouts()
+	Loadouts(TArray<UMultiplayerLoadout*>())
 {
-	Loadouts.Init(NewObject<UMultiplayerLoadout>(), 5);
+	Loadouts.SetNumZeroed(5);
+	for (int i = 0; i < 5; ++i)
+	{
+		Loadouts[i] = NewObject<UMultiplayerLoadout>();
+	}
 };
 
 void UGISS_Multiplayer::InitializeUserAccountAttributes(UPARAM(ref)FBPUserOnlineAccount& AccountInfo)

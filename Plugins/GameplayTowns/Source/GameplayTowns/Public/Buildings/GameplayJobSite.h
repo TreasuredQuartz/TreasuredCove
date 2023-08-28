@@ -7,7 +7,7 @@
 #include "TownSystemInterface.h"
 #include "GameplayJobSite.generated.h"
 
-class UResourceSet;
+class UResourceComponent;
 class UTownSystemComponent;
 class UGameplayJob;
 class AGameplayTown;
@@ -81,27 +81,33 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Towns", meta = (AllowPrivateAccess = "true"))
 	UTownSystemComponent* TownSystem;
 
+	// Resources
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay|Towns", meta = (AllowPrivateAccess = "true"))
+	UResourceComponent* ResourceComponent;
+
+
 	// Resources Component
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Towns")
 	// UResourceSet* ResourceSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Towns|Jobs")
 	TArray<UGameplayJob*> Jobs;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Towns|Jobs")
-	uint8 WorkHours;
+	TArray<TSubclassOf<UGameplayJob>> JobClasses;
 
 private:
-	TMap<FName, float> Resources;
-	TMap<FName, float> ResourcesCost;
+	TMap<FName, float> ResourceCosts;
+	TArray<FRequest> Requests;
 
-	void AddToResources(FName Resource, float Amount);
-	void RemoveFromResources(FName Resource, float Amount);
+	TMap<FName, float> GetResources() const;
+	void AddToResource(FName Resource, float Amount);
+	void RemoveFromResource(FName Resource, float Amount);
 
 	virtual void RequestResource(AActor* Requester, FName ResourceType, float RequestAmount);
 	virtual void RequestResources(AActor* Requester, TMap<FName, float> InResources); 
 
 	void CheckRequests(bool bNewRequest);
 	void FulfillRequest(FRequest Request);
+
 public:
 	int CurrentNewRequestAmount;
 	int NewRequestLimit;
@@ -111,11 +117,13 @@ public:
 
 	TMap<FName, float> ResourcesNeeded;
 
+	TArray<FRequest> GetRequests() const;
+	virtual void AddRequest(FRequest Request);
+	virtual void RemoveRequest(FRequest Request);
+
 	virtual bool CanMakeRequest(AActor* Requester, FName ResourceType, float RequestAmount, float CurrencyPaid);
 	virtual bool CanMakeRequests(AActor* Requester, TMap<FName, float> InResources, float CurrencyPaid);
 
-	TArray<FRequest> Requests;
-
-	virtual void AddRequest(FRequest Request);
-	virtual void RemoveRequest(FRequest Request);
+public:
+	void InitializeJobs();
 };

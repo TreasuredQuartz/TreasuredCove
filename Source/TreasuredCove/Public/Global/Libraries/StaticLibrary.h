@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "KismetProceduralMeshLibrary.h"
 #include "BulletStruct.h"
 #include "ItemKeyStruct.h"
 #include "StaticLibrary.generated.h"
@@ -15,6 +14,9 @@ class TREASUREDCOVE_API UStaticLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "Get Mass Of Components", CompactNodeTitle = "Mass", Keywords = "mass"), Category = "Physics")
+	static float GetSummedMassOfComponents(const AActor* Actor);
+
 	static FName GetTagLeafName(const struct FGameplayTag& Tag);
 
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Equal FBulletStruct", CompactNodeTitle = "==", Keywords = "== equal"), Category = "Math")
@@ -28,25 +30,6 @@ public:
 
 	UFUNCTION(BlueprintPure, meta = (DisplayName = "Add FItemKey", CompactNodeTitle = "ADD", Keywords = "+ Add Addition add addition"), Category = "Math")
 	static FItemKey Addition_FItemKeyFItemKey(const FItemKey Item1, const FItemKey Item2);
-
-	static void HolePunchProceduralMesh(UProceduralMeshComponent* InProcMesh, FVector EnterPoint, FVector EnterNormal, FVector ExitPoint, float HoleRadius, EProcMeshSliceCapOption CapOption, UMaterialInterface* CapMaterial, int32 Steps);
-
-	static void DentProceduralMesh(UProceduralMeshComponent* InProcMesh, FVector Center, float Radius, float ExpFalloff);
-
-	/** Util that returns 1 if on positive side of plane, -1 if negative, or 0 if split by plane */
-	static int32 BoxPlaneCompareLimited(FBox InBox, const FPlane& InPlane, float Radius, FVector Center);
-
-	/** Take two static mesh verts and interpolate all values between them */
-	static struct FProcMeshVertex InterpolateVert(const FProcMeshVertex& V0, const FProcMeshVertex& V1, float Alpha);
-
-	/** Transform triangle from 2D to 3D static-mesh triangle. */
-	static void Transform2DPolygonTo3D(const struct FUtilPoly2D& InPoly, const FMatrix& InMatrix, TArray<FProcMeshVertex>& OutVerts, FBox& OutBox);
-	
-	/** Given a polygon, decompose into triangles. */
-	static bool TriangulatePoly(TArray<uint32>& OutTris, const TArray<FProcMeshVertex>& PolyVerts, int32 VertBase, const FVector& PolyNormal);
-
-	/** Util to slice a convex hull with a plane */
-	static void SliceConvexElem(const FKConvexElem& InConvex, const FPlane& SlicePlane, TArray<FVector>& OutConvexVerts);
 
 	/** Get Current Planet through Game State. Null if none or invalid game state cast. */
 	static TObjectPtr<UObject> GetCurrentPlanet(TObjectPtr<UObject> CallingObject);

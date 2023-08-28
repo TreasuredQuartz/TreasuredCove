@@ -12,13 +12,13 @@ void AGameplayResidence::ReduceFatigue(AActor* User)
 	switch (BeddingQuality)
 	{
 	case 0:
-		OtherTownSystem->AddResource("BadSleepQuality", 1);
+		// OtherTownSystem->AddResource("BadSleepQuality", 1);
 		break;
 	case 1:
-		OtherTownSystem->AddResource("CommonSleepQuality", 1);
+		// OtherTownSystem->AddResource("CommonSleepQuality", 1);
 		break;
 	case 2:
-		OtherTownSystem->AddResource("ExquisiteSleepQuality", 1);
+		// OtherTownSystem->AddResource("ExquisiteSleepQuality", 1);
 		break;
 	}
 }
@@ -30,13 +30,13 @@ void AGameplayResidence::ReduceHunger(AActor* User)
 	switch (FoodQuality)
 	{
 	case 0:
-		OtherTownSystem->AddResource("BadEatQuality", 1);
+		// OtherTownSystem->AddResource("BadEatQuality", 1);
 		break;
 	case 1:
-		OtherTownSystem->AddResource("CommonEatQuality", 1);
+		// OtherTownSystem->AddResource("CommonEatQuality", 1);
 		break;
 	case 2:
-		OtherTownSystem->AddResource("ExquisiteEatQuality", 1);
+		// OtherTownSystem->AddResource("ExquisiteEatQuality", 1);
 		break;
 	}
 }

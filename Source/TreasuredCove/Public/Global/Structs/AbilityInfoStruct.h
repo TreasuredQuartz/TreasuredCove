@@ -93,23 +93,18 @@ struct FAbilityInfo
 	GENERATED_BODY()
 
 	FAbilityInfo();
-	FAbilityInfo(float InCoolDown, float InCost, EAbilityCostType InAbilityCostType, 
-		UMaterialInterface* InUIMaterial, TSubclassOf<UGameplayAbilityBase> InAbilities, 
-		TArray<TSubclassOf<UGameplayAbilityBase>> InRequiredAbilities,
-		TArray<FRequiredAttribute> InRequiredAttributes, 
-		FName InAbilityName, FText InAbilityDescription);
+	FAbilityInfo(TSubclassOf<UGameplayAbilityBase> InAbilityClass, FName InAbilityName, FText InAbilityDescription, UTexture2D* InTexture,
+		float InCoolDown, float InCost, EAbilityCostType InAbilityCostType);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	TSubclassOf<UGameplayAbilityBase> Class;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	FString Category;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
 	FName Name;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
+	TSubclassOf<UGameplayAbilityBase> Class;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
 	FText Description;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	UMaterialInterface* UIMaterial;
+	UTexture2D* Texture;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
 	float Cooldown;
@@ -118,9 +113,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
 	EAbilityCostType CostType;
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	TArray<TSubclassOf<UGameplayAbilityBase>> RequiredAbilities;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	TArray<FRequiredAttribute> RequiredAttributes;
+	FString Category;
 };
 

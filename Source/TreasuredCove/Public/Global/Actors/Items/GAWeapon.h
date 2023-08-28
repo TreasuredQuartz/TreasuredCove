@@ -92,6 +92,12 @@ public:
 	void OnPhysicsSleep(UPrimitiveComponent* SleepingComponent, FName BoneName);
 
 public:
+	//
+	virtual void OnPickedUp_Implementation() override;
+	//
+	virtual void OnDropped_Implementation() override;
+
+public:
 	FItemKey GetPickup_Implementation()
 	{
 		return FItemKey(Name, 1);

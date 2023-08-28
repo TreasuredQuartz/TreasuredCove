@@ -33,14 +33,15 @@ void UPauseAreaComponent::EnterPauseArea_Client_Implementation()
 			return;
 
 		FVector Location = GetOwner()->GetActorLocation();
-		Location.Z -= 100000;
+		Location.Z += 500;
 		const FTransform spawnTransform = FTransform(FRotator::ZeroRotator, Location);
-		AGAPauseStudioPawn* NewPauseAreaActor = GetWorld()->SpawnActorDeferred<AGAPauseStudioPawn>(PauseAreaClass, spawnTransform, GetOwner());
+		AGAPauseStudioPawn* NewPauseAreaActor = GetWorld()->SpawnActorDeferred<AGAPauseStudioPawn>(PauseAreaClass, spawnTransform, GetOwner(), nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
 		// Possible to get bad spawns and this checks that we did in fact spawn
 		if (!NewPauseAreaActor)
 			return;
 
+		NewPauseAreaActor->SetActorEnableCollision(false);
 		NewPauseAreaActor->OnDestroyed.AddDynamic(this, &UPauseAreaComponent::OnPauseAreaDestroyed);
 		UGameplayStatics::FinishSpawningActor(NewPauseAreaActor, spawnTransform);
 
@@ -52,7 +53,7 @@ void UPauseAreaComponent::EnterPauseArea_Client_Implementation()
 
 void UPauseAreaComponent::ExitPauseArea()
 {
-	PauseArea->OnExit();
+	if (PauseArea) PauseArea->OnExit();
 }
 
 void UPauseAreaComponent::OnPauseAreaDestroyed(AActor* DestroyedActor)

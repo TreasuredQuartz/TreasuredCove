@@ -93,10 +93,10 @@ public:
 
 	//~ Begin APhysicsVolume Interface
 	// Called when actor enters a volume
-	virtual void ActorEnteredVolume(class AActor* Other);
+	virtual void ActorEnteredVolume(class AActor* Other) override;
 
 	// Called when actor leaves a volume, Other can be NULL
-	virtual void ActorLeavingVolume(class AActor* Other);
+	virtual void ActorLeavingVolume(class AActor* Other) override;
 	//~ End APhysicsVolume Interface
 
 	//~ Begin PVolumeUnderwater Interface

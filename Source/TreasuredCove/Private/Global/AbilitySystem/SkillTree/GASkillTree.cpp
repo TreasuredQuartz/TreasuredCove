@@ -4,42 +4,37 @@
 #include "Global/AbilitySystem/SkillTree/GASkillTree.h"
 #include "GASkillTreeNode.h"
 
-UGASkillTree::UGASkillTree() : Root(CreateDefaultSubobject<UGASkillTreeNode>(TEXT("Root")))
+UGASkillTree::UGASkillTree()
 {
+	NodeType = UGASkillTreeNode::StaticClass();
 }
 
 void UGASkillTree::Initialize()
 {
-	BindOnSkillAquiredToAll(Root);
+	BindOnSkillAquiredToAll();
 }
 
-int UGASkillTree::GetHeight()
+void UGASkillTree::BindOnSkillAquiredToAll()
 {
-	return 0;
+	for (UGenericGraphNode* Node : AllNodes)
+		if (UGASkillTreeNode* SkillNode = Cast<UGASkillTreeNode>(Node))
+			BindOnSkillAquired(SkillNode);
 }
 
-void UGASkillTree::BindOnSkillAquiredToAll(UGASkillTreeNode* Parent)
+void UGASkillTree::BindOnSkillAquired(UGASkillTreeNode* InNode)
 {
 	FScriptDelegate Del = FScriptDelegate();
 	Del.BindUFunction(this, FName("OnSkillAquired"));
-	Parent->OnRequestAquire.Add(Del);
-
-	if (!Parent->NextNodes.IsEmpty())
-	{
-		for (UGASkillTreeNode* Node : Parent->NextNodes)
-		{
-			BindOnSkillAquiredToAll(Node);
-		}
-	}
+	InNode->OnRequestAquire.Add(Del);
 }
 
-void UGASkillTree::OnSkillAquired(FString Category, UGASkillTreeNode* Node)
+void UGASkillTree::OnSkillAquired(FString Category, UGASkillTreeNode* Node, uint8 SkillIndex)
 {
 	if (Points > 0)
 	{
 		--Points;
 		Node->Aquired();
-		OnAquired.Broadcast(Node->GetAbility());
+		OnAquired.Broadcast(SkillTable->FindRow<FSkillInfoRow>(Node->GetAbilityName(SkillIndex), "Aquiring Skill!")->Class);
 	}
 }
 

@@ -41,7 +41,7 @@ public:
 	FVertexData() : Position(FVector::ZeroVector),
 		Normal(FVector::ZeroVector),
 		UVPosition(FVector2D::ZeroVector),
-		Color(FColor::Black)
+		Color(FLinearColor::Black)
 	{}
 
 public:
@@ -52,7 +52,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Meta = (ClampMin = 0, ClampMax = 1))
 	FVector2D UVPosition;
 	UPROPERTY(EditDefaultsOnly)
-	FColor Color;
+	FLinearColor Color;
 };
 
 USTRUCT()

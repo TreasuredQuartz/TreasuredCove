@@ -6,6 +6,8 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "GACharacter.h"
 
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values for this component's properties
 UMovementTrailComponent::UMovementTrailComponent()
 {
@@ -16,6 +18,7 @@ UMovementTrailComponent::UMovementTrailComponent()
 	// ...
 	ComponentTags.Add( FName("GrassAffector") );
 	ComponentTags.Add( FName("WaterAffector") );
+	ComponentTags.Add( FName("SnowAffector")  );
 
 	MaxActors = 50;
 	MinMoveDistance = 50.0;
@@ -28,11 +31,6 @@ void UMovementTrailComponent::SetSpawnActors(bool InShouldSpawn)
 
 	if (!bShouldSpawn)
 	{
-		for (const auto& Actor : TrailActors)
-		{
-			Actor->Destroy();
-		}
-
 		TrailActors.Empty();
 	}
 }
@@ -57,10 +55,28 @@ void UMovementTrailComponent::TickComponent(float DeltaTime, ELevelTick TickType
 			TrailActors.RemoveAt(0);
 		}
 
-		AMovementTrailActor* NewActor =
-			NewObject<AMovementTrailActor>();
+		if (!TrailClass)
+			return;
+
+		FTransform SpawnTransform = FTransform(GetOwner()->GetActorRotation(), GetOwner()->GetActorLocation(), FVector(1, 1, 1));
+		AMovementTrailActor* NewActor = GetWorld()->SpawnActorDeferred<AMovementTrailActor>(TrailClass, SpawnTransform, GetOwner(), GetOwner<APawn>(), ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
+		if (!NewActor)
+			return;
+
+		NewActor->OnDestroyed.AddDynamic(this, &UMovementTrailComponent::OnTrailDestroyed);
+
+		UGameplayStatics::FinishSpawningActor(NewActor, SpawnTransform);
 
 		TrailActors.Add(NewActor);
 	}
+}
+
+void UMovementTrailComponent::OnTrailDestroyed(AActor* DestroyedActor)
+{
+	if (!DestroyedActor || TrailActors.IsEmpty())
+		return;
+
+	TrailActors.Pop();
 }
 

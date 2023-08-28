@@ -11,7 +11,7 @@ class APlayerState;
 class AGameplayVoxel;
 class UBoxComponent;
 
-#define CHECK_RADIUS(x, y, z) FIntVector((x - PlayerCoords.X), (y - PlayerCoords.Y), (z - PlayerCoords.Z)).Size() < (ChunkSize * RenderRange)
+#define CHECK_RADIUS(x, y, z) FIntVector((x - PlayerCoords.X), (y - PlayerCoords.Y), (z - PlayerCoords.Z)).Size() <= (ChunkSize * RenderRange)
 
 UCLASS()
 class GAMEPLAYTOWNS_API AGameplayManager : public AActor
@@ -32,43 +32,43 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UBoxComponent* PlayArea;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager|Settings")
 	int32 RenderRange;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager|Settings")
 	int32 ChunkLineElements;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager|Settings")
 	int32 ChunkZElements;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager|Settings")
 	int32 VoxelSize;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager|Settings")
 	int32 RandomSeed;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager|Settings")
 	bool bIsActive;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager|Settings")
 	bool bUsePlayerPosition = false;
 	bool bConstructionDoOnce = false;
 
 public:
-	UPROPERTY(Editanywhere, BlueprintReadWrite)
+	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Gameplay|Manager")
 	TArray<class APlayerState*> UserArray;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager")
 	TSubclassOf<AGameplayVoxel> VoxelClass;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Gameplay|Manager")
 	int32 ChunkSize;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Gameplay|Manager")
 	int32 ChunkSizeHalf;
 
 	// Player Chunk Coordinate
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Gameplay|Manager")
 	FIntVector ActiveChunkCoords;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager")
 	TArray<FIntVector> ChunkCoords;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager")
 	FIntVector PlayerCoords;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Manager")
 	TArray<AGameplayVoxel*> Chunks;
 protected:
 	// Called when the game starts or when spawned
@@ -81,7 +81,7 @@ public:
 	// Automatically adds new actor to chunks array
 	// if successful.
 	UFUNCTION(BlueprintCallable, Category = "Gameplay|Manager")
-	void AddVoxelActor(FVector VoxelSpawnLocation, FIntVector inVoxelIndex, int32 CurrentLOD);
+	virtual AGameplayVoxel* AddVoxelActor(FVector VoxelSpawnLocation, FIntVector inVoxelIndex, int32 CurrentLOD);
 	UFUNCTION(BlueprintCallable, Category="Gameplay|Manager")
 	virtual void AddChunk();
 	void RemoveChunk();

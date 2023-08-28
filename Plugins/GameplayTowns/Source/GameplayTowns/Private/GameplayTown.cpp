@@ -4,6 +4,7 @@
 #include "GameplayTownState.h"
 #include "GameplayJobSite.h"
 #include "GameplayResidence.h"
+#include "TownSystemComponent.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
@@ -20,14 +21,23 @@ void AGameplayTown::BeginPlay()
 	Super::BeginPlay();
 
 	FTransform StateTransform = GetTransform();
-	TownState = GetWorld()->SpawnActorDeferred<AGameplayTownState>(TownStateClass, StateTransform);
-	
+	TownState = GetWorld()->SpawnActorDeferred<AGameplayTownState>(TownStateClass, StateTransform, this, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+	if (TownState)
+	{
+		TownState->SetTown(this);
+		UGameplayStatics::FinishSpawningActor(TownState, StateTransform);
+	}
 }
 
 //
 void AGameplayTown::UpdateResources()
 {
-	
+	Resources;
+	for (AGameplayJobSite* JobSite : JobSites)
+	{
+		// JobSite->Resource;
+		continue;
+	}
 }
 
 

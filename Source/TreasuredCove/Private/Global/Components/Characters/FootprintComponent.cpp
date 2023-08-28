@@ -35,10 +35,8 @@ void UFootprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	FootprintCheck();
 }
 
-void UFootprintComponent::AddFootprint_Client_Implementation(const FVector& WorldLocation, int PhysSurfaceType)
+void UFootprintComponent::AddFootprint(const FVector& WorldLocation, int PhysSurfaceType)
 {
-	// UE_LOG(LogTemp, Warning, TEXT("[Footprint Component] Add Footprint."));
-
 	if (!FootprintActorClass)
 		return;
 
@@ -51,6 +49,7 @@ void UFootprintComponent::AddFootprint_Client_Implementation(const FVector& Worl
 	NewFootprint->OnDestroyed.AddDynamic(this, &UFootprintComponent::OnFootprintDestroyed);
 	NewFootprint->SetSurfaceType(PhysSurfaceType);
 	NewFootprint->SetFootprintType(CurrentFootstep);
+	NewFootprint->SetOwner(GetOwner());
 
 	UGameplayStatics::FinishSpawningActor(NewFootprint, SpawnTransform);
 
@@ -81,12 +80,11 @@ void UFootprintComponent::FootprintCheck()
 			if (DistanceWalked > FootstepDistance)
 			{
 				DistanceWalked = 0;
-				AddFootprint_Client(GetOwner()->GetActorLocation() + FootprintLocations[CurrentFootstep], UGameplayStatics::GetSurfaceType(OwnerCharacterMovement->CurrentFloor.HitResult));
 
-				if (FootprintLocations.Num() <= CurrentFootstep)
-				{
+				if (CurrentFootstep >= FootprintLocations.Num())
 					CurrentFootstep = 0;
-				}
+
+				AddFootprint(GetOwner()->GetActorLocation() + FootprintLocations[CurrentFootstep], OwnerCharacterMovement->CurrentFloor.bBlockingHit ? UGameplayStatics::GetSurfaceType(OwnerCharacterMovement->CurrentFloor.HitResult) : EPhysicalSurface::SurfaceType1);
 			}
 		}
 		else

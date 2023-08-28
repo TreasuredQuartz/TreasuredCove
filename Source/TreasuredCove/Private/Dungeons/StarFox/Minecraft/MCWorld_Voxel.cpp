@@ -1341,7 +1341,7 @@ void AMCWorld_Voxel::UpdateMesh()
 					TArray<int32>& Triangles = MeshSections[MeshIndex].Triangles;
 					TArray<FVector>& Normals = MeshSections[MeshIndex].Normals;
 					TArray<FVector2D>& UVs = MeshSections[MeshIndex].UVs;
-					TArray<FColor>& VertexColors = MeshSections[MeshIndex].VertexColors;
+					TArray<FLinearColor>& VertexColors = MeshSections[MeshIndex].VertexColors;
 					int32 ElementID = MeshSections[MeshIndex].ElementID;
 
 					// Vertices, Faces, UVs, Normals generator

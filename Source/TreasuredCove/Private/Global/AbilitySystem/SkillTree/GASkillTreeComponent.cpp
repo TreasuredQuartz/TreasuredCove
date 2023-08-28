@@ -27,7 +27,7 @@ void UGASkillTreeComponent::BeginPlay()
 	// ...
 	IAbilitySystemInterface* Owner = Cast<IAbilitySystemInterface>(GetOwner());
 	if (Owner) AbilityComponent = Owner->GetAbilitySystemComponent();
-	if (!InitialSkillTreeClasses.IsEmpty())
+	/*if (!InitialSkillTreeClasses.IsEmpty())
 	{
 		TArray<FString> Keys;
 		InitialSkillTreeClasses.GetKeys(Keys);
@@ -38,7 +38,7 @@ void UGASkillTreeComponent::BeginPlay()
 				AddSkillList(Key, *Class);
 			}
 		}
-	}
+	}*/
 }
 
 
@@ -82,7 +82,10 @@ void UGASkillTreeComponent::AddSkillList(FString Category, TSubclassOf<UGASkillT
 		SkillTree->Initialize();
 		SkillTree->OnAquired.AddDynamic(this, &UGASkillTreeComponent::AquireSkill);
 		SkillTrees.Add(Category, SkillTree);
-		UE_LOG(LogTemp, Warning, TEXT("New Skill Tree Obtained!"));
+		
+		
+		// Debugging
+		/*UE_LOG(LogTemp, Warning, TEXT("New Skill Tree Obtained!"));
 
 		if (SkillTree->Root)
 		{
@@ -92,6 +95,6 @@ void UGASkillTreeComponent::AddSkillList(FString Category, TSubclassOf<UGASkillT
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Next Nodes is empty!"));
 			}
-		}
+		}*/
 	}
 }

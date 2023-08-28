@@ -2,60 +2,90 @@
 
 
 #include "Global/AbilitySystem/SkillTree/GASkillTreeNode.h"
+#include "GASkillTree.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+
+#define LOCTEXT_NAMESPACE "SkillTreeNode"
+
+UGASkillTreeNode::UGASkillTreeNode()
+{
+
+}
+
+void UGASkillTreeNode::Initialize(UGenericGraph* InGraph)
+{
+	UGenericGraphNode::Initialize(InGraph);
+	InitializeItems();
+}
+
+void UGASkillTreeNode::InitializeItems()
+{
+	if (!Tier.Skills.IsEmpty())
+	{
+		UGASkillTree* SkillTree = Cast<UGASkillTree>(GetGraph());
+
+		if (SkillTree && SkillTree->SkillTable)
+		{
+			Items.Empty(Tier.Skills.Num());
+			for (FSkillInfo Skill : Tier.Skills)
+			{
+				UTexture2D* Texture = nullptr;
+				TSharedPtr<FSlateBrush> Brush = MakeShared<FSlateBrush>();
+				if (FSkillInfoRow* Info = SkillTree->SkillTable->FindRow<FSkillInfoRow>(Skill.AbilityName, "Initialize Skill Icons On Startup"))
+					Texture = Info->Texture;
+				else
+					Brush->TintColor = FSlateColor(FLinearColor(1.0, 1.0, 1.0, 0.f));
+
+				Brush->SetResourceObject(Texture);
+				Brush->SetImageSize(FVector2D(100, 100));
+				Items.Add(Brush);
+			}
+		}
+	}
+}
 
 #if WITH_EDITOR
 void UGASkillTreeNode::PostEditChangeChainProperty(struct FPropertyChangedChainEvent& e)
 {
 	// Guard Against null properties
 	if (e.Property == NULL) return;
-	/*
 	FName MemberPropertyName = e.MemberProperty->GetFName();
 	FName PropertyName = e.Property->GetFName();
 
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UGASkillTreeNode, NextNodes))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UGASkillTreeNode, Tier) 
+		|| PropertyName == GET_MEMBER_NAME_CHECKED(FGASkillTreeTier, Skills)
+		|| PropertyName == GET_MEMBER_NAME_CHECKED(FSkillInfo, AbilityName))
 	{
-		switch (e.ChangeType)
-		{
-		case EPropertyChangeType::ArrayAdd:
-			NextNodes[NextNodes.Num() - 1] = NewObject<UGASkillTreeNode>();
-			break;
-		}
+		Items.Empty(Tier.Skills.Num());
+		InitializeItems();
+
+		OnItemsUpdated.ExecuteIfBound();
+		UE_LOG(LogTemp, Warning, TEXT("Property Name: %s, Member Property Name: %s"), *PropertyName.ToString(), *MemberPropertyName.ToString());
 	}
-	*/
+
+
 	Super::PostEditChangeChainProperty(e);
 }
 #endif
 
-TArray<UGASkillTreeNode*> UGASkillTreeNode::GetAllNodes()
+FText UGASkillTreeNode::GetDescription_Implementation() const
 {
-	TArray<UGASkillTreeNode*> Value;
+	return LOCTEXT("NodeDesc", "Skill Tree Node");
+}
 
-	if (!NextNodes.IsEmpty())
-	{
-		for (int i = 0; i < NextNodes.Num(); ++i)
-		{
-			Value.Append(NextNodes[i]->GetAllNodes());
-		}
-	}
-	else
-	{
-		Value.Add(this);
-	}
+const FSlateBrush* UGASkillTreeNode::GetInnerObjectIcon(int32 Index) const
+{
+	return Items[Index].Get();
+}
 
-	return Value;
+int32 UGASkillTreeNode::GetInnerObjectNum() const
+{
+	return Tier.Skills.Num();
 }
 
 void UGASkillTreeNode::Aquired()
 {
 	SetStatus(EAbilityAquiredStatus::Aquired);
-
-	if (!NextNodes.IsEmpty())
-	{
-		for (UGASkillTreeNode* nextNode : NextNodes)
-		{
-			nextNode->SetStatus(EAbilityAquiredStatus::Unlocked);
-		}
-	}
 
 	OnAquired.Broadcast();
 }
@@ -73,3 +103,5 @@ void UGASkillTreeNode::Locked()
 
 	OnLocked.Broadcast();
 }
+
+#undef LOCTEXT_NAMESPACE

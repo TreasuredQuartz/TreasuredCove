@@ -7,21 +7,23 @@ public class TreasuredCove : ModuleRules
 	public TreasuredCove(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
-		PrivateDependencyModuleNames.AddRange(new string[] 
+
+        PrivateDependencyModuleNames.AddRange(new string[] 
 		{ 
 			"AdvancedSessions", 
 			"AdvancedSteamSessions",
 			"AIModule",
+			"CableComponent",
 			"Core", 
 			"CoreUObject",
             "ChaosVehicles",
-            "Engine", 
-			"InputCore", 
+            "Engine",
+            "EnhancedInput",
+            "InputCore", 
 			"GameplayAbilities",
 			"GameplayTags",
 			"GameplayTasks",
-			"Networking",
+            "Networking",
 			"OnlineSubsystem", 
 			"OnlineSubsystemUtils",
 			"RHI", 
@@ -39,14 +41,15 @@ public class TreasuredCove : ModuleRules
 			"RuntimeMeshComponent",
 			"GameplayTowns", 
 			"PhysXFlyingVehicles", 
-			"DlgSystem", 
-			"UnrealEd", 
-			"PlayFab",
+			"DlgSystem",
+            "GenericGraphRuntime",
+            "UnrealEd",
+            "PlayFab",
 			"SenseSystem"
 		});
 
 		// Uncomment if you are using Slate UI
-		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 		
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.AddRange(new string[] {  });

@@ -73,6 +73,20 @@ void AGAWeapon::OnPhysicsSleep(UPrimitiveComponent* SleepingComponent, FName Bon
 	Box->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
+void AGAWeapon::OnPickedUp_Implementation()
+{
+	Super::OnPickedUp_Implementation();
+
+	// Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
+void AGAWeapon::OnDropped_Implementation()
+{
+	Super::OnDropped_Implementation();
+
+	// Box->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+}
+
 //
 void AGAWeapon::GetItemInfo(FGAItemInfo& Info)
 {

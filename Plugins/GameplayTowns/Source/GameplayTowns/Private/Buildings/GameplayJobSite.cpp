@@ -1,40 +1,37 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GameplayJobSite.h"
+#include "GameplayJob.h"
 #include "TownSystemComponent.h"
+#include "ResourceComponent.h"
 
 // Sets default values
 AGameplayJobSite::AGameplayJobSite(const FObjectInitializer& ObjectInitializer)
 {
+	
 }
 
 // Called when the game starts or when spawned
 void AGameplayJobSite::BeginPlay()
 {
 	Super::BeginPlay();
+
 	
-	for (UGameplayJob* Job : Jobs)
-	{
-		Job = NewObject<UGameplayJob>();
-	}
 }
 
-void AGameplayJobSite::AddToResources(FName Resource, float Amount)
+void AGameplayJobSite::AddToResource(FName Resource, float Amount)
 {
-	if (Resources.Contains(Resource))
-	{
-		float NewAmount = Resources[Resource] + Amount;
-		Resources.Add(Resource, NewAmount);
-	}
+	ResourceComponent->GetResourceSet()->AddToResource(Resource, Amount);
 }
 
-void AGameplayJobSite::RemoveFromResources(FName Resource, float Amount)
+void AGameplayJobSite::RemoveFromResource(FName Resource, float Amount)
 {
-	if (Resources.Contains(Resource))
-	{
-		float NewAmount = Resources[Resource] - Amount;
-		Resources.Add(Resource, NewAmount);
-	}
+	ResourceComponent->GetResourceSet()->RemoveFromResource(Resource, Amount);
+}
+
+TMap<FName, float> AGameplayJobSite::GetResources() const
+{
+	return ResourceComponent->GetResourceSet()->GetAllResources();
 }
 
 void AGameplayJobSite::AddRequest(FRequest Request)
@@ -71,10 +68,9 @@ bool AGameplayJobSite::CanMakeRequest(AActor* Requester, FName ResourceType, flo
 {
 	float CurrencyRequired = 0;
 
-	if (Resources.Contains(ResourceType))
+	if (ResourceCosts.Contains(ResourceType))
 	{
-		if (ResourcesCost.Contains(ResourceType))
-			CurrencyRequired = ResourcesCost[ResourceType];
+		CurrencyRequired = ResourceCosts[ResourceType];
 
 		if (CurrencyRequired <= CurrencyOffered)
 		{
@@ -83,7 +79,7 @@ bool AGameplayJobSite::CanMakeRequest(AActor* Requester, FName ResourceType, flo
 		}
 	}
 
-	return Resources.Contains(ResourceType);
+	return ResourceCosts.Contains(ResourceType);
 }
 
 bool AGameplayJobSite::CanMakeRequests(AActor* Requester, TMap<FName, float> InResources, float CurrencyOffered)
@@ -98,8 +94,8 @@ bool AGameplayJobSite::CanMakeRequests(AActor* Requester, TMap<FName, float> InR
 	{
 		bSucceeded = CanMakeRequest(Requester, ResourceType, InResources[ResourceType], CurrencyOffered);
 
-		if(ResourcesCost.Contains(ResourceType))
-			CurrencyRequired += ResourcesCost[ResourceType];
+		if(ResourceCosts.Contains(ResourceType))
+			CurrencyRequired += ResourceCosts[ResourceType];
 
 		if (!bSucceeded)
 		{
@@ -122,6 +118,16 @@ bool AGameplayJobSite::CanMakeRequests(AActor* Requester, TMap<FName, float> InR
 	}
 
 	return bSucceeded;
+}
+
+void AGameplayJobSite::InitializeJobs()
+{
+	for (TSubclassOf<UGameplayJob> JobClass : JobClasses)
+	{
+		Jobs.Add(
+			NewObject<UGameplayJob>(this, JobClass)
+		);
+	}
 }
 
 void AGameplayJobSite::CheckRequests(bool bNewRequest)
@@ -148,17 +154,17 @@ void AGameplayJobSite::CheckRequests(bool bNewRequest)
 				{
 					float RequestAmount = Request.RequestedResources[RequestType];
 
-					if (!(Resources[RequestType] >= RequestAmount))
+					if (!(ResourceCosts[RequestType] >= RequestAmount))
 					{
 						bCanFulfillRequest = false;
 
 						if (NewResourcesNeeded.Contains(RequestType))
 						{
-							NewResourcesNeeded[RequestType] += RequestAmount - Resources[RequestType];
+							// NewResourcesNeeded[RequestType] += RequestAmount - Resources[RequestType];
 						}
 						else
 						{
-							NewResourcesNeeded.Add(RequestType, RequestAmount - Resources[RequestType]);
+							// NewResourcesNeeded.Add(RequestType, RequestAmount - Resources[RequestType]);
 						}
 					}
 				}
@@ -169,7 +175,7 @@ void AGameplayJobSite::CheckRequests(bool bNewRequest)
 				{
 					float RequestAmount = Request.RequestedResources[RequestType];
 
-					if (!(Resources[RequestType] >= RequestAmount))
+					if (!(ResourceCosts[RequestType] >= RequestAmount))
 					{
 						bCanFulfillRequest = false;
 					}
@@ -205,8 +211,8 @@ void AGameplayJobSite::FulfillRequest(FRequest Request)
 
 		UTownSystemComponent* OtherTownSystem = Cast<ITownSystemInterface>(Request.RequestOwner)->GetTownSystemComponent();
 
-		OtherTownSystem->AddResource(RequestType, RequestAmount);
+		// OtherTownSystem->AddResource(RequestType, RequestAmount);
 		
-		Resources[RequestType] -= RequestAmount;
+		ResourceCosts[RequestType] -= RequestAmount;
 	}
 }

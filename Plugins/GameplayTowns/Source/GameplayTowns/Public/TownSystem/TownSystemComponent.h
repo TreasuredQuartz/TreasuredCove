@@ -38,61 +38,6 @@ public:
 
 	FVector DesiredLocation;
 
-	TMap<FName, float> Resources;
-
-	UFUNCTION(BlueprintCallable, Category = "Gameplay|Towns")
-	void AddResource(FName InResourceType, float InResourceAmount)
-	{
-		if (Resources.Contains(InResourceType))
-		{
-			Resources[InResourceType] += InResourceAmount;
-		}
-		else
-		{
-			Resources.Add(InResourceType, InResourceAmount);
-		}
-
-		UpdateResources.Broadcast(InResourceType, InResourceAmount, true);
-	}
-	UFUNCTION(BlueprintCallable, Category = "Gameplay|Towns")
-	void RemoveResource(FName InResourceType, float InResourceAmount)
-	{
-		if (Resources.Contains(InResourceType))
-		{
-			Resources[InResourceType] -= InResourceAmount;
-		}
-		else
-		{
-			Resources.Add(InResourceType, -InResourceAmount);
-		}
-	}
-	UFUNCTION(BlueprintCallable, Category = "Gameplay|Towns")
-	void AddResources(TMap<FName, float> InResources)
-	{
-		TArray<FName> Keys;
-		InResources.GetKeys(Keys);
-		for (FName ResourceType : Keys)
-		{
-			AddResource(ResourceType, InResources[ResourceType]);
-		}
-	}
-	UFUNCTION(BlueprintCallable, Category = "Gameplay|Towns")
-	void RemoveResources(TMap<FName, float> InResources)
-	{
-
-		TArray<FName> Keys;
-		InResources.GetKeys(Keys);
-		for (FName ResourceType : Keys)
-		{
-			RemoveResource(ResourceType, InResources[ResourceType]);
-		}
-	}
-
-	TMap<FName, float> GetResources()
-	{
-		return Resources;
-	}
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Towns")
 	AGameplayTown* HomeTown;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Towns")

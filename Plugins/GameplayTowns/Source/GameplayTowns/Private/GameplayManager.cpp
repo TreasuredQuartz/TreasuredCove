@@ -113,7 +113,7 @@ void AGameplayManager::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AGameplayManager::AddVoxelActor(FVector VoxelSpawnLocation, FIntVector VoxelIndex, int32 CurrentLOD)
+AGameplayVoxel* AGameplayManager::AddVoxelActor(FVector VoxelSpawnLocation, FIntVector VoxelIndex, int32 CurrentLOD)
 {
 	if (GetWorld())
 	{
@@ -134,9 +134,12 @@ void AGameplayManager::AddVoxelActor(FVector VoxelSpawnLocation, FIntVector Voxe
 			// Register
 			UGameplayStatics::FinishSpawningActor(NewVoxel, FTransform(VoxelSpawnLocation));
 			NewVoxel->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
-			
+
+			return NewVoxel;
 		}
 	}
+
+	return nullptr;
 }
 
 static int32 LODDistances[4] = {
@@ -149,6 +152,13 @@ static int32 LODDistances[4] = {
 void AGameplayManager::AddChunk()
 {
 	// UE_LOG(LogTemp, Warning, TEXT("Adding Chunk!"));
+
+
+	if (RenderRange <= 0)
+	{
+		AddVoxelActor(FVector(ActiveChunkCoords), ActiveChunkCoords, 1);
+		return;
+	}
 
 	// Z
 	int32 z = 0;

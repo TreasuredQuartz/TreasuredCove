@@ -10,5 +10,13 @@ public class TreasuredCoveTarget : TargetRules
 		Type = TargetType.Game;
 
 		ExtraModuleNames.AddRange( new string[] { "TreasuredCove" } );
-	}
+
+        if (bBuildEditor)
+        {
+            ExtraModuleNames.AddRange(new string[]
+            {
+                "TreasuredCoveEditor"
+            });
+        }
+    }
 }

@@ -14,6 +14,8 @@ UCLASS(Blueprintable)
 class TREASUREDCOVE_API UMultiplayerLoadout : public UObject
 {
 	GENERATED_BODY()
+public:
+	UMultiplayerLoadout();
 	
 private:
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")

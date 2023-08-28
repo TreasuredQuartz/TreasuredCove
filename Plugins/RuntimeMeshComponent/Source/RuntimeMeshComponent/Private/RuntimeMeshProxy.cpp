@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "RuntimeMeshComponentPlugin.h"
 #include "RuntimeMesh.h"
+#include "RHICommandList.h"
 
 
 DECLARE_CYCLE_STAT(TEXT("RuntimeMeshProxy - Initialize LDOs - RenderThread"), STAT_RuntimeMeshProxy_InitializeLODs_RT, STATGROUP_RuntimeMesh);

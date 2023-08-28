@@ -143,43 +143,51 @@ void AGAAIController::DecreaseHunger()
 
 void AGAAIController::UpdateCurrentBuilding(AGameplayBuilding* CurrentBuilding)
 {
-	Blackboard->SetValueAsObject(CurrentBuildingKey, CurrentBuilding);
+	if (Blackboard)
+		Blackboard->SetValueAsObject(CurrentBuildingKey, CurrentBuilding);
 }
 
 void AGAAIController::UpdateCurrentEnemy(AActor* NewEnemy)
 {
 	CurrentEnemy = NewEnemy;
-	Blackboard->SetValueAsObject(CurrentEnemyKey, CurrentEnemy);
+	if (Blackboard)
+		Blackboard->SetValueAsObject(CurrentEnemyKey, CurrentEnemy);
 }
 
 void AGAAIController::UpdateDesiredLocation(const FVector& DesiredLocation)
 {
-	Blackboard->SetValueAsVector(DesiredLocationKey, DesiredLocation);
+	if (Blackboard)
+		Blackboard->SetValueAsVector(DesiredLocationKey, DesiredLocation);
 }
 
 void AGAAIController::UpdateHeardLocation(const FVector& HeardLocation)
 {
-	Blackboard->SetValueAsVector(HeardLocationKey, HeardLocation);
+	if (Blackboard)
+		Blackboard->SetValueAsVector(HeardLocationKey, HeardLocation);
 }
 
 void AGAAIController::UpdateIsBusy(bool bIsBusy)
 {
-	Blackboard->SetValueAsBool(IsBusyKey, bIsBusy);
+	if (Blackboard)
+		Blackboard->SetValueAsBool(IsBusyKey, bIsBusy);
 }
 
 void AGAAIController::UpdateHeardSomething(bool bHeardSomething)
 {
-	Blackboard->SetValueAsBool(HeardSomethingKey, bHeardSomething);
+	if (Blackboard)
+		Blackboard->SetValueAsBool(HeardSomethingKey, bHeardSomething);
 }
 
 void AGAAIController::UpdateTargetBuilding(AGameplayBuilding* TargetBuilding)
 {
-	Blackboard->SetValueAsObject(TargetBuildingKey, TargetBuilding);
+	if (Blackboard)
+		Blackboard->SetValueAsObject(TargetBuildingKey, TargetBuilding);
 }
 
 void AGAAIController::UpdateWarPartyRollKey(bool bIsFollower)
 {
-	Blackboard->SetValueAsBool(IsFollowerKey, bIsFollower);
+	if (Blackboard)
+		Blackboard->SetValueAsBool(IsFollowerKey, bIsFollower);
 }
 
 //----- Sensory Responses -----//
@@ -304,14 +312,17 @@ void AGAAIController::OnForgetSense(const USensorBase* Sensor, int32 Channel, co
 	if (Sensor == nullptr || SensedStimulus.IsEmpty())
 		return;
 
-	for (int i = 0; i < SensedStimulus.Num(); ++i)
+	int Num = SensedStimulus.Num();
+
+	for (int i = 0; i < Num; ++i)
 	{
 		if (!SensedStimulus.IsValidIndex(i))
 			continue;
 
 		const FSensedStimulus& Stimulus = SensedStimulus[i];
 
-		if (!Stimulus.StimulusComponent.IsValid()) continue;
+		if (!Stimulus.StimulusComponent.IsValid()) 
+			continue;
 
 		if (Sensor->SensorTag == FName("SensorSight"))
 		{

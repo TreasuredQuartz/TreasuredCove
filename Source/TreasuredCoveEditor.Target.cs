@@ -9,6 +9,6 @@ public class TreasuredCoveEditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 
-		ExtraModuleNames.AddRange( new string[] { "TreasuredCove" } );
-	}
+        ExtraModuleNames.AddRange(new string[] { "TreasuredCoveEditor" });
+    }
 }

@@ -47,16 +47,21 @@ protected:
 	UDlgContext* ActiveContext = nullptr;
 public:
 	//
-	//virtual void SetupInputComponent() override;
+	virtual void SetupInputComponent() override;
+
+	//
+	bool CanAccessHUD();
 
 	//
 	void ShouldDisableInput(bool ShouldDisable);
 
 	//
-	void AddAbilityToUI(FAbilityInfo AbilityInfo, EAbilityType AbilityType, struct FGameplayAbilitySpecHandle InHandle, bool bFromItem);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void AddAbilityToUI_Client(FAbilityInfo AbilityInfo, EAbilityType AbilityType, struct FGameplayAbilitySpecHandle InHandle, bool bFromItem);
 
 	//
-	void RemoveAbilityFromUI(struct FGameplayAbilitySpecHandle InHandle);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void RemoveAbilityFromUI_Client(struct FGameplayAbilitySpecHandle InHandle);
 
 	// We are not using this right now
 
@@ -65,61 +70,90 @@ public:
 	*/
 
 	//
-	void OnDeath();
-	void OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
-	void OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
-	void OnHealthModified(float Health, float MaxHealth);
-	void OnStaminaModified(float Stamina, float MaxStamina);
-	void OnManaModified(float Mana, float MaxMana);
-	void OnExperienceModified(float Experience, float MaxExperience);
-	void OnStatModified(float Charisma, float Constitution, float Dexterity, float Intelligence, float Strength, float Wisdom);
-	void OnCurrentWeaponAmmoModified(float Ammo, float MaxAmmo);
-	void OnAmmoStockModified(FBullet Bullet);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnDeath_Client();
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnDamaged_Client(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnHealed_Client(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnHealthModified_Client(float Health, float MaxHealth);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnStaminaModified_Client(float Stamina, float MaxStamina);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnManaModified_Client(float Mana, float MaxMana);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnExperienceModified_Client(float Experience, float MaxExperience);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnStatModified_Client(float Charisma, float Constitution, float Dexterity, float Intelligence, float Strength, float Wisdom);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnCurrentWeaponAmmoModified_Client(float Ammo, float MaxAmmo);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnAmmoStockModified_Client(FBullet Bullet);
 
 	//
-	void OnDesiredLocationCleared();
-	void OnDesiredLocationSet(FVector DesiredLocation);
-	UFUNCTION()
-	void OnUpdateCurrentBuilding(FName CurrentBuildingName);
-	UFUNCTION()
-	void OnUpdateTargetBuilding(FName TargetBuildingName);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnDesiredLocationCleared_Client();
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnDesiredLocationSet_Client(FVector DesiredLocation);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnUpdateCurrentBuilding_Client(FName CurrentBuildingName);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnUpdateTargetBuilding_Client(FName TargetBuildingName);
 
 	//------------------------------
 	// User Interface Pass Functions
 	//------------------------------
 
-	UFUNCTION(BlueprintCallable)
-	void ReturnMainMenu();
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void ReturnMainMenu_Client();
+	UFUNCTION(BlueprintCallable, Category = "GAPlayerController|HUD")
 	void BeginPause();
-	void EndPause();
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void EndPause_Client();
 
-	void ConfirmPressed();
-	void ConfirmReleased();
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void ConfirmPressed_Client();
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void ConfirmReleased_Client();
 
-	void ReturnPressed();
-	void ReturnReleased();
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void ReturnPressed_Client();
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void ReturnReleased_Client();
 
-	void RecieveNavRequest(ENavType NavType);
-	void RecieveTabRequest(bool bNavRight);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void RecieveNavRequest_Client(ENavType NavType);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void RecieveTabRequest_Client(bool bNavRight);
 
-	void CursorMoveUp(float Val);
-	void CursorMoveRight(float Val);
-	void OnMenuUpdated(FVector2D MenuSelection);
-	void SetItemPriority(bool Priority);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void CursorMoveUp_Client(float Val);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void CursorMoveRight_Client(float Val);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnMenuUpdated_Client(FVector2D MenuSelection);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void SetItemPriority_Client(bool Priority);
 
 	//------------------------------
 	// Inventory Pass Functions
 	//------------------------------
 
-	void NotifyCanInteract(FName ItemName, bool CanPickup);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void NotifyCanInteract_Client(FName ItemName, bool CanPickup);
 
 	// Pickup item into our inventory
-	void OnPickupItem(FGAItemInfo& ItemInfo);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnPickupItem_Client(const FGAItemInfo& ItemInfo);
 
 	// Pickup item into our repository
-	void OnAddItemToRepository(const FItemKey& Item);
-	void OnEquipItem(UObject* Item, FGAItemInfo& ItemInfo);
-	void OnStowedItem(FGAItemInfo& ItemInfo);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnAddItemToRepository_Client(const FItemKey& Item);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnEquipItem_Client(UObject* Item, const FGAItemInfo& ItemInfo);
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnStowedItem_Client(const FGAItemInfo& ItemInfo);
 	UFUNCTION(BlueprintCallable)
 	void OnEquipItemFromInventory(uint8 slot);
 	UFUNCTION(BlueprintCallable)
@@ -130,15 +164,15 @@ public:
 	void OnMoveItem(uint8 From, uint8 To);
 	UFUNCTION(BlueprintCallable)
 	void OnDropItemFromInventory(uint8 Slot);
-	void OnDropItem();
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void OnDropItem_Client();
 
 	//------------------------------
 	// Dialogue Functions
 	//------------------------------
 
-	UFUNCTION(BlueprintCallable, Category = "Dialogue")
-	void StartDialogue(UDlgDialogue* Dialogue, UObject* OtherParticipant);
-
-	UFUNCTION(BlueprintCallable, Category = "Dialogue")
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
+	void StartDialogue_Client(UDlgDialogue* Dialogue, UObject* OtherParticipant);
+	UFUNCTION(BlueprintCallable, Category = "GAPlayerController|HUD")
 	void SelectDialogueOption(int32 Index);
 };

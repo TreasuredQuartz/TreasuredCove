@@ -12,6 +12,7 @@
 #include "Components/SpotLightComponent.h"
 
 #include "GameFramework/Character.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/PointLight.h"
@@ -507,12 +508,12 @@ int32 UGALibrary::CreateFace(FProceduralMeshSection& MeshSection, const UGamepla
 	// const int32 Scale = FMath::Clamp<int32>(InScale, 1, InScale);
 
 	// Each triangle this face has, add the vertex indices to the mesh section
-	for (const auto& Triangle : Faces[InIndex].Triangles)
+	for (const FTriangle& Triangle : Faces[InIndex].Triangles)
 		for (int32 Index = 0; Index < 3; ++Index)
 			MeshSection.Triangles.Add(Triangle.VertIndices[Index] + CurTriangleNum + MeshSection.ElementID);
 
 	// in Index represents each face of the new voxel we are generating
-	for (const auto& VertexData : Faces[InIndex].VerticesData)
+	for (const FVertexData& VertexData : Faces[InIndex].VerticesData)
 	{
 		MeshSection.Vertices.Add((VertexData.Position * InVoxelSize * InScale * 0.5) + (InLocation * InVoxelSize));
 		MeshSection.UVs.Add(VertexData.UVPosition * InScale);
@@ -523,4 +524,42 @@ int32 UGALibrary::CreateFace(FProceduralMeshSection& MeshSection, const UGamepla
 
 	// Return Current Triangle Index count + The triangle indices we just added
 	return CurTriangleNum + Faces[InIndex].VerticesData.Num();
+}
+
+int32 UGALibrary::CreateFaceFromTransform(FProceduralMeshSection& MeshSection, const UGameplayTileData* InTileData, const FTransform& InTransform, int32 InIndex, int32 CurTriangleNum, int32 InVoxelSize)
+{
+	if (InIndex < 0 || InIndex > 5 || !InTileData) return CurTriangleNum;
+	const auto& Faces = InTileData->StaticFaces;
+	if (Faces[InIndex].Triangles.IsEmpty()) return CurTriangleNum;
+
+	// const int32 Scale = FMath::Clamp<int32>(InScale, 1, InScale);
+
+	// Each triangle this face has, add the vertex indices to the mesh section
+	MeshSection.Triangles.Reserve(Faces[InIndex].Triangles.Num());
+	for (const FTriangle& Triangle : Faces[InIndex].Triangles)
+		for (int32 Index = 0; Index < 3; ++Index)
+			MeshSection.Triangles.Add(Triangle.VertIndices[Index] + CurTriangleNum + MeshSection.ElementID);
+
+	int32 VertNum = Faces[InIndex].VerticesData.Num();
+	MeshSection.Vertices.Reserve(VertNum);
+	MeshSection.UVs.Reserve(VertNum);
+	MeshSection.Normals.Reserve(VertNum);
+	MeshSection.VertexColors.Reserve(VertNum);
+	// MeshSection.Tangents.Reserve(VertNum);
+	for (auto& VertexData : Faces[InIndex].VerticesData)
+	{
+		// FQuat Angle = FQuat::ToAxisAndAngle(FVector::UpVector, InTransform.GetRotation().GetAngle());
+		FVector NewVert = (VertexData.Position * InVoxelSize * InTransform.GetScale3D()); 
+		FVector RotVert = InTransform.GetRotation().RotateVector(UKismetMathLibrary::InverseTransformLocation(FTransform(FRotator(90, 0, 0), FVector::ZeroVector), NewVert));
+		FVector NewNorm = InTransform.GetRotation().RotateVector(UKismetMathLibrary::InverseTransformLocation(FTransform(FRotator(90, 0, 0), FVector::ZeroVector), VertexData.Normal )).GetSafeNormal();
+
+		MeshSection.Vertices.Add(RotVert + (InTransform.GetLocation() * InVoxelSize));
+		MeshSection.UVs.Add(VertexData.UVPosition);
+		MeshSection.Normals.Add(NewNorm);
+		MeshSection.VertexColors.Add(VertexData.Color);
+		// Tangents.Add(VertexData.Tangent);
+	}
+
+	// Return Current Triangle Index count + The triangle indices we just added
+	return CurTriangleNum + VertNum;
 }

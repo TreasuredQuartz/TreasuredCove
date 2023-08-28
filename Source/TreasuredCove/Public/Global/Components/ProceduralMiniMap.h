@@ -20,7 +20,7 @@ public:
 		// 2, 1, 0, 0, 3, 2
 		const FVector LocVoxelNormals[4] = { quadNormal };
 		const FVector2D LocVoxelUVs[] = { FVector2D(0.00000, 0.00000), FVector2D(0.00000, 1.00000), FVector2D(1.00000, 1.00000), FVector2D(1.00000, 0.00000) };
-		const FColor LocVoxelColors[] = { FColor(), FColor(), FColor(), FColor() };
+		const FLinearColor LocVoxelColors[] = { FLinearColor(), FLinearColor(), FLinearColor(), FLinearColor() };
 
 		Section.Triangles.Add(2 + Section.NumTriangles);
 		Section.Triangles.Add(1 + Section.NumTriangles);
@@ -67,7 +67,7 @@ public:
 		return Section.Tangents;
 	}
 
-	const TArray<FColor>& GetColors()
+	const TArray<FLinearColor>& GetColors()
 	{
 		return Section.VertexColors;
 	}

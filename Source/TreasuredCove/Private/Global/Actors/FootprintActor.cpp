@@ -4,6 +4,7 @@
 #include "Global/Actors/FootprintActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "SensorBase.h"
 #include "SenseStimulusComponent.h"
@@ -25,7 +26,7 @@ AFootprintActor::AFootprintActor()
 	// Sense Stimulus Component
 	SenseStimulus =
 		CreateDefaultSubobject<USenseStimulusComponent>(TEXT("Sense Stimulus"));
-	
+
 	SetRootComponent(SceneRoot);
 	FootprintMesh->SetupAttachment(SceneRoot);
 }
@@ -34,7 +35,8 @@ AFootprintActor::AFootprintActor()
 void AFootprintActor::BeginPlay()
 {
 	Super::BeginPlay();
-	if (SenseStimulus)
+
+	if (SenseStimulus && HasAuthority())
 	{
 		SenseStimulus->OnSensedFromSensor.AddUniqueDynamic(this, &AFootprintActor::OnSensed);
 		SenseStimulus->ReportSenseEvent(FName("SensorHearing"));
@@ -75,7 +77,16 @@ void AFootprintActor::SetFootprintType(int NewFootprintType)
 
 void AFootprintActor::OnSensed(const USensorBase* Sensor, int32 Channel, EOnSenseEvent SenseEvent)
 {
-	// if (!Sensor) return;
+	if (!Sensor || !Sensor->GetSensorOwner()) 
+		return;
+
+	APawn* Pawn = GetOwner<APawn>();
+
+	if (Sensor->GetSensorOwner() == GetOwner() || Pawn->GetController() == UGameplayStatics::GetPlayerController(this, 0))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("We hear ourselves!"));
+		return;
+	}
 
 	switch (SenseEvent)
 	{
@@ -87,10 +98,6 @@ void AFootprintActor::OnSensed(const USensorBase* Sensor, int32 Channel, EOnSens
 		else if (Sensor->SensorTag.IsEqual(FName("SensorSight")))
 		{
 			OnSeen();
-		}
-		else
-		{
-			// UE_LOG(LogTemp, Warning, TEXT("[Footprint Actor] Tag Does NOT Match"));
 		}
 
 		break;
@@ -108,9 +115,9 @@ void AFootprintActor::OnSurfaceTypeChanged_Implementation()
 
 }
 
-void AFootprintActor::OnHeard_Implementation()
+void AFootprintActor::OnHeard()
 {
-
+	OnHeard_BP();
 }
 
 void AFootprintActor::OnSeen_Implementation()

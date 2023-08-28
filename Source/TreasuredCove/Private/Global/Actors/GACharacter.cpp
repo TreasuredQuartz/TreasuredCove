@@ -38,6 +38,7 @@
 #include "FootprintComponent.h"
 #include "LaunchingComponent.h"
 #include "MovementTrailComponent.h"
+#include "GAInputConfigData.h"
 
 // Misc
 #include "GameplayBuilding.h"
@@ -55,6 +56,7 @@
 #include "BrainComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "EnhancedInputComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
@@ -79,9 +81,11 @@
 #include "DrawDebugHelpers.h"
 #include "GameplayAbilitiesModule.h"
 #include "Kismet/GameplayStatics.h"
+#include "EnhancedInputSubsystems.h"
 #include "StaticLibrary.h"
 #include "TimerManager.h"
 #include "Engine/Engine.h"
+#include "UnrealNetwork.h"
 #include "Engine/DirectionalLight.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -92,7 +96,19 @@ DEFINE_LOG_CATEGORY_STATIC(LogCharacter, Log, All);
 AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) : 
 	ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UGACharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
+	/*bInitialized = false;
+	bIsPaused = false;
+	bShouldUpdateConstructionScript = false;
+	bShouldUpdatePhysicalAnimation = false;
+	bIsDead = false;
+	bCanJump = false;
+	bCanSlide = false;
+	bCanWallRun = false;
+	bCanClimb = false;
+	bShadowed = false;*/
+
 	PrimaryActorTick.bCanEverTick = true;
+	SetReplicates(true);
 
 	// Procedural Mesh
 	/*RealMesh = 
@@ -110,6 +126,7 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 	RenamedAbilitySystem =
 		CreateDefaultSubobject<UGASystemComponent>(TEXT("Ability System"));
 	RenamedAbilitySystem->SetIsReplicated(true);
+	RenamedAbilitySystem->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	// Skill Tree Component
 	SkillTrees =
@@ -119,6 +136,7 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 	AISenses = 
 		CreateDefaultSubobject<USenseReceiverComponent>(TEXT("AISenses"));
 	AISenses->SetupAttachment(RootComponent);
+	// AISenses->OnNewSense.AddUniqueDynamic(this, &AGACharacter::OnNewSense);
 	// AISenses->SetRelativeRotation(FRotator(0, 0, -90));
 	// AISenses->SetRelativeLocation(FVector(0, 0, 68));
 
@@ -220,14 +238,12 @@ void AGACharacter::BeginPlay()
 	Super::BeginPlay();
 
 	bIsPaused = false;
-	ChangeCameraType(bFirstPerson);
+	ChangeViewpoint(bFirstPerson);
 	PhysicalAnimation->SetSkeletalMeshComponent(GetMesh());
 
 	// SightInitialRotation = Sight->GetComponentRotation();
 
 	AutoDetermineTeamIDByControllerType();
-	PC = Cast<AGAPlayerController>(GetController());
-	AC = Cast<AGAAIController>(GetController());
 	
 	if (WallRunTimelineCurve)
 	{
@@ -240,26 +256,12 @@ void AGACharacter::BeginPlay()
 		CameraTiltTimeline->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
 		CameraTiltTimeline->SetPlaybackPosition(0.f, false);
 	}
-	if (PC) PC->SetItemPriority(bWeaponPriority);
+	if (PC) PC->SetItemPriority_Client(bWeaponPriority);
 	if (TownInfo != nullptr)
 	{
-		TownInfo->UpdateDesiredLocation.AddDynamic(this, &AGACharacter::UpdateDesiredLocation);
-		TownInfo->UpdateCurrentBuilding.AddDynamic(this, &AGACharacter::UpdateCurrentBuilding);
-		TownInfo->UpdateTargetBuilding.AddDynamic(this, &AGACharacter::UpdateTargetBuilding);
-	}
-	if (AISenses != nullptr)
-	{
-		if (PC)
-		{
-			// return;
-		}
-		else if (AC)
-		{
-			AISenses->OnNewSense.AddUniqueDynamic(AC, &AGAAIController::OnNewSense);
-			AISenses->OnCurrentSense.AddUniqueDynamic(AC, &AGAAIController::OnCurrentSense);
-			AISenses->OnLostSense.AddUniqueDynamic(AC, &AGAAIController::OnLostSense);
-			AISenses->OnForgetSense.AddUniqueDynamic(AC, &AGAAIController::OnForgetSense);
-		}
+		TownInfo->UpdateDesiredLocation.AddUniqueDynamic(this, &AGACharacter::UpdateDesiredLocation);
+		TownInfo->UpdateCurrentBuilding.AddUniqueDynamic(this, &AGACharacter::UpdateCurrentBuilding);
+		TownInfo->UpdateTargetBuilding.AddUniqueDynamic(this, &AGACharacter::UpdateTargetBuilding);
 	}
 	if (AIStimulus != nullptr)
 	{
@@ -296,12 +298,52 @@ void AGACharacter::Tick(float InDeltaTime)
 			}
 		}
 	}
+
+	if (bFirstPerson || !bLockedViewpoint && (GetCharacterMovement() && GetCharacterMovement()->MovementMode < MOVE_Falling && GetVelocity().Size() > 0 && GetVelocity().ForwardVector.X >= 0))
+	{
+		// Walking or NavWalking
+		bUseControllerRotationYaw = true;
+	}
+	else
+	{
+		bUseControllerRotationYaw = bFirstPerson;
+	}
 }
 
 // Called to bind functionality to input
 void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PC = Cast<AGAPlayerController>(GetController());
+
+	// Get the local player subsystem
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+
+	if (Subsystem == nullptr)
+		return;
+	
+	// Clear out existing mapping, and add our mapping
+	Subsystem->ClearAllMappings();
+	// Subsystem->AddPlayerMappableConfig();
+	Subsystem->AddMappingContext(InputMapping, 0);
+	// Subsystem->AddMappingContext(Unarmed_InputMapping, 1);
+
+	// Get the EnhancedInputComponent
+	UEnhancedInputComponent* PEI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+
+	// Bind the actions
+	PEI->BindAction(InputActions->InputMove, ETriggerEvent::Triggered, this, &AGACharacter::Move);
+	PEI->BindAction(InputActions->InputLook, ETriggerEvent::Triggered, this, &AGACharacter::Look);
+	PEI->BindAction(InputActions->InputJump, ETriggerEvent::Triggered, this, &AGACharacter::Jump_Input);
+	PEI->BindAction(InputActions->InputCrouch, ETriggerEvent::Triggered, this, &AGACharacter::Crouch_Input);
+	PEI->BindAction(InputActions->InputSprint, ETriggerEvent::Triggered, this, &AGACharacter::Sprint_Input);
+	PEI->BindAction(InputActions->InputSwitch, ETriggerEvent::Triggered, this, &AGACharacter::Switch_Input);
+
+	// PEI->BindAction(Unarmed_InputActions->InputPrimary, ETriggerEvent::Triggered, this, &AGACharacter::Primary);
+	// PEI->BindAction(Unarmed_InputActions->InputSecondary, ETriggerEvent::Triggered, this, &AGACharacter::Secondary);
+	// PEI->BindAction(Unarmed_InputActions->InputTertiary, ETriggerEvent::Triggered, this, &AGACharacter::Tertiary);
+	// PEI->BindAction(Unarmed_InputActions->InputQuaternary, ETriggerEvent::Triggered, this, &AGACharacter::Quaternary);
 
 	PlayerInputComponent->BindAction("QuickSelect", IE_Pressed, this, &AGACharacter::BeginQuickSelect);
 	PlayerInputComponent->BindAction("QuickSelect", IE_Released, this, &AGACharacter::EndQuickSelect);
@@ -324,28 +366,22 @@ void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AGACharacter::BeginInteract);
 	PlayerInputComponent->BindAction("Interact", IE_Released, this, &AGACharacter::EndInteract);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AGACharacter::BeginJump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AGACharacter::EndJump);
+	// PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AGACharacter::BeginJump);
+	// PlayerInputComponent->BindAction("Jump", IE_Released, this, &AGACharacter::EndJump);
 
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AGACharacter::BeginCrouch);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AGACharacter::EndCrouch);
+	// PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AGACharacter::BeginCrouch);
+	// PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AGACharacter::EndCrouch);
 
-	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AGACharacter::BeginSprint);
-	PlayerInputComponent->BindAction("Run", IE_Released, this, &AGACharacter::EndSprint);
+	// PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AGACharacter::BeginSprint);
+	// PlayerInputComponent->BindAction("Run", IE_Released, this, &AGACharacter::EndSprint);
 
-	PlayerInputComponent->BindAxis("Switch", this, &AGACharacter::Switch);
+	// PlayerInputComponent->BindAxis("Switch", this, &AGACharacter::Switch);
 
-	PlayerInputComponent->BindAxis("MenuUp", this, &AGACharacter::MenuUp);
-	PlayerInputComponent->BindAxis("MenuRight", this, &AGACharacter::MenuRight);
+	// PlayerInputComponent->BindAxis("LookRight", this, &AGACharacter::LookRight);
+	// PlayerInputComponent->BindAxis("LookRightRate", this, &AGACharacter::LookRight);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &AGACharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AGACharacter::MoveRight);
-
-	PlayerInputComponent->BindAxis("LookRight", this, &AGACharacter::LookRight);
-	PlayerInputComponent->BindAxis("LookRightRate", this, &AGACharacter::LookRight);
-
-	PlayerInputComponent->BindAxis("LookUp", this, &AGACharacter::LookUp);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &AGACharacter::LookUp);
+	// PlayerInputComponent->BindAxis("LookUp", this, &AGACharacter::LookUp);
+	// PlayerInputComponent->BindAxis("LookUpRate", this, &AGACharacter::LookUp);
 }
 
 // Called when possessed by a new controller
@@ -359,6 +395,20 @@ void AGACharacter::PossessedBy(AController* NewController)
 		InitializeAbilitySystem();
 	}
 
+	PC = Cast<AGAPlayerController>(NewController);
+	AC = Cast<AGAAIController>(NewController);
+
+	if (AC)
+	{
+		if (AISenses != nullptr)
+		{
+			AISenses->OnNewSense.AddUniqueDynamic(AC, &AGAAIController::OnNewSense);
+			AISenses->OnCurrentSense.AddUniqueDynamic(AC, &AGAAIController::OnCurrentSense);
+			AISenses->OnLostSense.AddUniqueDynamic(AC, &AGAAIController::OnLostSense);
+			AISenses->OnForgetSense.AddUniqueDynamic(AC, &AGAAIController::OnForgetSense);
+		}
+	}
+
 	Super::PossessedBy(NewController);
 }
 
@@ -366,6 +416,16 @@ void AGACharacter::PossessedBy(AController* NewController)
 void AGACharacter::UnPossessed()
 {
 	Super::UnPossessed();
+}
+
+// Replication
+void AGACharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AGACharacter, ActiveAbilityHandles);
+	DOREPLIFETIME(AGACharacter, HeldItem);
+	DOREPLIFETIME(AGACharacter, StowedItem);
 }
 
 // Called when server replicates controller to clients
@@ -525,7 +585,6 @@ void AGACharacter::PostEditChangeChainProperty(struct FPropertyChangedChainEvent
 //	return Result;
 //}
 #pragma endregion
-
 
 #pragma region VisualEffects
 // */
@@ -723,10 +782,20 @@ void AGACharacter::Puncture(FVector ImpactLocation, FVector ImpactNormal, FVecto
 	PSPuncture->SetVectorParameter(FName("Velocity"), ImpactForce);
 }
 
-void AGACharacter::ChangeCameraType_Implementation(bool bInFirstPerson)
+void AGACharacter::ChangeViewpoint(bool bInFirstPerson)
 {
+	if (!IsLocallyControlled())
+		return;
+
 	bFirstPerson = bInFirstPerson;
 	// bUseControllerRotationYaw = bFirstPerson;
+
+	OnChangeCameraType(bInFirstPerson);
+}
+
+void AGACharacter::OnChangeCameraType_Implementation(bool bInFirstPerson)
+{
+
 }
 
 void AGACharacter::BeginCameraTilt()
@@ -737,7 +806,7 @@ void AGACharacter::BeginCameraTilt()
 	FTimerDelegate TiltDel;
 	TiltDel.BindUFunction(this, FName("UpdateCameraTilt"), CameraTiltTime, increment, endValue, endTime);
 	GetWorldTimerManager().SetTimer(CameraTiltTimerHandle, increment, true); */
-	UE_LOG(LogTemp, Warning, TEXT("Begin Camera Tilt!"));
+	// UE_LOG(LogTemp, Warning, TEXT("Begin Camera Tilt!"));
 
 	CameraTiltTimeline->Play();
 }
@@ -935,46 +1004,46 @@ void AGACharacter::InitializeAttributeSet(UAttributeSet* Set)
 	UASHealth* HealthSet = Cast<UASHealth>(Set);
 	if (HealthSet)
 	{
-		HealthSet->OnDamaged.AddDynamic(this, &AGACharacter::OnDamaged);
-		HealthSet->OnHealed.AddDynamic(this, &AGACharacter::OnHealed);
+		HealthSet->OnDamaged.AddUniqueDynamic(this, &AGACharacter::OnDamaged);
+		HealthSet->OnHealed.AddUniqueDynamic(this, &AGACharacter::OnHealed);
 
-		HealthSet->OnHealthModified.AddDynamic(this, &AGACharacter::OnHealthModified);
-		HealthSet->OnStaminaModified.AddDynamic(this, &AGACharacter::OnStaminaModified);
-		HealthSet->OnManaModified.AddDynamic(this, &AGACharacter::OnManaModified);
+		HealthSet->OnHealthModified.AddUniqueDynamic(this, &AGACharacter::OnHealthModified);
+		HealthSet->OnStaminaModified.AddUniqueDynamic(this, &AGACharacter::OnStaminaModified);
+		HealthSet->OnManaModified.AddUniqueDynamic(this, &AGACharacter::OnManaModified);
 		return;
 	}
 
 	UASStats* StatSet = Cast<UASStats>(Set);
 	if (StatSet)
 	{
-		StatSet->OnExperienceModified.AddDynamic(this, &AGACharacter::OnExperienceModified);
-		StatSet->OnStatModified.AddDynamic(this, &AGACharacter::OnStatModified);
+		StatSet->OnExperienceModified.AddUniqueDynamic(this, &AGACharacter::OnExperienceModified);
+		StatSet->OnStatModified.AddUniqueDynamic(this, &AGACharacter::OnStatModified);
 		return;
 	}
 
 	UASAmmo* AmmoSet = Cast<UASAmmo>(Set);
 	if (AmmoSet)
 	{
-		AmmoSet->OnAmmoModified.AddDynamic(this, &AGACharacter::OnAmmoModified);
+		AmmoSet->OnAmmoModified.AddUniqueDynamic(this, &AGACharacter::OnAmmoModified);
 		return;
 	}
 
 	UASWeaponStats* WeaponSet = Cast<UASWeaponStats>(Set);
 	if (WeaponSet)
 	{
-		WeaponSet->OnSpreadAngleModified.AddDynamic(this, &AGACharacter::OnSpreadAngleModified);
-		WeaponSet->OnHipAccuracyModified.AddDynamic(this, &AGACharacter::OnHipAccuracyModified);
-		WeaponSet->OnADSAccuracyModified.AddDynamic(this, &AGACharacter::OnADSAccuracyModified);
-		WeaponSet->OnHandlingModified.AddDynamic(this, &AGACharacter::OnHandlingModified);
-		WeaponSet->OnRangeModified.AddDynamic(this, &AGACharacter::OnRangeModified);
-		WeaponSet->OnDamageModified.AddDynamic(this, &AGACharacter::OnDamageModified);
+		WeaponSet->OnSpreadAngleModified.AddUniqueDynamic(this, &AGACharacter::OnSpreadAngleModified);
+		WeaponSet->OnHipAccuracyModified.AddUniqueDynamic(this, &AGACharacter::OnHipAccuracyModified);
+		WeaponSet->OnADSAccuracyModified.AddUniqueDynamic(this, &AGACharacter::OnADSAccuracyModified);
+		WeaponSet->OnHandlingModified.AddUniqueDynamic(this, &AGACharacter::OnHandlingModified);
+		WeaponSet->OnRangeModified.AddUniqueDynamic(this, &AGACharacter::OnRangeModified);
+		WeaponSet->OnDamageModified.AddUniqueDynamic(this, &AGACharacter::OnDamageModified);
 		return;
 	}
 
 	UASUltimate* UltimateSet = Cast<UASUltimate>(Set);
 	if (UltimateSet)
 	{
-		UltimateSet->OnUltimateChargeModified.AddDynamic(this, &AGACharacter::OnUltimateModified);
+		UltimateSet->OnUltimateChargeModified.AddUniqueDynamic(this, &AGACharacter::OnUltimateModified);
 		return;
 	}
 }
@@ -1084,7 +1153,7 @@ void AGACharacter::AddAbilityToUI(TSubclassOf<UGameplayAbilityBase> InAbility, E
 		if (AbilityInstance)
 		{
 			FAbilityInfo AbilityInfo = AbilityInstance->GetAbilityInfo();
-			PC->AddAbilityToUI(AbilityInfo, AbilityType, InHandle, bFromItem);
+			// PC->AddAbilityToUI(AbilityInfo, AbilityType, InHandle, bFromItem);
 		}
 	}
 }
@@ -1094,7 +1163,7 @@ void AGACharacter::RemoveAbilityFromUI(FGameplayAbilitySpecHandle InHandle)
 {
 	if (PC)
 	{
-		PC->RemoveAbilityFromUI(InHandle);
+		PC->RemoveAbilityFromUI_Client(InHandle);
 	}
 }
 #pragma endregion
@@ -1111,7 +1180,7 @@ void AGACharacter::BeginQuickSelect()
 	{
 		if (PC)
 		{
-			PC->RecieveTabRequest(false);
+			// PC->RecieveTabRequest(false);
 		}
 	}
 	else
@@ -1134,7 +1203,7 @@ void AGACharacter::BeginQuickSelect()
 
 		if (PC)
 		{
-			PC->SetItemPriority(bWeaponPriority);
+			// PC->SetItemPriority(bWeaponPriority);
 		}
 	}
 }
@@ -1153,7 +1222,7 @@ void AGACharacter::EndQuickSelect()
 
 			if (PC)
 			{
-				PC->SetItemPriority(bWeaponPriority);
+				// PC->SetItemPriority(bWeaponPriority);
 			}
 		}
 		else
@@ -1252,6 +1321,7 @@ void AGACharacter::EndSecondary()
 	}
 }
 
+// Called to Switch items
 void AGACharacter::Switch(float Val)
 {
 	if (Val != 0)
@@ -1353,7 +1423,7 @@ void AGACharacter::EndThrow()
 	{
 		if (PC)
 		{
-			PC->RecieveTabRequest(true);
+			// PC->RecieveTabRequest(true);
 		}
 	}
 	else
@@ -1493,6 +1563,8 @@ void AGACharacter::EndUltimate()
 
 void AGACharacter::StartHeldInputTimer(EHeldInputType InputType)
 {
+	if (PC == nullptr) return;
+
 	switch (InputType)
 	{
 	case EHeldInputType::Primary:
@@ -1525,54 +1597,238 @@ void AGACharacter::StartHeldInputTimer(EHeldInputType InputType)
 /////			CHARACTER MOVEMENT				//////
 //////////////////////////////////////////////////////
 
+#pragma region PlayerInputBindings
+// Called to move the character
+void AGACharacter::Move(const FInputActionValue& Value)
+{
+	if (bIsPaused) return;
+
+	FVector2D MoveDirection = Value.Get<FVector2D>();
+	if (MoveDirection.Size() > 0)
+	{
+		MoveForward(MoveDirection.Y);
+		MoveRight(MoveDirection.X);
+	}
+}
+
+// Called to turn the character
+void AGACharacter::Look(const FInputActionValue& Value)
+{
+	if (bIsPaused) return;
+
+	FVector2D LookDirection = Value.Get<FVector2D>();
+	if (LookDirection.Size() > 0)
+	{
+		LookUp(LookDirection.Y);
+		LookRight(LookDirection.X);
+	}
+}
+
+// Called to crouch
+void AGACharacter::Crouch_Input(const FInputActionValue& Value)
+{
+	if (bIsPaused) return;
+
+	bool PressedCrouch = Value.Get<bool>();
+	if (PressedCrouch)
+	{
+		BeginCrouch();
+	}
+	else
+	{
+		EndCrouch();
+	}
+}
+
+// Called to jump
+void AGACharacter::Jump_Input(const FInputActionValue& Value)
+{
+	if (bIsPaused) return;
+
+	bool PressedJump = Value.Get<bool>();
+	if (PressedJump)
+	{
+		BeginJump();
+	}
+	else
+	{
+		EndJump();
+	}
+}
+
+// Called to run
+void AGACharacter::Sprint_Input(const FInputActionValue& Value)
+{
+	if (bIsPaused) return;
+
+	bool PressedSprint = Value.Get<bool>();
+	if (PressedSprint)
+	{
+		BeginSprint();
+	}
+	else
+	{
+		EndSprint();
+	}
+}
+
+// Called to switch
+void AGACharacter::Switch_Input(const FInputActionValue& Value)
+{
+
+}
+#pragma endregion
+
+#pragma region BasicMovement
+// Called to move the player's pawn forward
+void AGACharacter::MoveForward(float Val)
+{
+	ForwardAxisValue = Val;
+	FVector Direction = FVector::ZeroVector;
+	FRotator Rotation = FRotator::ZeroRotator;
+
+	switch (GetGACharacterMovement()->MovementMode)
+	{
+	case MOVE_Swimming:
+		Rotation = Controller->GetControlRotation();
+		Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
+		break;
+	case EMovementMode::MOVE_Custom:
+		switch (GetGACharacterMovement()->CustomMovementMode)
+		{
+		case ECustomMovementMode::MOVE_Climbing:
+			Rotation = GetActorRotation();
+			Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Z);
+			break;
+		default:
+			Rotation = Controller->GetControlRotation();
+			Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
+		}
+		break;
+	case MOVE_Walking:
+	case MOVE_NavWalking:
+	case MOVE_Falling:
+	default:
+		Rotation = GetControlRotation();
+		Rotation.Pitch = 0.0f;
+		Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
+	}
+
+	AddMovementInput(Direction, Val);
+}
+
+// Called to move the player's pawn right
+void AGACharacter::MoveRight(float Val)
+{
+	RightAxisValue = Val;
+	FVector Direction = FVector::ZeroVector;
+	FRotator Rotation = FRotator::ZeroRotator;
+
+	switch (GetGACharacterMovement()->MovementMode)
+	{
+	case MOVE_Swimming:
+		Rotation = Controller->GetControlRotation();
+		Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+		break;
+	case EMovementMode::MOVE_Custom:
+		switch (GetGACharacterMovement()->CustomMovementMode)
+		{
+		case ECustomMovementMode::MOVE_Climbing:
+			Rotation = GetActorRotation();
+			// Direction = FVector::UpVector ^ Rotation.Vector();
+			Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+			break;
+		default:
+			Rotation = Controller->GetControlRotation();
+			Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+		}
+		break;
+	case MOVE_Walking:
+	case MOVE_NavWalking:
+	case MOVE_Falling:
+	default:
+		Rotation = Controller->GetControlRotation();
+		Rotation.Pitch = 0.0f;
+		Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+	}
+
+	AddMovementInput(Direction, Val);
+}
+#pragma endregion
+
+#pragma region LookingAround
+// Called to look up
+void AGACharacter::LookUp(float Val)
+{
+	if (GetActorRotation().Pitch <= LookUpperLimit || Val < 0)
+	{
+		if (bIsUsingController)
+		{
+			AddControllerPitchInput(Val * VerticalLookRate);
+		}
+		else
+		{
+			AddControllerPitchInput(Val);
+		}
+
+		UpdateSightRotation();
+	}
+}
+
+// Called to look right
+void AGACharacter::LookRight(float Val)
+{
+	if (bIsUsingController)
+	{
+		AddControllerYawInput(Val * HorizontalLookRate);
+	}
+	else
+	{
+		AddControllerYawInput(Val);
+	}
+
+	// Update Pitch on other players' clients
+	if (!IsLocallyControlled())
+	{
+		FRotator NewRot = GetMesh()->GetRelativeRotation();
+		NewRot.Pitch = RemoteViewPitch * 360 / 255;
+
+		GetMesh()->SetRelativeRotation(NewRot);
+	}
+
+	UpdateSightRotation();
+}
+#pragma endregion
+
+#pragma region Jumping
+/** Jumping Functions */
+
 // Overridden to allow jump from crouch
 bool AGACharacter::CanJumpInternal_Implementation() const
 {
-	// Super::CanJumpInternal_Implementation() // Does not allow crouch jumping
+	// if (JumpIsAllowedInternal()) UE_LOG(LogTemp, Warning, TEXT("Character CanJumpInternal()"));
+	// if (bCanJump) UE_LOG(LogTemp, Warning, TEXT("Character Can Jump."));
+
 	return bCanJump && JumpIsAllowedInternal();
+}
+
+void AGACharacter::OnJumped_Implementation()
+{
+	// UE_LOG(LogTemp, Warning, TEXT("We performed a jump!"));
 }
 
 // Called When Pressing The "Jump" Action Key
 void AGACharacter::BeginJump()
 {
-	if (bIsPaused)
-	{
-		if (PC)
-		{
-			PC->ConfirmPressed();
-		}
-	}
-	else
-	{
-		const float TempJumpZVelocity = GetGACharacterMovement()->JumpZVelocity;
-
-		if (bIsCrouched)
-		{
-			UnCrouch();
-			GetGACharacterMovement()->JumpZVelocity *= 2;
-		}
-
-		if (CanJump()) Jump();
-
-		GetGACharacterMovement()->JumpZVelocity = TempJumpZVelocity;
-	}
+	Jump();
 }
 
 // Called When Releasing The "Jump" Action Key
 void AGACharacter::EndJump()
 {
-	if (bIsPaused)
-	{
-		if (PC)
-		{
-			PC->ConfirmReleased();
-		}
-	}
-	else
-	{
-		StopJumping();
-	}
+	StopJumping();
 }
+#pragma endregion
 
 //
 void AGACharacter::ClampHorizontalVelocity()
@@ -1586,19 +1842,26 @@ void AGACharacter::ClampHorizontalVelocity()
 	}
 }
 
-//
+#pragma region WallRunning
+/** Wall Run Functions */
+
+// Called when starting to WallRun
 void AGACharacter::OnBeginWallRun()
 {
 	BeginCameraTilt();
 	bIsWallRunning = true;
 }
 
-//
+// Called when coming out of a WallRun
 void AGACharacter::OnEndWallRun()
 {
 	EndCameraTilt();
 	bIsWallRunning = false;
 }
+#pragma endregion
+
+#pragma region Sliding
+/** Slding Functions */
 
 // Start Slide
 void AGACharacter::OnBeginSlide()
@@ -1613,12 +1876,16 @@ void AGACharacter::OnEndSlide()
 	EndCameraTilt();
 	bIsSliding = false;
 }
+#pragma endregion
 
+#pragma region Sprinting
+// Called to validate character can run
 bool AGACharacter::CanSprint() const 
 { 
 	return !bIsSprinting && GetGACharacterMovement() && GetGACharacterMovement()->CanEverSprint() && GetRootComponent() && !GetRootComponent()->IsSimulatingPhysics();
 }
 
+// Called to start running
 void AGACharacter::Sprint()
 {
 	if (GetGACharacterMovement())
@@ -1636,6 +1903,7 @@ void AGACharacter::Sprint()
 	}
 }
 
+// Called to stop running
 void AGACharacter::UnSprint()
 {
 	if (GetGACharacterMovement())
@@ -1647,261 +1915,82 @@ void AGACharacter::UnSprint()
 // Called When Pressing The "Run" Action Key
 void AGACharacter::BeginSprint()
 {
-	if (bIsPaused)
+	if (bToggleSprint)
 	{
-
-	}
-	else
-	{
-		if (bToggleSprint)
-		{
-			if (!bIsSprinting)
-			{
-				Sprint();
-			}
-			else
-			{
-				UnSprint();
-			}
-		}
-		else
+		if (!bIsSprinting)
 		{
 			Sprint();
 		}
+		else
+		{
+			UnSprint();
+		}
+	}
+	else
+	{
+		Sprint();
 	}
 }
 
 // Called When Releasing The "Run" Action Key
 void AGACharacter::EndSprint()
 {
-	if (bIsPaused)
-	{
+	if (!bToggleSprint) UnSprint();
+}
+#pragma endregion
 
-	}
-	else
+#pragma region Crouching
+/** Crouch Functions */
+
+// Overriden for first person crouching
+void AGACharacter::OnStartCrouch(float HeightAdjust, float ScaledHeightAdjust)
+{
+	Super::OnStartCrouch(HeightAdjust, ScaledHeightAdjust);
+
+	if (bFirstPerson && IsLocallyControlled())
 	{
-		if (!bToggleSprint)
+		if (GetMesh())
 		{
-			UnSprint();
+			FVector& MeshRelativeLocation = GetMesh()->GetRelativeLocation_DirectMutable();
+			MeshRelativeLocation.Z -= 90;
 		}
+
+		BaseTranslationOffset.Z -= 90;
 	}
 }
 
-// Start crouching
+// Empty Override
+void AGACharacter::OnEndCrouch(float HeightAdjust, float ScaledHeightAdjust)
+{
+	Super::OnEndCrouch(HeightAdjust, ScaledHeightAdjust);
+}
+
+// Called to Start crouching
 void AGACharacter::BeginCrouch()
 {
-	if (bIsPaused)
+	if (bToggleCrouch)
 	{
-		if (PC)
-		{
-			PC->ReturnPressed();
-		}
-	}
-	else
-	{
-		if (bToggleCrouch)
-		{
-			if (!bIsCrouched)
-			{
-				Crouch();
-				// GetCapsuleComponent()->SetCapsuleHalfHeight(GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() * 0.5);
-			}
-			else
-			{
-				UnCrouch();
-				// GetCapsuleComponent()->SetCapsuleHalfHeight(GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() * 2);
-			}
-		}
-		else
+		if (!bIsCrouched)
 		{
 			Crouch();
-		}
-	}
-}
-
-// Stop crouching
-void AGACharacter::EndCrouch()
-{
-	if (bIsPaused)
-	{
-		if (PC)
-		{
-			PC->ReturnReleased();
-		}
-	}
-	else
-	{
-		if (bToggleCrouch)
-		{
-			return;
 		}
 		else
 		{
 			UnCrouch();
 		}
 	}
-}
-
-// Called to move the player's pawn forward
-void AGACharacter::MoveForward(float Val)
-{
-	ForwardAxisValue = Val;
-
-	if (Val != 0.0f)
+	else
 	{
-		if (bIsPaused)
-		{
-
-		}
-		else
-		{
-			FVector Direction = FVector::ZeroVector;
-			FRotator Rotation = FRotator::ZeroRotator;
-
-			switch (GetGACharacterMovement()->MovementMode)
-			{
-			case MOVE_Swimming:
-				Rotation = Controller->GetControlRotation();
-				Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
-				break;
-			case EMovementMode::MOVE_Custom:
-				switch (GetGACharacterMovement()->CustomMovementMode)
-				{
-				case ECustomMovementMode::MOVE_Climbing:
-					Rotation = GetActorRotation();
-					Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Z);
-					break;
-				default:
-					Rotation = Controller->GetControlRotation();
-					Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
-				}
-				break;
-			case MOVE_Walking:
-			case MOVE_NavWalking:
-			case MOVE_Falling:
-			default:
-				Rotation = GetControlRotation();
-				Rotation.Pitch = 0.0f;
-				Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::X);
-			}
-
-			AddMovementInput(Direction, Val);
-		}
+		Crouch();
 	}
 }
 
-// Called to move the player's pawn right
-void AGACharacter::MoveRight(float Val)
+// Called to Stop crouching
+void AGACharacter::EndCrouch()
 {
-	RightAxisValue = Val;
-
-	if (Val != 0.0f)
-	{
-		if (bIsPaused)
-		{
-
-		}
-		else
-		{
-			FVector Direction = FVector::ZeroVector;
-			FRotator Rotation = FRotator::ZeroRotator;
-
-			switch (GetGACharacterMovement()->MovementMode)
-			{
-			case MOVE_Swimming:
-				Rotation = Controller->GetControlRotation();
-				Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
-				break;
-			case EMovementMode::MOVE_Custom:
-				switch (GetGACharacterMovement()->CustomMovementMode)
-				{
-				case ECustomMovementMode::MOVE_Climbing:
-					Rotation = GetActorRotation();
-					// Direction = FVector::UpVector ^ Rotation.Vector();
-					Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
-					break;
-				default:
-					Rotation = Controller->GetControlRotation();
-					Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
-				}
-				break;
-			case MOVE_Walking:
-			case MOVE_NavWalking:
-			case MOVE_Falling:
-			default:
-				Rotation = Controller->GetControlRotation();
-				Rotation.Pitch = 0.0f;
-				Direction = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
-			}
-
-			AddMovementInput(Direction, Val);
-		}
-	}
+	if (!bToggleCrouch) UnCrouch();
 }
-
-// Called to look up
-void AGACharacter::LookUp(float Val)
-{
-	if (Val != 0)
-	{
-		if (bIsPaused)
-		{
-			if (PC)
-				PC->CursorMoveUp(Val);
-		}
-		else
-		{
-			if (GetActorRotation().Pitch <= LookUpperLimit)
-			{
-				if (bIsUsingController)
-				{
-					AddControllerPitchInput(Val * VerticalLookRate);
-				}
-				else
-				{
-					AddControllerPitchInput(Val);
-				}
-
-				// Update Pitch on other players' clients
-				if (!IsLocallyControlled())
-				{
-					FRotator NewRot = GetMesh()->GetRelativeRotation();
-					NewRot.Pitch = RemoteViewPitch * 360 / 255;
-
-					GetMesh()->SetRelativeRotation(NewRot);
-				}
-
-				UpdateSightRotation();
-			}
-		}
-	}
-}
-
-// Called to look right
-void AGACharacter::LookRight(float Val)
-{
-	if (Val != 0)
-	{
-		if (bIsPaused)
-		{
-			if (PC)
-				PC->CursorMoveRight(Val);
-		}
-		else
-		{
-			if (bIsUsingController)
-			{
-				AddControllerYawInput(Val * HorizontalLookRate);
-			}
-			else
-			{
-				AddControllerYawInput(Val);
-			}
-
-			UpdateSightRotation();
-		}
-	}
-}
+#pragma endregion
 #pragma endregion
 
 #pragma region MenuInput
@@ -1915,169 +2004,140 @@ void AGACharacter::BeginPause()
 	if (bIsPaused)
 	{
 		bIsPaused = false;
-
-		if (PC)
-		{
-			PC->EndPause();
-		}
-		else if (AC)
-		{
-
-		}
 	}
 	else
 	{
 		bIsPaused = true;
-
-		if (PC)
-		{
-			PC->BeginPause();
-		}
-		else if (AC)
-		{
-
-		}
 	}
 }
 
 void AGACharacter::EndPause()
 {
-	/*
-	bIsPaused = false;
 
-	if (PC)
-	{
-		PC->EndPause();
-	}
-	else if (AC) 
-	{
-
-	}
-	*/
 }
 
 void AGACharacter::MenuUp(float Val)
 {
-	if (Val != 0)
-	{
-		if (Val > 0)
-		{
-			if (bIsPaused)
-			{
-				if (PC)
-				{
-					PC->RecieveNavRequest(ENavType::Up);
-				}
-			}
-			else
-			{
-				FTimerDelegate MenuUpDel;
-				if (MenuUpTimerHandle.IsValid())
-				{
-					if (GetWorldTimerManager().IsTimerPaused(MenuUpTimerHandle))
-						GetWorldTimerManager().UnPauseTimer(MenuUpTimerHandle);
-				}
-				else 
-				{
-					GetWorldTimerManager().SetTimer(MenuUpTimerHandle, this, &AGACharacter::MenuUpDelayed, 0.05f, true);
-				}
-			}
-		}
-		else if (Val < 0)
-		{
-			if (bIsPaused)
-			{
-				if (PC)
-				{
-					PC->RecieveNavRequest(ENavType::Down);
-				}
-			}
-			else
-			{
-				if (MenuDownTimerHandle.IsValid())
-				{
-					if (GetWorldTimerManager().IsTimerPaused(MenuDownTimerHandle))
-						GetWorldTimerManager().UnPauseTimer(MenuDownTimerHandle);
-				}
-				else
-				{
-					GetWorldTimerManager().SetTimer(MenuDownTimerHandle, this, &AGACharacter::MenuDownDelayed, 0.05f, true);
-				}
-			}
-		}
-	}
-	else
-	{
-		// Value is 0; Meaning we are not touching the input
-		// Clearing the timer handle will stop the menu selection
-		GetWorldTimerManager().ClearTimer(MenuUpTimerHandle);
-		GetWorldTimerManager().ClearTimer(MenuDownTimerHandle);
-	}
+	//if (Val != 0)
+	//{
+	//	if (Val > 0)
+	//	{
+	//		if (bIsPaused)
+	//		{
+	//			if (PC)
+	//			{
+	//				PC->RecieveNavRequest(ENavType::Up);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			FTimerDelegate MenuUpDel;
+	//			if (MenuUpTimerHandle.IsValid())
+	//			{
+	//				if (GetWorldTimerManager().IsTimerPaused(MenuUpTimerHandle))
+	//					GetWorldTimerManager().UnPauseTimer(MenuUpTimerHandle);
+	//			}
+	//			else 
+	//			{
+	//				GetWorldTimerManager().SetTimer(MenuUpTimerHandle, this, &AGACharacter::MenuUpDelayed, 0.05f, true);
+	//			}
+	//		}
+	//	}
+	//	else if (Val < 0)
+	//	{
+	//		if (bIsPaused)
+	//		{
+	//			if (PC)
+	//			{
+	//				PC->RecieveNavRequest(ENavType::Down);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			if (MenuDownTimerHandle.IsValid())
+	//			{
+	//				if (GetWorldTimerManager().IsTimerPaused(MenuDownTimerHandle))
+	//					GetWorldTimerManager().UnPauseTimer(MenuDownTimerHandle);
+	//			}
+	//			else
+	//			{
+	//				GetWorldTimerManager().SetTimer(MenuDownTimerHandle, this, &AGACharacter::MenuDownDelayed, 0.05f, true);
+	//			}
+	//		}
+	//	}
+	//}
+	//else
+	//{
+	//	// Value is 0; Meaning we are not touching the input
+	//	// Clearing the timer handle will stop the menu selection
+	//	GetWorldTimerManager().ClearTimer(MenuUpTimerHandle);
+	//	GetWorldTimerManager().ClearTimer(MenuDownTimerHandle);
+	//}
 }
 
 void AGACharacter::MenuRight(float Val)
 {
-	if (Val != 0)
-	{
-		FTimerDelegate MenuDel;
+	//if (Val != 0)
+	//{
+	//	FTimerDelegate MenuDel;
 
-		if (Val == 1)
-		{
-			if (bIsPaused)
-			{
-				if (PC)
-				{
-					PC->RecieveNavRequest(ENavType::Right);
-				}
-			}
-			else
-			{
-				if (MenuRightTimerHandle.IsValid())
-				{
-					if (GetWorldTimerManager().IsTimerPaused(MenuRightTimerHandle))
-						GetWorldTimerManager().UnPauseTimer(MenuRightTimerHandle);
-				}
-				else
-				{
-					GetWorldTimerManager().SetTimer(MenuRightTimerHandle, this, &AGACharacter::MenuRightDelayed, 0.1f, true);
-				}
-			}
-		}
-		else if (Val == -1)
-		{
-			if (bIsPaused)
-			{
-				if (PC)
-				{
-					PC->RecieveNavRequest(ENavType::Left);
-				}
-			}
-			else
-			{
-				if (MenuLeftTimerHandle.IsValid())
-				{
-					if (GetWorldTimerManager().IsTimerPaused(MenuLeftTimerHandle))
-						GetWorldTimerManager().PauseTimer(MenuLeftTimerHandle);
-				}
-				else
-				{
-					GetWorldTimerManager().SetTimer(MenuLeftTimerHandle, this, &AGACharacter::MenuLeftDelayed, 0.1f, true);
-				}
-			}
-		}
-	}
-	else
-	{
-		// Value is 0; Meaning we are not touching the input
-		// Clearing the timer handle will stop the menu selection
-		GetWorldTimerManager().ClearTimer(MenuRightTimerHandle);
-		GetWorldTimerManager().ClearTimer(MenuLeftTimerHandle);
-	}
+	//	if (Val == 1)
+	//	{
+	//		if (bIsPaused)
+	//		{
+	//			if (PC)
+	//			{
+	//				PC->RecieveNavRequest(ENavType::Right);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			if (MenuRightTimerHandle.IsValid())
+	//			{
+	//				if (GetWorldTimerManager().IsTimerPaused(MenuRightTimerHandle))
+	//					GetWorldTimerManager().UnPauseTimer(MenuRightTimerHandle);
+	//			}
+	//			else
+	//			{
+	//				GetWorldTimerManager().SetTimer(MenuRightTimerHandle, this, &AGACharacter::MenuRightDelayed, 0.1f, true);
+	//			}
+	//		}
+	//	}
+	//	else if (Val == -1)
+	//	{
+	//		if (bIsPaused)
+	//		{
+	//			if (PC)
+	//			{
+	//				PC->RecieveNavRequest(ENavType::Left);
+	//			}
+	//		}
+	//		else
+	//		{
+	//			if (MenuLeftTimerHandle.IsValid())
+	//			{
+	//				if (GetWorldTimerManager().IsTimerPaused(MenuLeftTimerHandle))
+	//					GetWorldTimerManager().PauseTimer(MenuLeftTimerHandle);
+	//			}
+	//			else
+	//			{
+	//				GetWorldTimerManager().SetTimer(MenuLeftTimerHandle, this, &AGACharacter::MenuLeftDelayed, 0.1f, true);
+	//			}
+	//		}
+	//	}
+	//}
+	//else
+	//{
+	//	// Value is 0; Meaning we are not touching the input
+	//	// Clearing the timer handle will stop the menu selection
+	//	GetWorldTimerManager().ClearTimer(MenuRightTimerHandle);
+	//	GetWorldTimerManager().ClearTimer(MenuLeftTimerHandle);
+	//}
 }
 
 void AGACharacter::MenuUpDelayed()
 {
-	if (bWeaponPriority && HeldItem)
+	/*if (bWeaponPriority && HeldItem)
 	{
 		
 	}
@@ -2087,12 +2147,12 @@ void AGACharacter::MenuUpDelayed()
 			DetermineActiveMenuSelection(0, 1);
 		else if (MaxSubMenuSlots.Num() > SubMenuCount)
 			DetermineActiveMenuSelection(MaxActiveMenuSlots[SubMenuCount], 1);
-	}
+	}*/
 }
 
 void AGACharacter::MenuDownDelayed()
 {
-	if (bWeaponPriority && HeldItem)
+	/*if (bWeaponPriority && HeldItem)
 	{
 		
 	}
@@ -2102,12 +2162,12 @@ void AGACharacter::MenuDownDelayed()
 			DetermineActiveMenuSelection(0, 1);
 		else if (MaxSubMenuSlots.Num() > SubMenuCount)
 			DetermineActiveMenuSelection(MaxActiveMenuSlots[SubMenuCount], -1);
-	}
+	}*/
 }
 
 void AGACharacter::MenuRightDelayed()
 {
-	if (bWeaponPriority && HeldItem)
+	/*if (bWeaponPriority && HeldItem)
 	{
 		
 	}
@@ -2117,12 +2177,12 @@ void AGACharacter::MenuRightDelayed()
 			DetermineSubMenuSelection(0, 1);
 		else if (MaxSubMenuSlots[ActiveMenuCount])
 			DetermineSubMenuSelection(MaxSubMenuSlots[ActiveMenuCount], 1);
-	}
+	}*/
 }
 
 void AGACharacter::MenuLeftDelayed()
 {
-	if (bWeaponPriority && HeldItem)
+	/*if (bWeaponPriority && HeldItem)
 	{
 		
 	}
@@ -2132,7 +2192,7 @@ void AGACharacter::MenuLeftDelayed()
 			DetermineSubMenuSelection(0, -1);
 		else if (MaxSubMenuSlots[ActiveMenuCount])
 			DetermineSubMenuSelection(MaxSubMenuSlots[ActiveMenuCount], -1);
-	}
+	}*/
 }
 #pragma endregion
 #pragma endregion
@@ -2159,7 +2219,7 @@ void AGACharacter::ResetActiveMenuSelection()
 
 	if (PC)
 	{
-		PC->OnMenuUpdated(FVector2D(ActiveMenuCount, SubMenuCount));
+		PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
 	}
 }
 
@@ -2169,7 +2229,7 @@ void AGACharacter::ResetSubMenuSelection()
 
 	if (PC)
 	{
-		PC->OnMenuUpdated(FVector2D(ActiveMenuCount, SubMenuCount));
+		PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
 	}
 }
 
@@ -2183,7 +2243,7 @@ int AGACharacter::DetermineActiveMenuSelection(int MaxMenuCount, int Direction)
 
 		if (PC)
 		{
-			PC->OnMenuUpdated(FVector2D(ActiveMenuCount, SubMenuCount));
+			PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
 		}
 	}
 
@@ -2218,7 +2278,7 @@ int AGACharacter::DetermineActiveMenuSelection(int MaxMenuCount, int Direction)
 
 	if (PC)
 	{
-		PC->OnMenuUpdated(FVector2D(ActiveMenuCount, SubMenuCount));
+		PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
 	}
 
 	// ResetSubMenuSelection();
@@ -2237,7 +2297,7 @@ int AGACharacter::DetermineSubMenuSelection(int MaxMenuCount, int Direction)
 
 		if (PC)
 		{
-			PC->OnMenuUpdated(FVector2D(ActiveMenuCount, SubMenuCount));
+			PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
 		}
 	}
 
@@ -2272,7 +2332,7 @@ int AGACharacter::DetermineSubMenuSelection(int MaxMenuCount, int Direction)
 
 	if (PC)
 	{
-		PC->OnMenuUpdated(FVector2D(ActiveMenuCount, SubMenuCount));
+		PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
 	}
 
 	ResetActiveMenuSelection();
@@ -2392,7 +2452,7 @@ void AGACharacter::OnHealthModified(float Health, float MaxHealth)
 
 	if (PC)
 	{
-		PC->OnHealthModified(Health, MaxHealth);
+		PC->OnHealthModified_Client(Health, MaxHealth);
 	}
 }
 
@@ -2400,7 +2460,7 @@ void AGACharacter::OnStaminaModified(float Stamina, float MaxStamina)
 {
 	if(PC)
 	{
-		PC->OnStaminaModified(Stamina, MaxStamina);
+		PC->OnStaminaModified_Client(Stamina, MaxStamina);
 	}
 }
 
@@ -2408,7 +2468,7 @@ void AGACharacter::OnManaModified(float Mana, float MaxMana)
 {
 	if (PC)
 	{
-		PC->OnManaModified(Mana, MaxMana);
+		PC->OnManaModified_Client(Mana, MaxMana);
 	}
 }
 
@@ -2417,7 +2477,7 @@ void AGACharacter::OnExperienceModified(float Experience, float MaxExperience)
 {
 	if (PC)
 	{
-		PC->OnExperienceModified(Experience, MaxExperience);
+		PC->OnExperienceModified_Client(Experience, MaxExperience);
 	}
 }
 
@@ -2426,7 +2486,7 @@ void AGACharacter::OnStatModified(float Charisma, float Constitution, float Dext
 {
 	if (PC)
 	{
-		PC->OnStatModified(Charisma, Constitution, Dexterity, Intelligence, Strength, Wisdom);
+		PC->OnStatModified_Client(Charisma, Constitution, Dexterity, Intelligence, Strength, Wisdom);
 	}
 }
 
@@ -2436,7 +2496,7 @@ void AGACharacter::OnAmmoModified(float Ammo, float MaxAmmo)
 	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Purple, "Ammo Modified from character");
 	if (PC)
 	{
-		PC->OnCurrentWeaponAmmoModified(Ammo, MaxAmmo);
+		PC->OnCurrentWeaponAmmoModified_Client(Ammo, MaxAmmo);
 	}
 }
 
@@ -2526,7 +2586,7 @@ void AGACharacter::Death()
 	if (PC)
 	{
 		// PC->UnPossess();
-		PC->OnDeath();
+		PC->OnDeath_Client();
 
 		FInputModeUIOnly UIOnly;
 		PC->SetInputMode(UIOnly);
@@ -2537,7 +2597,7 @@ void AGACharacter::Death()
 		AC->GetBrainComponent()->StopLogic("Dead");
 	}
 
-	ChangeCameraType(false);
+	ChangeViewpoint(false);
 	FloatingBarComponent->DestroyAllBars();
 	FVector LaunchVelocity;
 	LaunchingComponent->EndLaunch(LaunchVelocity);
@@ -2568,7 +2628,7 @@ void AGACharacter::NotifyCanInteract_Implementation(FName InteractibleName, bool
 {
 	if (PC)
 	{
-		PC->NotifyCanInteract(InteractibleName, CanPickup);
+		PC->NotifyCanInteract_Client(InteractibleName, CanPickup);
 	}
 }
 
@@ -2728,35 +2788,28 @@ void AGACharacter::PickupItem(AGAActor* Item)
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString("We want to pick " + Item->GetName() + " up!"));
 		}
 
-		bool bAddedItem = false;
 		if (!HeldItem)
 		{
+			Item->OnPickedUp();
 			EquipItem(Item);
-			bAddedItem = true;
 		}
 		else if (!StowedItem)
 		{
+			Item->OnPickedUp();
 			StowItem(Item);
-			bAddedItem = true;
 		}
 		else if (Inventory->AddItem(Item))
 		{
+			Item->OnPickedUp();
 			Item->SetActorHiddenInGame(true);
-			Item->SetActorEnableCollision(false);
-			bAddedItem = true;
 
 			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
 			if (Weapon && PC)
 			{
 				FGAItemInfo Info = FGAItemInfo();
 				Weapon->GetItemInfo(Info);
-				PC->OnPickupItem(Info); 
+				PC->OnPickupItem_Client(Info); 
 			}
-		}
-
-		if (bAddedItem)
-		{
-			Item->OnPickedUp();
 		}
 	}
 }
@@ -2770,14 +2823,14 @@ void AGACharacter::EquipItem(AGAActor* Item)
 
 		if (PC)
 		{
-			PC->SetItemPriority(bWeaponPriority);
+			PC->SetItemPriority_Client(bWeaponPriority);
 			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
 			if (Weapon)
 			{
 				FGAItemInfo Info = FGAItemInfo();
 				Weapon->GetItemInfo(Info);
 				HeldWeaponType = Weapon->WeaponType;
-				PC->OnEquipItem(Item, Info);
+				PC->OnEquipItem_Client(Item, Info);
 			}
 		}
 		else if (AC)
@@ -2788,10 +2841,9 @@ void AGACharacter::EquipItem(AGAActor* Item)
 		FAttachmentTransformRules ItemAttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 		HeldItem->AttachToComponent(this->GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(DominantHand) ? DominantHand : FName());
 		HeldItem->SetActorHiddenInGame(false);
-		HeldItem->SetActorEnableCollision(false);
 		HeldItem->IntializeAbilitySystem();
 
-		// Item->OnEquipped();
+		Item->OnEquipped();
 	}
 }
 
@@ -2804,17 +2856,16 @@ void AGACharacter::StowItem(AGAActor* Item)
 		FAttachmentTransformRules ItemAttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 		StowedItem->AttachToComponent(this->GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(FName("spine_03")) ? FName("spine_03") : FName());
 		StowedItem->SetActorHiddenInGame(true);
-		StowedItem->SetActorEnableCollision(false);
 
 		if (PC)
 		{
-			PC->SetItemPriority(bWeaponPriority);
+			PC->SetItemPriority_Client(bWeaponPriority);
 			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
 			if (Weapon)
 			{
 				FGAItemInfo Info = FGAItemInfo();
 				Weapon->GetItemInfo(Info);
-				PC->OnStowedItem(Info);
+				PC->OnStowedItem_Client(Info);
 			}
 		}
 		else if (AC)
@@ -2863,7 +2914,7 @@ void AGACharacter::AddStowedItemToInventory()
 			{
 				FGAItemInfo Info = FGAItemInfo();
 				Weapon->GetItemInfo(Info);
-				PC->OnPickupItem(Info);
+				PC->OnPickupItem_Client(Info);
 			}
 		}
 	}
@@ -2875,6 +2926,7 @@ void AGACharacter::AddEquippedItemToInventory()
 {
 	if (HeldItem)
 	{
+		HeldItem->OnUnEquipped();
 		HeldItem->SetActorHiddenInGame(true);
 		Inventory->AddItem(HeldItem);
 
@@ -2885,7 +2937,7 @@ void AGACharacter::AddEquippedItemToInventory()
 			{
 				FGAItemInfo Info = FGAItemInfo();
 				Weapon->GetItemInfo(Info);
-				PC->OnPickupItem(Info);
+				PC->OnPickupItem_Client(Info);
 			}
 		}
 	}
@@ -2907,17 +2959,12 @@ void AGACharacter::DropEquippedItem(const FVector& DropVelocity)
 		GetActorEyesViewPoint(EyesLocation, EyesRotation);
 		FVector ItemLocation = EyesLocation + GetActorForwardVector() * 25;
 
-		HeldItem->SetOwner(nullptr);
-		HeldItem->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 		HeldItem->SetActorLocation(ItemLocation);
-		HeldItem->SetActorHiddenInGame(false);
-		HeldItem->SetActorEnableCollision(true);
 		HeldItem->OnDropped();
 		if (AGAWeapon* Weapon = Cast<AGAWeapon>(HeldItem))
 			Weapon->LaunchItem(DropVelocity);
 
-		if (PC)
-			PC->OnDropItem();
+		if (PC) PC->OnDropItem_Client();
 
 		HeldItem = nullptr;
 	}
@@ -2933,8 +2980,6 @@ void AGACharacter::DropItemFromInventory(uint8 Slot)
 
 	FVector ItemLocation = GetActorLocation() + FVector(NewLocation, 0);
 
-	Item->SetActorHiddenInGame(false);
-	Item->SetActorEnableCollision(true);
 	Item->SetActorLocation(ItemLocation);
 	Item->OnDropped();
 
@@ -2956,9 +3001,7 @@ bool AGACharacter::GetAllItems(const FString Category, TArray<FItemKey>& Items) 
 void AGACharacter::AddItemRepository(const FString Category, const FItemKey& Item)
 {
 	Repository->AddItem(Category, Item);
-	if (PC) {
-		PC->OnAddItemToRepository(Item);
-	}
+	if (PC) PC->OnAddItemToRepository_Client(Item);
 }
 
 void AGACharacter::AddItemRepository(const FString Category, const FName Name, const uint8 Quantity)
@@ -3064,7 +3107,7 @@ void AGACharacter::OnDamaged(AActor* SourceActor, EAttributeType AttributeType, 
 
 	if (PC)
 	{
-		PC->OnDamaged(SourceActor, AttributeType, DeltaAmount, NewValue);
+		PC->OnDamaged_Client(SourceActor, AttributeType, DeltaAmount, NewValue);
 	}
 	else if (AC)
 	{
@@ -3115,7 +3158,7 @@ void AGACharacter::OnHealed(AActor* SourceActor, EAttributeType AttributeType, f
 {
 	if (PC)
 	{
-		PC->OnHealed(SourceActor, AttributeType, DeltaAmount, NewValue);
+		PC->OnHealed_Client(SourceActor, AttributeType, DeltaAmount, NewValue);
 	}
 	else if (AC)
 	{
@@ -3230,18 +3273,15 @@ void AGACharacter::CheckVisibleCharacters()
 			{
 				VisibleCharacter.Target->CalculateShadowed();
 
-				if (Shadowed == 2)
+				if (bShadowed)
 				{
 					AIState.SetCurrentSuspicion(1 + AIState.GetCurrentSuspicion());
 				}
-				else if (Shadowed == 1)
+				else
 				{
 					AIState.SetCurrentSuspicion(4 + AIState.GetCurrentSuspicion());
 				}
-				else
-				{
-					AIState.SetCurrentSuspicion(6 + AIState.GetCurrentSuspicion());
-				}
+
 			}
 		}
 
@@ -3307,7 +3347,7 @@ void AGACharacter::UpdateCurrentBuilding(AGameplayBuilding* CurrentBuilding)
 
 	if (PC)
 	{
-		PC->OnUpdateCurrentBuilding(CurrentBuilding->BuildingName);
+		PC->OnUpdateCurrentBuilding_Client(CurrentBuilding->BuildingName);
 	}
 	else if (AC)
 	{
@@ -3319,7 +3359,7 @@ void AGACharacter::UpdateDesiredLocation(FVector DesiredLocation)
 {
 	if (PC)
 	{
-		PC->OnDesiredLocationSet(DesiredLocation);
+		PC->OnDesiredLocationSet_Client(DesiredLocation);
 	}
 	else if (AC)
 	{
@@ -3331,7 +3371,7 @@ void AGACharacter::UpdateTargetBuilding(AGameplayBuilding* TargetBuilding)
 {
 	if (PC)
 	{
-		PC->OnUpdateTargetBuilding(TargetBuilding->BuildingName);
+		PC->OnUpdateTargetBuilding_Client(TargetBuilding->BuildingName);
 	}
 	else if (AC)
 	{
