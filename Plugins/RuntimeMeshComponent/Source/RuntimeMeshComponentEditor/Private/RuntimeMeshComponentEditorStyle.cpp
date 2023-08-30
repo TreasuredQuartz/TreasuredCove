@@ -12,8 +12,8 @@ void FRuntimeMeshComponentEditorStyle::Initialize()
 {
 	if (!StyleInstance.IsValid())
 	{
-		StyleInstance = Create();
-		FSlateStyleRegistry::RegisterSlateStyle(*StyleInstance);
+		// StyleInstance = Create();
+		// FSlateStyleRegistry::RegisterSlateStyle(*StyleInstance);
 	}
 }
 
@@ -40,7 +40,7 @@ const FVector2D Icon128x128(128.0f, 128.0f);
 
 TSharedRef< FSlateStyleSet > FRuntimeMeshComponentEditorStyle::Create()
 {
-	TSharedRef< FSlateStyleSet > Style = MakeShareable(new FSlateStyleSet("RuntimeMeshComponentEditorStyle"));
+	TSharedRef< FSlateStyleSet > Style = MakeShareable<FSlateStyleSet>(new FSlateStyleSet("RuntimeMeshComponentEditorStyle"));
 	Style->SetContentRoot(IPluginManager::Get().FindPlugin("RuntimeMeshComponent")->GetBaseDir() / TEXT("Resources"));
 
 	Style->Set("RuntimeMeshComponentEditor.PluginAction", new IMAGE_BRUSH(TEXT("Icon128"), Icon128x128));
