@@ -16,6 +16,11 @@
   "Installed": false,
   "Modules": [
     {
+      "Name": "RuntimeMeshComponent",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
       "Name": "RealtimeMeshComponent",
       "Type": "Runtime",
       "LoadingPhase": "PostConfigInit"
@@ -27,6 +32,11 @@
     },
     {
       "Name": "RealtimeMeshEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "RuntimeMeshComponentEditor",
       "Type": "Editor",
       "LoadingPhase": "Default"
     }

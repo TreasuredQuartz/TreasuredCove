@@ -1,0 +1,2 @@
+
+#include "SkillInfoStruct.h"

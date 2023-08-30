@@ -197,6 +197,16 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 								]
 							]
 						]					
+
+						// Title
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SAssignNew(ListViewWidget, SListView<TSharedPtr<FSlateBrush>>)
+							.ItemHeight(24)
+							.ListItemsSource(&Cast<UEdNode_GenericGraphNode>(GraphNode)->GenericGraphNode->Items) //The Items array is the source of this listview
+							.OnGenerateRow(this, &SEdNode_GenericGraphNode::OnGenerateRowForList)
+						]
 					]
 				]
 			]
@@ -331,6 +341,17 @@ EVisibility SEdNode_GenericGraphNode::GetDragOverMarkerVisibility() const
 const FSlateBrush* SEdNode_GenericGraphNode::GetNameIcon() const
 {
 	return FAppStyle::GetBrush(TEXT("BTEditor.Graph.BTNode.Icon"));
+}
+
+TSharedRef<ITableRow> SEdNode_GenericGraphNode::OnGenerateRowForList(TSharedPtr<FSlateBrush> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	//Create the row
+	return
+		SNew(STableRow< TSharedPtr<FSlateBrush> >, OwnerTable)
+		.Padding(2.0f)
+		[
+			SNew(SImage).Image(Item.Get())
+		];
 }
 
 #undef LOCTEXT_NAMESPACE

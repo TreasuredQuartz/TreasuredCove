@@ -2,7 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "Templates/SubclassOf.h"
+#include "Templates/SharedPointer.h"
 #include "GenericGraphNode.generated.h"
+
+DECLARE_DYNAMIC_DELEGATE(FOnItemsUpdated);
 
 class UGenericGraph;
 class UGenericGraphEdge;
@@ -19,6 +22,12 @@ UCLASS(Blueprintable)
 class GENERICGRAPHRUNTIME_API UGenericGraphNode : public UObject
 {
 	GENERATED_BODY()
+
+public:
+	TArray<TSharedPtr<FSlateBrush>> Items;
+
+	UPROPERTY()
+	FOnItemsUpdated OnItemsUpdated;
 
 public:
 	UGenericGraphNode();
@@ -74,7 +83,6 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor" ,meta = (ClampMin = "0",EditCondition = "ChildrenLimitType == ENodeLimit::Limited", EditConditionHides))
 	int32 ChildrenLimit;
-	
 #endif
 
 #if WITH_EDITOR

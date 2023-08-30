@@ -27,6 +27,11 @@ public:
 
 	virtual const FSlateBrush* GetNameIcon() const;
 
+public:
+	/* Adds a new Image with the brush to the list */
+	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FSlateBrush> Item, const TSharedRef<STableViewBase>& OwnerTable);
+	/* The actual UI list */
+	TSharedPtr< SListView< TSharedPtr<FSlateBrush> > > ListViewWidget;
 protected:
 };
 

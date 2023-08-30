@@ -12,11 +12,11 @@ UGASkillTreeNode::UGASkillTreeNode()
 
 }
 
-void UGASkillTreeNode::Initialize(UGenericGraph* InGraph)
-{
-	UGenericGraphNode::Initialize(InGraph);
-	InitializeItems();
-}
+//void UGASkillTreeNode::Initialize(UGenericGraph* InGraph)
+//{
+//	UGenericGraphNode::Initialize(InGraph);
+//	InitializeItems();
+//}
 
 void UGASkillTreeNode::InitializeItems()
 {
@@ -73,15 +73,15 @@ FText UGASkillTreeNode::GetDescription_Implementation() const
 	return LOCTEXT("NodeDesc", "Skill Tree Node");
 }
 
-const FSlateBrush* UGASkillTreeNode::GetInnerObjectIcon(int32 Index) const
-{
-	return Items[Index].Get();
-}
-
-int32 UGASkillTreeNode::GetInnerObjectNum() const
-{
-	return Tier.Skills.Num();
-}
+//const FSlateBrush* UGASkillTreeNode::GetInnerObjectIcon(int32 Index) const
+//{
+//	return Items[Index].Get();
+//}
+//
+//int32 UGASkillTreeNode::GetInnerObjectNum() const
+//{
+//	return Tier.Skills.Num();
+//}
 
 void UGASkillTreeNode::Aquired()
 {

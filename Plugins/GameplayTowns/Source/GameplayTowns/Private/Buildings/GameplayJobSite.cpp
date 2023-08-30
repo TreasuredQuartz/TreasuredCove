@@ -21,17 +21,17 @@ void AGameplayJobSite::BeginPlay()
 
 void AGameplayJobSite::AddToResource(FName Resource, float Amount)
 {
-	ResourceComponent->GetResourceSet()->AddToResource(Resource, Amount);
+	ResourceComponent->AddToResource(Resource, Amount);
 }
 
 void AGameplayJobSite::RemoveFromResource(FName Resource, float Amount)
 {
-	ResourceComponent->GetResourceSet()->RemoveFromResource(Resource, Amount);
+	ResourceComponent->RemoveFromResource(Resource, Amount);
 }
 
 TMap<FName, float> AGameplayJobSite::GetResources() const
 {
-	return ResourceComponent->GetResourceSet()->GetAllResources();
+	return ResourceComponent->GetAllResources();
 }
 
 void AGameplayJobSite::AddRequest(FRequest Request)

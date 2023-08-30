@@ -30,7 +30,7 @@ class TREASUREDCOVE_API UGASkillTreeNode : public UGenericGraphNode
 public:
 	UGASkillTreeNode();
 
-	virtual void Initialize(UGenericGraph* InGraph) override;
+	// virtual void Initialize(UGenericGraph* InGraph) override;
 	void InitializeItems();
 
 public:
@@ -38,8 +38,8 @@ public:
 	FGASkillTreeTier Tier;
 
 	virtual FText GetDescription_Implementation() const override;
-	virtual const FSlateBrush* GetInnerObjectIcon(int32 Index) const override;
-	virtual int32 GetInnerObjectNum() const override;
+	// virtual const FSlateBrush* GetInnerObjectIcon(int32 Index) const override;
+	// virtual int32 GetInnerObjectNum() const override;
 public:
 #if WITH_EDITOR
 	void PostEditChangeChainProperty(struct FPropertyChangedChainEvent& e) override;
