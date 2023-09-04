@@ -5,7 +5,7 @@
 #include "Templates/SharedPointer.h"
 #include "GenericGraphNode.generated.h"
 
-DECLARE_DYNAMIC_DELEGATE(FOnItemsUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnItemsUpdated);
 
 class UGenericGraph;
 class UGenericGraphEdge;
@@ -26,7 +26,7 @@ class GENERICGRAPHRUNTIME_API UGenericGraphNode : public UObject
 public:
 	TArray<TSharedPtr<FSlateBrush>> Items;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintAssignable)
 	FOnItemsUpdated OnItemsUpdated;
 
 public:

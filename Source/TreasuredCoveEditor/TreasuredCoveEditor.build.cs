@@ -16,7 +16,9 @@ public class TreasuredCoveEditor : ModuleRules
 
         PrivateDependencyModuleNames.AddRange(new string[]
         {
-            "TreasuredCove"
+            "UnrealEd",
+            "GenericGraphRuntime",
+            "TreasuredCove",
         });
 
         // Uncomment if you are using Slate UI

@@ -166,7 +166,7 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 							]
 
 							// Icon
-							+SHorizontalBox::Slot()
+							+ SHorizontalBox::Slot()
 							.AutoWidth()
 							.VAlign(VAlign_Center)
 							[
@@ -195,15 +195,17 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 								[
 									NodeTitle.ToSharedRef()
 								]
-							]
-						]					
 
-						// Title
+							]
+						]
+
+						// Body
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						[
 							SAssignNew(ListViewWidget, SListView<TSharedPtr<FSlateBrush>>)
 							.ItemHeight(24)
+							.Orientation(EOrientation::Orient_Horizontal)
 							.ListItemsSource(&Cast<UEdNode_GenericGraphNode>(GraphNode)->GenericGraphNode->Items) //The Items array is the source of this listview
 							.OnGenerateRow(this, &SEdNode_GenericGraphNode::OnGenerateRowForList)
 						]
@@ -293,6 +295,18 @@ void SEdNode_GenericGraphNode::AddPin(const TSharedRef<SGraphPin>& PinToAdd)
 	}
 }
 
+TSharedRef<ITableRow> SEdNode_GenericGraphNode::OnGenerateRowForList(TSharedPtr<FSlateBrush> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	//Create the row
+	return
+		SNew(STableRow< TSharedPtr<FSlateBrush> >, OwnerTable)
+		.Padding(2.0f)
+		[
+			SNew(SImage)
+			.Image(Item.Get())
+		];
+}
+
 bool SEdNode_GenericGraphNode::IsNameReadOnly() const
 {
 	UEdNode_GenericGraphNode* EdNode_Node = Cast<UEdNode_GenericGraphNode>(GraphNode);
@@ -341,17 +355,6 @@ EVisibility SEdNode_GenericGraphNode::GetDragOverMarkerVisibility() const
 const FSlateBrush* SEdNode_GenericGraphNode::GetNameIcon() const
 {
 	return FAppStyle::GetBrush(TEXT("BTEditor.Graph.BTNode.Icon"));
-}
-
-TSharedRef<ITableRow> SEdNode_GenericGraphNode::OnGenerateRowForList(TSharedPtr<FSlateBrush> Item, const TSharedRef<STableViewBase>& OwnerTable)
-{
-	//Create the row
-	return
-		SNew(STableRow< TSharedPtr<FSlateBrush> >, OwnerTable)
-		.Padding(2.0f)
-		[
-			SNew(SImage).Image(Item.Get())
-		];
 }
 
 #undef LOCTEXT_NAMESPACE

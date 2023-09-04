@@ -19,9 +19,9 @@ void FRuntimeMeshComponentEditorStyle::Initialize()
 
 void FRuntimeMeshComponentEditorStyle::Shutdown()
 {
-	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
-	ensure(StyleInstance.IsUnique());
-	StyleInstance.Reset();
+	// FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
+	// ensure(StyleInstance.IsUnique());
+	// StyleInstance.Reset();
 }
 
 FName FRuntimeMeshComponentEditorStyle::GetStyleSetName()

@@ -59,7 +59,7 @@ void UGASkillTreeNode::PostEditChangeChainProperty(struct FPropertyChangedChainE
 		Items.Empty(Tier.Skills.Num());
 		InitializeItems();
 
-		OnItemsUpdated.ExecuteIfBound();
+		OnItemsUpdated.Broadcast();
 		UE_LOG(LogTemp, Warning, TEXT("Property Name: %s, Member Property Name: %s"), *PropertyName.ToString(), *MemberPropertyName.ToString());
 	}
 
