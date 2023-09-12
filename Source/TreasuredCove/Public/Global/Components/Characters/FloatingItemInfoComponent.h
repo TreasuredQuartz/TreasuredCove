@@ -15,6 +15,8 @@ class TREASUREDCOVE_API UFloatingItemInfoComponent : public UActorComponent
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FloatingItemInfo", Meta = (AllowPrivateAccess = "true"))
+	float PopupDetectionDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "FloatingItemInfo", Meta = (AllowPrivateAccess = "true"))
 	float PopupVerticalOffset;
 
 	// Blueprint override

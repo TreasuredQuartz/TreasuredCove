@@ -19,6 +19,7 @@ UFloatingItemInfoComponent::UFloatingItemInfoComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
+	PopupDetectionDistance = 500;
 }
 
 // Called when the game starts
@@ -69,7 +70,7 @@ void UFloatingItemInfoComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	{
 		FHitResult Hit;
 		const FVector Start = CameraLocation;
-		const FVector End = Start + (CameraRotation.Vector() * 250);
+		const FVector End = Start + (CameraRotation.Vector() * PopupDetectionDistance);
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(GetOwner());
 		if (World->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_GameTraceChannel1, Params))
@@ -79,7 +80,7 @@ void UFloatingItemInfoComponent::TickComponent(float DeltaTime, ELevelTick TickT
 				if (!HitWeapon->IsPickedUp())
 				{
 					bLookingAtPickup = true;
-					PopupLocation = HitWeapon->GetActorLocation() + (HitWeapon->GetActorForwardVector() * 50);
+					PopupLocation = HitWeapon->GetActorLocation();
 					// PopupLocation.Z = Hit.Location.Z >= PopupLocation.Z ? Hit.Location.Z : PopupLocation.Z;
 					if (WeaponPickup != HitWeapon)
 					{
@@ -110,7 +111,13 @@ void UFloatingItemInfoComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	else
 	{
 		if (Popup)
+		{
 			Popup->SetActorLocation(PopupLocation);
+
+			const float Alpha = FMath::GetMappedRangeValueClamped<float>(TRange<float>(100.f, PopupDetectionDistance), TRange<float>(0.f, 1.f), (PopupLocation - GetOwner()->GetActorLocation()).Size());
+			const FVector PopupScale3D = FMath::Lerp(FVector(10, 10, 10), FVector(0.1,0.1,0.1), Alpha);
+			Popup->SetActorScale3D(PopupScale3D);
+		}
 	}
 }
 

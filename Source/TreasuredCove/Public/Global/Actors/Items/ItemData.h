@@ -7,6 +7,39 @@
 #include "ItemData.generated.h"
 
 class UItemAttributeData;
+class UGASkillTree;
+class UItemCreator;
+
+enum class EItemType : uint8
+{
+	None,
+	
+};
+
+/**
+ *
+ */
+UCLASS(Blueprintable, EditInlineNew)
+class TREASUREDCOVE_API UItemTypeData : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UItemTypeData();
+
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UItemCreator* Creator;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UGASkillTree* ProficiencyTree;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	uint8 UseType;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	uint8 AimType;
+};
 
 /**
  * 
@@ -21,6 +54,9 @@ public:
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	FText DisplayName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	FText CooldownOrCost;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
@@ -31,14 +67,42 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	FText Summary;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	FText Description;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes", meta = (AllowPrivateAccess = "true"))
 	TMap<FString, FText> ItemAttributeData;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	FText Description;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Credits", meta = (AllowPrivateAccess = "true"))
+	TMap<FString, FText> Credits;
 
 public:
 	UFUNCTION(BlueprintCallable, Category="Item")
 	void GetAttributeMap(TMap<FString, FText>& Attributes);
 
+};
+
+/**
+*
+*/
+UCLASS()
+class TREASUREDCOVE_API UItemData : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UItemData();
+
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UStaticMesh* Mesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	AGAWeapon* Blueprint;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UItemTypeData* TypeData;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UItemPopupData* PopupData;
 };

@@ -10,7 +10,7 @@
  * 
  */
 UCLASS()
-class TREASUREDCOVE_API UItemAttributeData : public UObject
+class TREASUREDCOVE_API UItemUserInterfaceData : public UObject
 {
 	GENERATED_BODY()
 	
@@ -19,5 +19,4 @@ private:
 	TMap<FString, FText> AttributeMap;
 
 public:
-	void GetAttributeMap(TMap<FString, FText>& OutAttributeMap);
 };

@@ -21,9 +21,7 @@ struct FItemDatabaseRow
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	UDataTable* SpawnTable;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	UDataTable* InventoryUITable;
+	UDataTable* LootTable;
 	UPROPERTY(EditDefaultsOnly, Instanced, Category = "UI")
 	UItemPopupData* PopupData;
 };
