@@ -43,6 +43,15 @@ uint32 FAssetTypeActions_GenericGraph::GetCategories()
 	return MyAssetCategory;
 }
 
+const TArray<FText>& FAssetTypeActions_GenericGraph::GetSubMenus() const
+{
+	static const TArray<FText> SubMenus
+	{
+		LOCTEXT("GenericGraphSubMenu", "Generic Graph")
+	};
+	return SubMenus;
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 #undef LOCTEXT_NAMESPACE

@@ -21,6 +21,8 @@ class TREASUREDCOVE_API UMeshExtensionLibrary : public UBlueprintFunctionLibrary
 public:
 	static void CopyProceduralMeshFromStaticMesh(UStaticMesh* StaticMesh, int32 LODIndex, UProceduralMeshComponent* ProcMeshComponent, bool bCreateCollision);
 
+	static UStaticMesh* CopyStaticMeshFromProceduralMesh(UProceduralMeshComponent* ProcMesh, FString SavePath, FString Name);
+
 //	/**
 //	* Merges the given meshes into a single mesh.
 //	* @return the merged mesh (will be invalid if the merge failed).

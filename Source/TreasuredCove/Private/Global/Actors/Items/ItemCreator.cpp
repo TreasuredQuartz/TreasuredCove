@@ -3,7 +3,7 @@
 
 #include "Global/Actors/Items/ItemCreator.h"
 
-ItemCreator::ItemCreator()
+UItemCreator::UItemCreator()
 {
 }
 

@@ -25,7 +25,7 @@ class TREASUREDCOVE_API UItemTypeData : public UObject
 	GENERATED_BODY()
 
 public:
-	UItemTypeData();
+	UItemTypeData() {};
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
@@ -91,14 +91,14 @@ class TREASUREDCOVE_API UItemData : public UObject
 	GENERATED_BODY()
 
 public:
-	UItemData();
+	UItemData() {};
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	UStaticMesh* Mesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	AGAWeapon* Blueprint;
+	TSubclassOf<class AGAWeapon> Blueprint;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
 	UItemTypeData* TypeData;

@@ -15,7 +15,7 @@ class TREASUREDCOVE_API UItemCreator : public UObject
 	GENERATED_BODY()
 
 public:
-	ItemCreator();
+	UItemCreator();
 
 public:
 	TArray<UObject*> Parts;

@@ -16,7 +16,7 @@ void FGenericGraphEditor::StartupModule()
 
 	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
 
-	GenericGraphAssetCategoryBit = AssetTools.RegisterAdvancedAssetCategory(FName(TEXT("GenericGraph")), LOCTEXT("GenericGraphAssetCategory", "GenericGraph"));
+	GenericGraphAssetCategoryBit = EAssetTypeCategories::Gameplay;// AssetTools.RegisterAdvancedAssetCategory(FName(TEXT("GenericGraph")), LOCTEXT("GenericGraphAssetCategory", "GenericGraph"));
 
 	RegisterAssetTypeAction(AssetTools, MakeShareable(new FAssetTypeActions_GenericGraph(GenericGraphAssetCategoryBit)));
 }
@@ -48,6 +48,8 @@ void FGenericGraphEditor::RegisterAssetTypeAction(IAssetTools& AssetTools, TShar
 	AssetTools.RegisterAssetTypeActions(Action);
 	CreatedAssetTypeActions.Add(Action);
 }
+
+
 
 IMPLEMENT_MODULE(FGenericGraphEditor, GenericGraphEditor)
 
