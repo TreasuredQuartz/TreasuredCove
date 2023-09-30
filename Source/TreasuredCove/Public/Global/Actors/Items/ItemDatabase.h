@@ -24,17 +24,25 @@ public:
 	UDataTable* LootTable;
 	UPROPERTY(EditDefaultsOnly, Instanced, Category = "UI")
 	UItemPopupData* PopupData;
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	FString Category;
 };
 
 /**
  * 
  */
-UCLASS(BlueprintType)
+UCLASS(Blueprintable)
 class TREASUREDCOVE_API UItemDatabase : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Database")
 	TMap<FName, FItemDatabaseRow> ItemDatabase;
+	TArray<FString> Categories;
+
+public:
+	int32 GetTotalItemCount() const { return ItemDatabase.Num(); };
+
+
 };

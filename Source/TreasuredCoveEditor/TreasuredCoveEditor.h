@@ -3,4 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ModuleManager.h"
 
+class FTreasuredCoveEditorModule : public FDefaultGameModuleImpl
+{
+public:
+	virtual void StartupModule() override;
+	virtual void ShutdownModule() override;
+};

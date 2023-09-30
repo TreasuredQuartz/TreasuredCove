@@ -2788,12 +2788,12 @@ void AGACharacter::PickupItem(AGAActor* Item)
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString("We want to pick " + Item->GetName() + " up!"));
 		}
 
-		if (!HeldItem)
+		if (!GetHeldItem())
 		{
 			Item->OnPickedUp();
 			EquipItem(Item);
 		}
-		else if (!StowedItem)
+		else if (!GetStowedItem())
 		{
 			Item->OnPickedUp();
 			StowItem(Item);
@@ -3033,6 +3033,14 @@ void AGACharacter::SpawnItemFromRepository()
 {
 
 }
+
+// */
+//////////////////////////////////////////////////////
+/////			CHARACTER QUICK SELECT			//////
+//////////////////////////////////////////////////////
+
+
+
 #pragma endregion
 
 #pragma region Climbing

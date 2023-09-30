@@ -12,7 +12,7 @@ class UPhysicalMaterial;
 struct TREASUREDCOVE_API FPartVertexData
 {
 public:
-	FPartVertexData();
+	FPartVertexData() {};
 
 public:
 	FVector Location = FVector::ZeroVector;
@@ -65,7 +65,7 @@ private:
 	// Metal, Wood, Fungus etc.
 	TArray<FName> AvailableMaterialTypes;
 public:
-	bool HasInnerParts() const { !InnerParts.IsEmpty(); };
+	bool HasInnerParts() const { return !InnerParts.IsEmpty(); };
 
 public:
 	FProceduralMeshSection GenerateSection();
