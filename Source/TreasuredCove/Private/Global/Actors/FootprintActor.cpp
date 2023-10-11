@@ -84,7 +84,7 @@ void AFootprintActor::OnSensed(const USensorBase* Sensor, int32 Channel, EOnSens
 
 	if (Sensor->GetSensorOwner() == GetOwner() || Pawn->GetController() == UGameplayStatics::GetPlayerController(this, 0))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("We hear ourselves!"));
+		// UE_LOG(LogTemp, Warning, TEXT("We hear ourselves!"));
 		return;
 	}
 

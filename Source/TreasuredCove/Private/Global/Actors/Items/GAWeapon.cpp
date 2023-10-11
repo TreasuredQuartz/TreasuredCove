@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GAWeapon.h"
+#include "GASkillTreeComponent.h"
+#include "GAProjectileMovementComponent.h"
 #include "Global/Components/Characters/FloatingItemInfoComponent.h"
 #include "Global/Actors/Items/ItemData.h"
 
@@ -19,6 +21,10 @@ AGAWeapon::AGAWeapon()
 	Box->OnComponentBeginOverlap.AddDynamic(this, &AGAWeapon::OnOverlapBegin);
 	Box->OnComponentEndOverlap.AddDynamic(this, &AGAWeapon::OnOverlapEnd);
 
+
+	ProficiencyTreeComponent =
+		CreateDefaultSubobject<UGASkillTreeComponent>(TEXT("Proficiency Tree"));
+
 	//ItemData =
 	//	CreateDefaultSubobject<UItemData>(TEXT("Item Data"));
 
@@ -34,9 +40,14 @@ void AGAWeapon::LaunchItem(const FVector& LaunchVelocity) const
 	Box->AddImpulse(LaunchVelocity);
 }
 
-UObject* AGAWeapon::GetItemData()
+UItemPopupData* AGAWeapon::GetItemData() const
 {
-	return ItemData;
+	UItemPopupData* Data = NewObject<UItemPopupData>();
+
+	Data->DisplayIcon = Texture;
+	Data->DisplayName = FText::FromName(Name);
+
+	return Data;
 }
 
 //
@@ -88,11 +99,10 @@ void AGAWeapon::OnDropped_Implementation()
 }
 
 //
-void AGAWeapon::GetItemInfo(FGAItemInfo& Info)
+FGAItemInfo AGAWeapon::GetItemInfo() const
 {
-	Info = FGAItemInfo(
+	return FGAItemInfo(
 		Name,
 		Texture,
-		ActiveMenuClass,
 		EditMenuClass);
 }

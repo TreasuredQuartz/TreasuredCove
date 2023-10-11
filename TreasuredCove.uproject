@@ -34,6 +34,10 @@
 	],
 	"Plugins": [
 		{
+			"Name": "DMXEngine",
+			"Enabled": false
+		},
+		{
 			"Name": "GameplayAbilities",
 			"Enabled": true
 		},

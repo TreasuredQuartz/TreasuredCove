@@ -15,7 +15,7 @@
 class UGASystemComponent;
 class UAbilitySet;
 class UGameplayAbilityBase;
-class UProjectileMovementComponent;
+class UItemMovementComponent;
 
 /** This Class serves a dual purpose:
 * - Reduce Complexity of AGACharacter.
@@ -37,8 +37,10 @@ private:
 	// These are the handles to the actual abilities 
 	// that will be given to us by the ability system
 	TArray< FGameplayAbilitySpecHandle > CurrentActiveAbilityHandles;
+	//
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAActor|Animation", meta = (AllowPrivateAccess = true))
 	UBillboardComponent* DominantHandOffset;
+	//
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAActor|Animation", meta = (AllowPrivateAccess = true))
 	UBillboardComponent* SupportingHandOffset;
 
@@ -127,18 +129,25 @@ protected:
 
 public:
 	// Root Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USceneComponent* Root;
 
 	// Abilities Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UGASystemComponent* AbilitySystem;
 
 	// Attribute Set Component
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	TArray<TSubclassOf<UAttributeSet>> AttributeSetClasses;
 
-	// Projectile Movement Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UProjectileMovementComponent* ProjectileMovement;
+	// Item Movement Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UItemMovementComponent* ItemMovement;
+
+public:
+	void LaunchItem(FVector LaunchVelocity, bool XYOveride, bool ZOveride);
+
+	/** Let blueprint know that we were launched */
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnLaunched(FVector LaunchVelocity, bool bXYOverride, bool bZOverride);
 };

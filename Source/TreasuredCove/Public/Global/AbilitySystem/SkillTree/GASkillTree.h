@@ -35,7 +35,13 @@ public:
 	TSubclassOf<class UWidget> Widget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText DisplayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int Points;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int Level;
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	// struct FGASkillTreeStyleStruct Style;

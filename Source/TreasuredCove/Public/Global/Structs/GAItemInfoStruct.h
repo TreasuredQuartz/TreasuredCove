@@ -19,15 +19,13 @@ struct FGAItemInfo
 	FGAItemInfo();
 
 	FGAItemInfo(FName InName, UTexture2D* inTexture, 
-		TSubclassOf<UCommandMenu> InItemWidgetActiveMenuClass, TSubclassOf<UItemEditor> InItemWidgetEditMenuClss);
+		TSubclassOf<UItemEditor> InItemWidgetEditMenuClss);
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FName Name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	UTexture2D* Texture;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	TSubclassOf<UCommandMenu> ActiveMenuClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	TSubclassOf<UItemEditor> EditMenuClass;
 };

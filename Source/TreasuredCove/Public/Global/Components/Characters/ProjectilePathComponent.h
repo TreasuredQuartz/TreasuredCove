@@ -42,10 +42,11 @@ public:
 	// virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	// UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "ProjectilePath")
+	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "ProjectilePath")
 	void BeginPrediction_Client(const FVector& StartLocation, const FVector& LaunchVelocity);
 	void StopPrediction();
 	void UpdatePrediction(const FVector& InStartLocation, const FVector& LaunchVelocity);
+	UFUNCTION()
 	void OnPathDestroyed(AActor* DestroyedActor);
 
 };

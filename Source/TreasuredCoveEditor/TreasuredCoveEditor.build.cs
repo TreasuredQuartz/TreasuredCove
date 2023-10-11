@@ -12,11 +12,13 @@ public class TreasuredCoveEditor : ModuleRules
         {
             "Core",
             "CoreUObject",
+            "InputCore",
         });
 
         PrivateDependencyModuleNames.AddRange(new string[]
         {
             "GenericGraphRuntime",
+            "GameplayAbilities",
             "TreasuredCove",
         });
 

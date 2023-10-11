@@ -337,6 +337,7 @@ void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PEI->BindAction(InputActions->InputLook, ETriggerEvent::Triggered, this, &AGACharacter::Look);
 	PEI->BindAction(InputActions->InputJump, ETriggerEvent::Triggered, this, &AGACharacter::Jump_Input);
 	PEI->BindAction(InputActions->InputCrouch, ETriggerEvent::Triggered, this, &AGACharacter::Crouch_Input);
+	// PEI->BindAction(InputActions->InputSlide, ETriggerEvent::Triggered, this, &AGACharacter::Slide_Input);
 	PEI->BindAction(InputActions->InputSprint, ETriggerEvent::Triggered, this, &AGACharacter::Sprint_Input);
 	PEI->BindAction(InputActions->InputSwitch, ETriggerEvent::Triggered, this, &AGACharacter::Switch_Input);
 
@@ -2806,9 +2807,8 @@ void AGACharacter::PickupItem(AGAActor* Item)
 			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
 			if (Weapon && PC)
 			{
-				FGAItemInfo Info = FGAItemInfo();
-				Weapon->GetItemInfo(Info);
-				PC->OnPickupItem_Client(Info); 
+				FGAItemInfo Info = Weapon->GetItemInfo();
+				PC->OnPickupItem_Client(Info);
 			}
 		}
 	}
@@ -2827,9 +2827,7 @@ void AGACharacter::EquipItem(AGAActor* Item)
 			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
 			if (Weapon)
 			{
-				FGAItemInfo Info = FGAItemInfo();
-				Weapon->GetItemInfo(Info);
-				HeldWeaponType = Weapon->WeaponType;
+				FGAItemInfo Info = Weapon->GetItemInfo();
 				PC->OnEquipItem_Client(Item, Info);
 			}
 		}
@@ -2863,8 +2861,7 @@ void AGACharacter::StowItem(AGAActor* Item)
 			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
 			if (Weapon)
 			{
-				FGAItemInfo Info = FGAItemInfo();
-				Weapon->GetItemInfo(Info);
+				FGAItemInfo Info = Weapon->GetItemInfo();
 				PC->OnStowedItem_Client(Info);
 			}
 		}
@@ -2912,8 +2909,7 @@ void AGACharacter::AddStowedItemToInventory()
 			AGAWeapon* Weapon = Cast<AGAWeapon>(StowedItem);
 			if (Weapon)
 			{
-				FGAItemInfo Info = FGAItemInfo();
-				Weapon->GetItemInfo(Info);
+				FGAItemInfo Info = Weapon->GetItemInfo();
 				PC->OnPickupItem_Client(Info);
 			}
 		}
@@ -2935,8 +2931,7 @@ void AGACharacter::AddEquippedItemToInventory()
 			AGAWeapon* Weapon = Cast<AGAWeapon>(HeldItem);
 			if (Weapon)
 			{
-				FGAItemInfo Info = FGAItemInfo();
-				Weapon->GetItemInfo(Info);
+				FGAItemInfo Info = Weapon->GetItemInfo();
 				PC->OnPickupItem_Client(Info);
 			}
 		}
@@ -2961,8 +2956,7 @@ void AGACharacter::DropEquippedItem(const FVector& DropVelocity)
 
 		HeldItem->SetActorLocation(ItemLocation);
 		HeldItem->OnDropped();
-		if (AGAWeapon* Weapon = Cast<AGAWeapon>(HeldItem))
-			Weapon->LaunchItem(DropVelocity);
+		HeldItem->LaunchItem(DropVelocity, true, true);
 
 		if (PC) PC->OnDropItem_Client();
 

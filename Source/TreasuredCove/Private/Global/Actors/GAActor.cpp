@@ -5,12 +5,12 @@
 #include "GASystemComponent.h"
 #include "GameplayAbilityBase.h"
 #include "AbilitySet.h"
+#include "ItemMovementComponent.h"
 
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "ProceduralMeshComponent.h"
 
 #include "Engine/Engine.h"
@@ -22,10 +22,9 @@ AGAActor::AGAActor()
 	AbilitySystem =
 		CreateDefaultSubobject<UGASystemComponent>(TEXT("AbilitySystem"));
 
-	// Projectile Movement Component
-	ProjectileMovement =
-		CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	ProjectileMovement->SetAutoActivate(false);
+	// Item Movement Component
+	ItemMovement =
+		CreateDefaultSubobject<UItemMovementComponent>(TEXT("Item Movement"));
 
 	// Root
 	Root =
@@ -145,6 +144,7 @@ void AGAActor::OnPickedUp_Implementation()
 {
 	bPickedUp = true;
 	SetActorEnableCollision(false);
+	DisableComponentsSimulatePhysics();
 }
 
 void AGAActor::OnDropped_Implementation()
@@ -166,4 +166,28 @@ void AGAActor::OnUnEquipped_Implementation()
 {
 	bEquipped = false;
 }
+
+void AGAActor::LaunchItem(FVector LaunchVelocity, bool bXYOverride, bool bZOverride)
+{
+	if (ItemMovement)
+	{
+		FVector FinalVel = LaunchVelocity;
+		const FVector Velocity = GetVelocity();
+
+		if (!bXYOverride)
+		{
+			FinalVel.X += Velocity.X;
+			FinalVel.Y += Velocity.Y;
+		}
+		if (!bZOverride)
+		{
+			FinalVel.Z += Velocity.Z;
+		}
+
+		ItemMovement->Launch(FinalVel);
+
+		OnLaunched(LaunchVelocity, bXYOverride, bZOverride);
+	}
+}
+
 

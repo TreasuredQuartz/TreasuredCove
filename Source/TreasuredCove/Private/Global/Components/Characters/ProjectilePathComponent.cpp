@@ -35,7 +35,7 @@ void UProjectilePathComponent::BeginPlay()
 //	// ...
 //}
 
-void UProjectilePathComponent::BeginPrediction_Client(const FVector& StartLocation, const FVector& LaunchVelocity)
+void UProjectilePathComponent::BeginPrediction_Client_Implementation(const FVector& StartLocation, const FVector& LaunchVelocity)
 {
 	if (GEngine)
 		GEngine->AddOnScreenDebugMessage(13, 5.0, FColor::Red, "Begin Prediction!");

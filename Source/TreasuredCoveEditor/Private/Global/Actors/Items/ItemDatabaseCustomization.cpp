@@ -4,10 +4,82 @@
 #include "Global/Actors/Items/ItemDatabaseCustomization.h"
 #include "PropertyEditor/Public/DetailLayoutBuilder.h"
 #include "PropertyEditor/Public/DetailCategoryBuilder.h"
+#include "PropertyEditor/Public/IDetailChildrenBuilder.h"
 #include "PropertyEditor/Public/DetailWidgetRow.h"
+#include "PropertyCustomizationHelpers.h"
 #include "ItemDatabase.h"
+#include "GAActor.h"
 
 #define LOCTEXT_NAMESPACE "TreasuredCoveEditor"
+
+class TREASUREDCOVEEDITOR_API FDatabaseArrayBuilder : public FDetailArrayBuilder
+{
+public:
+    FDatabaseArrayBuilder(TSharedRef<IPropertyHandle> InBaseProperty, bool InGenerateHeader = true, bool InDisplayResetToDefault = true, bool InDisplayElementNum = true)
+        : FDetailArrayBuilder(InBaseProperty, InGenerateHeader, InDisplayResetToDefault, InDisplayElementNum)
+    {
+        
+    }
+public:
+    void GenerateHeaderRowContent(FDetailWidgetRow& Node) override;
+};
+
+void FDatabaseArrayBuilder::GenerateHeaderRowContent(FDetailWidgetRow& NodeRow)
+{
+    FDetailArrayBuilder::GenerateHeaderRowContent(NodeRow);
+
+    auto OnTextChanged = [this](FText Text)
+    {
+        //TArray<FItemDatabaseRow> Items;
+
+        //if (MyObject.IsValid())
+        //{
+        //    /* TArray<FName> Names;
+        //    // TArray<FItemDatabaseRow> Values;
+        //    // TArray<FItemDatabaseRow> Items;
+
+        //    // MyObject->ItemDatabase.GenerateValueArray(Values);
+        //    // MyObject->ItemDatabase.GenerateKeyArray(Names);
+
+        //    for (FName ItemName : Names)
+        //    {
+        //        if (ItemName.ToString().Contains(Text.ToString()))
+        //        {
+        //            Items.Add(MyObject->ItemDatabase[ItemName]);
+        //        }
+
+        //        if (MyObject->ItemDatabase[ItemName].Category.Contains(Text.ToString()))
+        //        {
+
+        //        }
+        //    }*/
+
+        //    if (Text.IsEmpty()) 
+        //        return MyObject->ItemDatabase;
+
+        //    for (FItemDatabaseRow Row : MyObject->ItemDatabase)
+        //    {
+        //        if (Row.Category.Contains(Text.ToString()) || Row.Name.Contains(Text.ToString()))
+        //        {
+        //            Items.Add(Row);
+        //        }
+        //    }
+
+        //    return Items;
+        //}
+
+        //return Items;
+    };
+
+    NodeRow
+    .FilterString(LOCTEXT("ItemDatabaseSearch", "Search"))
+    .NameContent()
+    [
+        SNew(SEditableTextBox)
+        .HintText(LOCTEXT("HintTextSearch", "Search"))
+        .OnTextChanged_Lambda(OnTextChanged)
+    ];
+}
 
 TSharedRef<IDetailCustomization> FItemDatabaseCustomization::MakeInstance()
 {
@@ -17,15 +89,6 @@ TSharedRef<IDetailCustomization> FItemDatabaseCustomization::MakeInstance()
 
 void FItemDatabaseCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
-	TSharedRef< IPropertyHandle > Prop = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UItemDatabase, ItemDatabase));
-    IDetailCategoryBuilder& Cat = DetailBuilder.EditCategory(TEXT("Database"));
-
-    UE_LOG(LogTemp, Warning, TEXT("%s - The header customization is called"), ANSI_TO_TCHAR(__FUNCTION__));
-	if (Prop->IsValidHandle())
-	{
-        Cat.AddProperty(Prop);
-	}
-
     TArray< TWeakObjectPtr< UObject > > Objects;
     DetailBuilder.GetObjectsBeingCustomized(Objects);
     if (Objects.Num() != 1)
@@ -34,41 +97,49 @@ void FItemDatabaseCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBu
     }
     TWeakObjectPtr< UItemDatabase > MyObject = Cast< UItemDatabase >(Objects[0].Get());
 
-    /*
-    Displaying a button that triggers editor-time processing.
-    */
-    auto OnRegenerate = [MyObject]
+    TSharedRef< IPropertyHandle > Prop = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UItemDatabase, ItemDatabase));
+    IDetailCategoryBuilder& Cat = DetailBuilder.EditCategory(TEXT("Database"));
+
+    if (Prop->IsValidHandle())
     {
-        if (MyObject.IsValid())
+        auto OnGenerateRow = [](TSharedPtr<FSlateBrush> Item, const TSharedRef<STableViewBase>& OwnerTable)
         {
-            MyObject->ItemDatabase.Empty();
-        }
+            //Create the row
+            return
+                SNew(STableRow< TSharedPtr<FSlateBrush> >, OwnerTable)
+                .Padding(2.0f)
+                [
+                    SNew(SImage)
+                    .Image(Item.Get())
+                ];
+        };
 
-        return FReply::Handled();
-    };
+        TSharedPtr<SResetToDefaultMenu> ResetToDefaultMenu;
+        DetailBuilder.HideProperty(Prop);
+        AGAActor* ItemObject = const_cast<AGAActor*>(TSubclassOf<AGAActor>().GetDefaultObject());
 
-    Cat.AddCustomRow(LOCTEXT("MyButtonRowFilterString", "Search Filter Keywords"))
-        .WholeRowContent()
-        [
-            SNew(SButton)
-            .Text(LOCTEXT("RegenerateBtnText", "Regenerate List"))
-            .OnClicked_Lambda(OnRegenerate)
-        ];
-}
+        auto GenerateAdditionalItemWidget = [](TSharedRef<IPropertyHandle> PropertyHandle, int32 ArrayIndex, IDetailChildrenBuilder& ChildrenBuilder)
+        {
+            IDetailPropertyRow& Row = ChildrenBuilder.AddProperty(PropertyHandle);
 
-void FItemDatabaseCustomization::CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle,
-	class FDetailWidgetRow& HeaderRow,
-	IPropertyTypeCustomizationUtils& StructCustomizationUtils)
-{
-	UE_LOG(LogTemp, Warning, TEXT("%s - The header customization is called"), ANSI_TO_TCHAR(__FUNCTION__));
-	// Should customize here soon
-}
+            Row.ShowPropertyButtons(false);
+            Row.CustomWidget(true)
+            .NameContent()
+            [
+                PropertyHandle->CreatePropertyNameWidget()
+            ]
+            .ValueContent()
+            .MaxDesiredWidth(TOptional<float>(1))
+            [
+                PropertyHandle->CreatePropertyValueWidget()
+            ];
+        };
 
-void FItemDatabaseCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> StructPropertyHandle,
-	class IDetailChildrenBuilder& StructBuilder,
-	IPropertyTypeCustomizationUtils& StructCustomizationUtils)
-{
-	// Should customize here soon
+        // Create the additional textures widget
+        TSharedRef<FDetailArrayBuilder> ItemDatabaseBuilder = MakeShareable(new FDatabaseArrayBuilder(Prop, true, true, true));
+        ItemDatabaseBuilder->OnGenerateArrayElementWidget(FOnGenerateArrayElementWidget::CreateLambda(GenerateAdditionalItemWidget));
+        Cat.AddCustomBuilder(ItemDatabaseBuilder);
+    }
 }
 
 

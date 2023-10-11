@@ -13,73 +13,6 @@ class UItemCreator;
 enum class EItemType : uint8
 {
 	None,
-	
-};
-
-/**
- *
- */
-UCLASS(Blueprintable, EditInlineNew)
-class TREASUREDCOVE_API UItemTypeData : public UObject
-{
-	GENERATED_BODY()
-
-public:
-	UItemTypeData() {};
-
-public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	UItemCreator* Creator;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	UGASkillTree* ProficiencyTree;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	uint8 UseType;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	uint8 AimType;
-};
-
-/**
- * 
- */
-UCLASS(Blueprintable, EditInlineNew)
-class TREASUREDCOVE_API UItemPopupData : public UObject
-{
-	GENERATED_BODY()
-
-public:
-	UItemPopupData();
-
-public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	FText DisplayName;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	FText CooldownOrCost;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	FText WeaponType;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	FText AimType;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	FText Summary;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	FText Description;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes", meta = (AllowPrivateAccess = "true"))
-	TMap<FString, FText> ItemAttributeData;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Credits", meta = (AllowPrivateAccess = "true"))
-	TMap<FString, FText> Credits;
-
-public:
-	UFUNCTION(BlueprintCallable, Category="Item")
-	void GetAttributeMap(TMap<FString, FText>& Attributes);
-
 };
 
 /**
@@ -94,15 +27,72 @@ public:
 	UItemData() {};
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	UStaticMesh* Mesh;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<class AGAWeapon> Blueprint;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	UItemTypeData* TypeData;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-	UItemPopupData* PopupData;
+	virtual TMap<FString, FText> GetPopupProperties() const { return TMap<FString, FText>(); };
 };
+
+/**
+ *
+ */
+UCLASS(Blueprintable, EditInlineNew)
+class TREASUREDCOVE_API UItemTypeData : public UItemData
+{
+	GENERATED_BODY()
+
+public:
+	UItemTypeData() {};
+
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UGASkillTree* ProficiencyTree;
+
+	TMap<FString, FText> GetPopupProperties() const override;
+};
+
+/** The 3D representation of the item. 
+* While a mesh would be the expected, items can
+* Be constructed by players. A necessary range 
+* Is provided when required.
+*/
+UCLASS()
+class TREASUREDCOVE_API UItemPhysicalData : public UItemData
+{
+	GENERATED_BODY()
+
+public:
+	UItemPhysicalData() {};
+
+public:
+	// UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UStaticMesh* GetMesh();
+
+	float Mass;
+};
+
+/** How the item is handled in combat. Stats,
+* Combos, Skills, Proficiency and anything else
+* Related would be included here.
+*/
+UCLASS()
+class TREASUREDCOVE_API UItemCombatData : public UItemData
+{
+	GENERATED_BODY()
+public:
+
+
+};
+
+/** Information regarding the creation of the item;
+* Such as a specific player, company, or any other 
+* Type of attribution would go here.
+*/
+UCLASS()
+class TREASUREDCOVE_API UItemCreditData : public UItemData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText CreatorName;
+
+	TMap<FString, FText> GetPopupProperties() const override;
+};
+

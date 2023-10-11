@@ -22,6 +22,7 @@ class UItemEditor;
 class UItemPopupData;
 class UCommandMenu;
 class UGameplayAbilitySet;
+class UGASkillTreeComponent;
 
 /** The base class for weapons.
  * 
@@ -36,15 +37,12 @@ protected:
 	bool bBeingPickedUp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
+	uint8 Rarity;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	FName Name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	UTexture2D* Texture;
 
-	UPROPERTY(Instanced, EditDefaultsOnly, Category = "Item")
-	UItemPopupData* ItemData;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
-	TSubclassOf<UCommandMenu> ActiveMenuClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	TSubclassOf<UItemEditor> EditMenuClass;
 
@@ -52,14 +50,6 @@ public:
 	AGAWeapon();
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
-	TArray<int> MaxActiveMenuSlots;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
-	TArray<int> MaxSubMenuSlots;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	EWeaponType WeaponType;
-
 	// This would be where the projectile from an ability would spawn
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	FVector AbilitySpawnLocation;
@@ -70,16 +60,19 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	class UBoxComponent* Box;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UGASkillTreeComponent* ProficiencyTreeComponent;
+
 public:
 	// Used by owning character to throw held item
 	void LaunchItem(const FVector& LaunchVelocity) const;
 
 	//
 	UFUNCTION()
-	void GetItemInfo(FGAItemInfo& Info);
+	FGAItemInfo GetItemInfo() const;
 
 	UFUNCTION(BlueprintCallable, Category="Item")
-	UObject* GetItemData();
+	UItemPopupData* GetItemData() const;
 
 	virtual void InteractedWith_Implementation(AActor* OtherActor) override;
 

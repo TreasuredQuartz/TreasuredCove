@@ -9,6 +9,10 @@
  */
 class TREASUREDCOVEEDITOR_API FItemDatabaseCustomization : public IDetailCustomization
 {
+private:
+	// Array of listview items
+	TArray<TSharedPtr<FSlateBrush>> Items;
+
 public:
 	/**
 	 * It is just a convenient helpers which will be used
@@ -21,12 +25,4 @@ public:
 	/** Called when details should be customized */
 	void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
 
-	// BEGIN IPropertyTypeCustomization interface
-	virtual void CustomizeHeader(TSharedRef<IPropertyHandle> StructPropertyHandle,
-		class FDetailWidgetRow& HeaderRow,
-		IPropertyTypeCustomizationUtils& StructCustomizationUtils);
-	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> StructPropertyHandle,
-		class IDetailChildrenBuilder& StructBuilder,
-		IPropertyTypeCustomizationUtils& StructCustomizationUtils);
-	// END IPropertyTypeCustomization interface
 };
