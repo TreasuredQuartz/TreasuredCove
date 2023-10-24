@@ -2,6 +2,7 @@
 
 
 #include "Multiplayer/MultiplayerLoadout.h"
+#include "GASkillTreeComponent.h"
 
 UMultiplayerLoadout::UMultiplayerLoadout() 
 	: Name(FText())				// I have defined default values in the header file, but occasionally get an error:
@@ -16,6 +17,7 @@ UMultiplayerLoadout::UMultiplayerLoadout()
 	, StrikePackages()
 	, WildCards()
 {
+	// PerkComponent = CreateDefaultSubobject<UGASkillTreeComponent>(TEXT("Perk Component"));
 }
 
 void UMultiplayerLoadout::SetName(FText InName)

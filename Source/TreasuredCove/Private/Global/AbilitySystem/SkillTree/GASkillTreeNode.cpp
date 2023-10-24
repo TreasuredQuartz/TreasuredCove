@@ -9,7 +9,7 @@
 
 UGASkillTreeNode::UGASkillTreeNode()
 {
-
+	InitializeItems();
 }
 
 //void UGASkillTreeNode::Initialize(UGenericGraph* InGraph)
@@ -32,9 +32,10 @@ void UGASkillTreeNode::InitializeItems()
 				UTexture2D* Texture = nullptr;
 				TSharedPtr<FSlateBrush> Brush = MakeShared<FSlateBrush>();
 				if (FSkillInfoRow* Info = SkillTree->SkillTable->FindRow<FSkillInfoRow>(Skill.AbilityName, "Initialize Skill Icons On Startup"))
+				{
 					Texture = Info->Texture;
-				else
-					Brush->TintColor = FSlateColor(FLinearColor(1.0, 1.0, 1.0, 0.f));
+				}
+				else Brush->TintColor = FSlateColor(FLinearColor(1.0, 1.0, 1.0, 0.f));
 
 				Brush->SetResourceObject(Texture);
 				Brush->SetImageSize(FVector2D(100, 100));

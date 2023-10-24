@@ -20,9 +20,11 @@
 #include "GA_DecreaseSpread.h"
 #include "GA_IncreaseSpread.h"
 #include "GA_Interact.h"
+#include "GameplayTagContainer.h"
 
 // Custom Components
 #include "GACharacterMovementComponent.h"
+#include "GAEnhancedInputComponent.h"
 #include "GASystemComponent.h"
 #include "GASkillTreeComponent.h"
 #include "ComboComponent.h"
@@ -330,21 +332,25 @@ void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	// Subsystem->AddMappingContext(Unarmed_InputMapping, 1);
 
 	// Get the EnhancedInputComponent
-	UEnhancedInputComponent* PEI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	UGAEnhancedInputComponent* PEI = Cast<UGAEnhancedInputComponent>(PlayerInputComponent);
+	
+	TArray<uint32> BindHandles;
+
+	// Bind Abilities
+	if (InputAbilityActions) PEI->BindAbilityActions(InputAbilityActions, this, &AGACharacter::AbilityInputTagPressed, &AGACharacter::AbilityInputTagReleased, /*out*/ BindHandles);
+	// PEI->BindAction(InputActions->InputJump, ETriggerEvent::Triggered, this, &AGACharacter::AbilityInputTagPressed);
 
 	// Bind the actions
-	PEI->BindAction(InputActions->InputMove, ETriggerEvent::Triggered, this, &AGACharacter::Move);
-	PEI->BindAction(InputActions->InputLook, ETriggerEvent::Triggered, this, &AGACharacter::Look);
-	PEI->BindAction(InputActions->InputJump, ETriggerEvent::Triggered, this, &AGACharacter::Jump_Input);
-	PEI->BindAction(InputActions->InputCrouch, ETriggerEvent::Triggered, this, &AGACharacter::Crouch_Input);
-	// PEI->BindAction(InputActions->InputSlide, ETriggerEvent::Triggered, this, &AGACharacter::Slide_Input);
-	PEI->BindAction(InputActions->InputSprint, ETriggerEvent::Triggered, this, &AGACharacter::Sprint_Input);
-	PEI->BindAction(InputActions->InputSwitch, ETriggerEvent::Triggered, this, &AGACharacter::Switch_Input);
-
-	// PEI->BindAction(Unarmed_InputActions->InputPrimary, ETriggerEvent::Triggered, this, &AGACharacter::Primary);
-	// PEI->BindAction(Unarmed_InputActions->InputSecondary, ETriggerEvent::Triggered, this, &AGACharacter::Secondary);
-	// PEI->BindAction(Unarmed_InputActions->InputTertiary, ETriggerEvent::Triggered, this, &AGACharacter::Tertiary);
-	// PEI->BindAction(Unarmed_InputActions->InputQuaternary, ETriggerEvent::Triggered, this, &AGACharacter::Quaternary);
+	if (InputActions)
+	{
+		PEI->BindAction(InputActions->InputMove, ETriggerEvent::Triggered, this, &AGACharacter::Move);
+		PEI->BindAction(InputActions->InputLook, ETriggerEvent::Triggered, this, &AGACharacter::Look);
+		PEI->BindAction(InputActions->InputJump, ETriggerEvent::Triggered, this, &AGACharacter::Jump_Input);
+		PEI->BindAction(InputActions->InputCrouch, ETriggerEvent::Triggered, this, &AGACharacter::Crouch_Input);
+		PEI->BindAction(InputActions->InputSlide, ETriggerEvent::Triggered, this, &AGACharacter::Slide_Input);
+		PEI->BindAction(InputActions->InputSprint, ETriggerEvent::Triggered, this, &AGACharacter::Sprint_Input);
+		PEI->BindAction(InputActions->InputSwitch, ETriggerEvent::Triggered, this, &AGACharacter::Switch_Input);
+	}
 
 	PlayerInputComponent->BindAction("QuickSelect", IE_Pressed, this, &AGACharacter::BeginQuickSelect);
 	PlayerInputComponent->BindAction("QuickSelect", IE_Released, this, &AGACharacter::EndQuickSelect);
@@ -366,23 +372,6 @@ void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AGACharacter::BeginInteract);
 	PlayerInputComponent->BindAction("Interact", IE_Released, this, &AGACharacter::EndInteract);
-
-	// PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AGACharacter::BeginJump);
-	// PlayerInputComponent->BindAction("Jump", IE_Released, this, &AGACharacter::EndJump);
-
-	// PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AGACharacter::BeginCrouch);
-	// PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AGACharacter::EndCrouch);
-
-	// PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AGACharacter::BeginSprint);
-	// PlayerInputComponent->BindAction("Run", IE_Released, this, &AGACharacter::EndSprint);
-
-	// PlayerInputComponent->BindAxis("Switch", this, &AGACharacter::Switch);
-
-	// PlayerInputComponent->BindAxis("LookRight", this, &AGACharacter::LookRight);
-	// PlayerInputComponent->BindAxis("LookRightRate", this, &AGACharacter::LookRight);
-
-	// PlayerInputComponent->BindAxis("LookUp", this, &AGACharacter::LookUp);
-	// PlayerInputComponent->BindAxis("LookUpRate", this, &AGACharacter::LookUp);
 }
 
 // Called when possessed by a new controller
@@ -390,14 +379,16 @@ void AGACharacter::PossessedBy(AController* NewController)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Possessed..."));
 
+	PC = Cast<AGAPlayerController>(NewController);
+	AC = Cast<AGAAIController>(NewController);
+
 	if (RenamedAbilitySystem)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Ability System initializing..."));
 		InitializeAbilitySystem();
-	}
 
-	PC = Cast<AGAPlayerController>(NewController);
-	AC = Cast<AGAAIController>(NewController);
+		if (PC) PC->OnPostProcessInput.AddUniqueDynamic(RenamedAbilitySystem, &UGASystemComponent::ProcessAbilityInput);
+	}
 
 	if (AC)
 	{
@@ -416,6 +407,8 @@ void AGACharacter::PossessedBy(AController* NewController)
 // Called when control is taken away from this pawn
 void AGACharacter::UnPossessed()
 {
+	if (PC) PC->OnPostProcessInput.RemoveAll(RenamedAbilitySystem);
+
 	Super::UnPossessed();
 }
 
@@ -1673,10 +1666,22 @@ void AGACharacter::Sprint_Input(const FInputActionValue& Value)
 	}
 }
 
+void AGACharacter::Slide_Input(const FInputActionValue& Value)
+{
+}
+
 // Called to switch
 void AGACharacter::Switch_Input(const FInputActionValue& Value)
 {
 
+}
+void AGACharacter::AbilityInputTagPressed(FGameplayTag Tag)
+{
+	RenamedAbilitySystem->AbilityInputTagPressed(Tag);
+}
+void AGACharacter::AbilityInputTagReleased(FGameplayTag Tag)
+{
+	RenamedAbilitySystem->AbilityInputTagReleased(Tag);
 }
 #pragma endregion
 

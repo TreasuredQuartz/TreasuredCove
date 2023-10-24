@@ -11,6 +11,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSuccess);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFailure);
 
 class UMultiplayerLoadout;
+class UGASkillTreeComponent;
 
 /**
  * 
@@ -22,6 +23,10 @@ class TREASUREDCOVE_API UMultiplayerLoadoutManager : public UObject
 	
 public:
 	UMultiplayerLoadoutManager();
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UGASkillTreeComponent* PerkComponent;
 
 public:
 	UMultiplayerLoadout* Loadout;

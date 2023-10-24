@@ -66,6 +66,7 @@ public:
 
 	// Accessors and Mutators //
 
+	UFUNCTION(BlueprintPure, BlueprintCallable)
 	EAbilityAquiredStatus GetStatus()
 	{
 		return Tier.AquiredStatus;

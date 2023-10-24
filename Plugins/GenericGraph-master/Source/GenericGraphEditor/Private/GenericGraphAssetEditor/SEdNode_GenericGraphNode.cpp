@@ -240,6 +240,7 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 
 	ErrorReporting = ErrorText;
 	ErrorReporting->SetError(ErrorMsg);
+	ListViewWidget->RequestListRefresh();
 	CreatePinWidgets();
 }
 

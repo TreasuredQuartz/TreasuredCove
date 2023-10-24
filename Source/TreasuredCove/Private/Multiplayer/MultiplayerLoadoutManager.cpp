@@ -3,10 +3,14 @@
 
 #include "Multiplayer/MultiplayerLoadoutManager.h"
 #include "Multiplayer/MultiplayerLoadout.h"
+#include "GASkillTreeComponent.h"
 
 UMultiplayerLoadoutManager::UMultiplayerLoadoutManager()
 {
 	Loadout = nullptr;
+	PerkComponent =
+		CreateDefaultSubobject<UGASkillTreeComponent>(TEXT("Perk Component"));
+	PerkComponent;
 }
 
 void UMultiplayerLoadoutManager::SetCurrentLoadout(UMultiplayerLoadout* InLoadout)

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GAPlayerController.h"
+#include "GASystemComponent.h"
 #include "GAHUD.h"
 #include "GAActor.h"
 #include "GACharacter.h"
@@ -17,6 +18,13 @@ void AGAPlayerController::SetupInputComponent()
 	// InputComponent->BindAction("Pause", IE_Released, this, &AGAPlayerController::EndPause_Client);
 
 	Player = Cast<AGACharacter>(this->GetCharacter());
+}
+
+void AGAPlayerController::PostProcessInput(const float DeltaTime, const bool bGamePaused)
+{
+	OnPostProcessInput.Broadcast(DeltaTime, bGamePaused);
+
+	Super::PostProcessInput(DeltaTime, bGamePaused);
 }
 
 bool AGAPlayerController::CanAccessHUD()

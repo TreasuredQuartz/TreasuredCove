@@ -3,6 +3,7 @@
 #include "GenericGraph.h"
 #include "GenericGraphAssetEditor/EdNode_GenericGraphNode.h"
 #include "GenericGraphAssetEditor/EdNode_GenericGraphEdge.h"
+#include "GenericGraphAssetEditor/SEdNode_GenericGraphNode.h"
 
 UEdGraph_GenericGraph::UEdGraph_GenericGraph()
 {
@@ -70,6 +71,8 @@ void UEdGraph_GenericGraph::RebuildGenericGraph()
 					}
 				}
 			}
+
+			if (EdNode->SEdNode) EdNode->SEdNode->UpdateGraphNode();
 		}
 		else if (UEdNode_GenericGraphEdge* EdgeNode = Cast<UEdNode_GenericGraphEdge>(Nodes[i]))
 		{

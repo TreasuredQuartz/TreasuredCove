@@ -2,7 +2,8 @@
 
 
 #include "Playfab/Playfab_GameInstanceSubsystem.h"
-/*#include "Classes/PlayFabUtilities.h"
+#include "Classes/PlayFabUtilities.h"
+#include "PlayFabClientAPI.h"
 #include "AdvancedSessions.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -37,6 +38,7 @@ void UPlayfab_GameInstanceSubsystem::LoginWithEmail(FString Email, FString Passw
 	OnSuccess.BindUFunction(this, FName("OnLoginSuccess"));
 	OnFailure.BindUFunction(this, FName("OnLoginFailure"));
 
+	UE_LOG(LogTemp, Warning, TEXT("PlayFab: \n   Begin Login..."));
 	UPlayFabClientAPI::LoginWithEmailAddress(Request, OnSuccess, OnFailure, nullptr);
 }
 
@@ -68,12 +70,13 @@ void UPlayfab_GameInstanceSubsystem::OnLoginSuccess(const FClientLoginResult& re
 
 void UPlayfab_GameInstanceSubsystem::OnLoginFailure(const FPlayFabError& error, UObject* customData)
 {
+	UE_LOG(LogTemp, Warning, TEXT("PlayFab: \n   Error Name: %s\n   Error Message: %s\n   Error Details: %s\n"), *error.ErrorName, *error.ErrorMessage, *error.ErrorDetails);
+
 	FClientLoginWithSteamRequest Request;
 	UPlayFabClientAPI::FDelegateOnSuccessLoginWithSteam OnSuccess;
 	UPlayFabClientAPI::FDelegateOnFailurePlayFabError OnFailure;
 
 	UPlayFabClientAPI::LoginWithSteam(Request, OnSuccess, OnFailure, nullptr);
-
 }
 
 void UPlayfab_GameInstanceSubsystem::IniializeInventory()
@@ -95,4 +98,4 @@ void UPlayfab_GameInstanceSubsystem::GetInventoryOnSuccess(FClientGetUserInvento
 	}
 }
 
-*/
+// */

@@ -22,6 +22,8 @@ class AGACharacter;
 class UDlgDialogue;
 class UDlgContext;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPostProcessInput, float, DeltaTime, bool, bGamePaused);
+
 /**
  * 
  */
@@ -45,10 +47,17 @@ protected:
 	//
 	UPROPERTY(BlueprintReadOnly)
 	UDlgContext* ActiveContext = nullptr;
+
 public:
+	//
+	FOnPostProcessInput OnPostProcessInput;
+
 	//
 	virtual void SetupInputComponent() override;
 
+	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
+
+public:
 	//
 	bool CanAccessHUD();
 

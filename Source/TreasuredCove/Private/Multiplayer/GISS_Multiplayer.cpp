@@ -58,9 +58,11 @@ void UGISS_Multiplayer::InitializeUserAccountAttributes(UPARAM(ref)FBPUserOnline
 	switch (Result)
 	{
 	case EBlueprintResultSwitch::OnSuccess:
+		UE_LOG(LogTemp, Warning, TEXT("PlayFab: Got Player Level!"));
 		AccountAttributes.Level = FCString::Atoi(*LevelValue);
 		break;
 	case EBlueprintResultSwitch::OnFailure:
+		UE_LOG(LogTemp, Warning, TEXT("PlayFab: Missed Player Level!"));
 		break;
 	}
 

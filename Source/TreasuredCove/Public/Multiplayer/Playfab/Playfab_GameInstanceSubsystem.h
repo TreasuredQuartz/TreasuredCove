@@ -16,7 +16,7 @@ class TREASUREDCOVE_API UPlayfab_GameInstanceSubsystem : public UGameInstanceSub
 {
 	GENERATED_BODY()
 
-    /*
+    
 private:
     // PlayFabID (Must match corrosponding ID for title in PlayFab catelog)
     FString GameTitleId;
@@ -62,5 +62,5 @@ public:
     void GetInventoryOnSuccess(FClientGetUserInventoryResult& Result, UObject* CustomData);
     // End PlayFab_GameInstanceSubsystem
 
-    */
+    // */
 };

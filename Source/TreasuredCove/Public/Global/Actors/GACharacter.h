@@ -38,6 +38,7 @@ class AGAWeapon;
 class AGAPlayerController;
 class AGAAIController;
 class UGAInputConfigData;
+class UAbilityInputConfigData;
 class AGravityWidget;
 class UAbilitySet;
 class UGAWidget;
@@ -260,7 +261,7 @@ protected:
 
 	// Unarmed Input Configuration Data
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enhanced Input")
-	UGAInputConfigData* Unarmed_InputActions;
+	UAbilityInputConfigData* InputAbilityActions;
 
 	// In single player terms,
 	// All AI Controlled characters are seperated from
@@ -341,8 +342,13 @@ protected:
 	void Crouch_Input(const FInputActionValue& Value);
 	// Called when player-controlled from the shift key or controller analog press
 	void Sprint_Input(const FInputActionValue& Value);
+	// Called when player-controlled from the combination of crouching during sprint
+	void Slide_Input(const FInputActionValue& Value);
 	// Called when player-controlled from the F key or controller top face button
 	void Switch_Input(const FInputActionValue& Value);
+
+	void AbilityInputTagPressed(FGameplayTag);
+	void AbilityInputTagReleased(FGameplayTag);
 
 	// Called when "MoveForawrd" passed a value
 	void MoveForward(float Val);

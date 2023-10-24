@@ -18,7 +18,8 @@
 				"ProceduralMeshComponent",
 				"SenseSystem",
 				"Water",
-				"CableComponent"
+				"CableComponent",
+				"EnhancedInput"
 			]
 		},
 		{
@@ -77,8 +78,26 @@
 		},
 		{
 			"Name": "PlayFab",
-			"Enabled": false,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/217fdf581b784571af03d3fb6580368f"
+			"Enabled": true,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/217fdf581b784571af03d3fb6580368f",
+			"WhitelistPlatforms": [
+				"XB1",
+				"WinGDK",
+				"XSX",
+				"Win64",
+				"Switch",
+				"PS4",
+				"PS5"
+			],
+			"SupportedTargetPlatforms": [
+				"XB1",
+				"WinGDK",
+				"XSX",
+				"Win64",
+				"Switch",
+				"PS4",
+				"PS5"
+			]
 		},
 		{
 			"Name": "OnlineSubsystemEOS",

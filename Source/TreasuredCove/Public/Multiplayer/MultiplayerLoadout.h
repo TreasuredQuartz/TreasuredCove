@@ -3,15 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-// #include "UObject/NoExportTypes.h"
+#include "GameFramework/Actor.h"
 #include "LoadoutItemInfo.h"
 #include "MultiplayerLoadout.generated.h"
+
+class UGASkillTreeComponent;
 
 /**
  * 
  */
 UCLASS(Blueprintable)
-class TREASUREDCOVE_API UMultiplayerLoadout : public UObject
+class TREASUREDCOVE_API UMultiplayerLoadout : public UDataAsset
 {
 	GENERATED_BODY()
 public:
@@ -23,7 +25,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
 	int32 TotalPoints = 15;
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
 	int32 CurrentPoints = 0;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"), Category = "Loadout")
@@ -81,6 +82,8 @@ public:
 	TArray<FLoadoutItemInfo> GetSecondaryAttachments() const;
 	TArray<FLoadoutItemInfo> GetLethals() const;
 	TArray<FLoadoutItemInfo> GetTacticals() const;
+
+public:
 	TArray<FLoadoutItemInfo> GetPerks() const;
 	TArray<FLoadoutItemInfo> GetStrikePackages() const;
 	TArray<FLoadoutItemInfo> GetWildcards() const;

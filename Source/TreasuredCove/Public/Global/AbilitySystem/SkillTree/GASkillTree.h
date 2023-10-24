@@ -32,7 +32,7 @@ public:
 	UDataTable* SkillTable;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class UWidget> Widget;
+	TSubclassOf<class UGASkillTreeWidget> Widget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText DisplayName;

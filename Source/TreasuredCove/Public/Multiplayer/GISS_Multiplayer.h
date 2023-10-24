@@ -9,7 +9,7 @@
 #include "GISS_Multiplayer.generated.h"
 
 class USaveGame;
-class UMultiplayerLoadout;
+class AMultiplayerLoadout;
 class UMultiplayerLoadoutManager;
 
 USTRUCT(BlueprintType)
