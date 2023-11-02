@@ -9,7 +9,7 @@
 #include "ProceduralMeshSectionStruct.h"
 #include "MCWorld_Voxel.generated.h"
 
-class URuntimeMeshComponentStatic;
+class URealtimeMeshComponent;
 class UInstancedStaticMeshComponent;
 class UGameplayTileData;
 class UWaterBodyProceduralActor;
@@ -107,8 +107,8 @@ public:
 	UPROPERTY()
 	TArray< int32 > ChunkFields;
 	UPROPERTY()
-	URuntimeMeshComponentStatic* Mesh;
-	URuntimeMeshComponentStatic* WaterMesh;
+	URealtimeMeshComponent* Mesh;
+	URealtimeMeshComponent* WaterMesh;
 
 	UFUNCTION(BlueprintNativeEvent)
 	TArray<int32> CalcNoise();

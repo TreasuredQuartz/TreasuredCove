@@ -8,6 +8,7 @@
 #include "KatanaCreator.generated.h"
 
 class UPhysicalMaterial;
+class URealtimeMeshComponent;
 
 struct TREASUREDCOVE_API FPartVertexData
 {
@@ -59,7 +60,7 @@ private:
 
 #if WITH_EDITOR
 	//
-	URuntimeMeshComponentStatic* Mesh;
+	URealtimeMeshComponent* Mesh;
 #endif
 
 	// Metal, Wood, Fungus etc.
@@ -86,7 +87,7 @@ private:
 	TArray<UPart*> Parts;
 
 	//
-	URuntimeMeshComponentStatic* Mesh;
+	URealtimeMeshComponent* Mesh;
 
 public:
 	void GenerateKatana();

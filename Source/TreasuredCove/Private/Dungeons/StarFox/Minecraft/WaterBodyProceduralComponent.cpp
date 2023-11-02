@@ -118,7 +118,7 @@ void UWaterBodyProceduralComponent::BeginUpdateWaterBody()
 }
 
 #if WITH_EDITOR
-TArray<TSharedRef<FTokenizedMessage>> UWaterBodyProceduralComponent::CheckWaterBodyStatus() const
+TArray<TSharedRef<FTokenizedMessage>> UWaterBodyProceduralComponent::CheckWaterBodyStatus()
 {
 	TArray<TSharedRef<FTokenizedMessage>> StatusMessages = Super::CheckWaterBodyStatus();
 

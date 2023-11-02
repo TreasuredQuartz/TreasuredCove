@@ -394,10 +394,10 @@ void AGACharacter::PossessedBy(AController* NewController)
 	{
 		if (AISenses != nullptr)
 		{
-			AISenses->OnNewSense.AddUniqueDynamic(AC, &AGAAIController::OnNewSense);
-			AISenses->OnCurrentSense.AddUniqueDynamic(AC, &AGAAIController::OnCurrentSense);
-			AISenses->OnLostSense.AddUniqueDynamic(AC, &AGAAIController::OnLostSense);
-			AISenses->OnForgetSense.AddUniqueDynamic(AC, &AGAAIController::OnForgetSense);
+			// AISenses->OnNewSense.AddUniqueDynamic(AC, &AGAAIController::OnNewSense);
+			// AISenses->OnCurrentSense.AddUniqueDynamic(AC, &AGAAIController::OnCurrentSense);
+			// AISenses->OnLostSense.AddUniqueDynamic(AC, &AGAAIController::OnLostSense);
+			// AISenses->OnForgetSense.AddUniqueDynamic(AC, &AGAAIController::OnForgetSense);
 		}
 	}
 

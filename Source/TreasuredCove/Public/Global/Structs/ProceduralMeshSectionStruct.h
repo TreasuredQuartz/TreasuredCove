@@ -2,7 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "Components/RuntimeMeshComponentStatic.h"
+// #include "Components/RuntimeMeshComponentStatic.h"
 #include "ProceduralMeshSectionStruct.generated.h"
 
 /**
@@ -19,7 +19,7 @@ public:
 		Normals(TArray<FVector>()),
 		UVs(TArray<FVector2D>()),
 		VertexColors(TArray<FLinearColor>()),
-		Tangents(TArray<struct FRuntimeMeshTangent>()),
+		Tangents(TArray<FVector>()),
 		Material(nullptr)
 	{}
 
@@ -35,7 +35,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FLinearColor> VertexColors;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<struct FRuntimeMeshTangent> Tangents;
+	TArray<FVector> Tangents;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterialInterface* Material;
 

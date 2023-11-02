@@ -6,9 +6,10 @@
 #include "DTMCBlockInfoStruct.h"
 #include "GameplayTileData.h"
 #include "Global/Libraries/GALibrary.h"
-#include "Providers/RuntimeMeshProviderStatic.h"
-#include "Components/RuntimeMeshComponentStatic.h"
 #include "Global/Components/Items/BobbingMovementComponent.h"
+
+#include "RealtimeMeshComponent.h"
+#include "RealtimeMeshSimple.h"
 
 #include "Materials/MaterialInterface.h"
 #include "Gameframework/RotatingMovementComponent.h"
@@ -46,7 +47,7 @@ void AMCWorld_VoxelItem::OnConstruction(const FTransform& Transform)
 	if (!Mesh)
 	{
 		Mesh =
-			NewObject<URuntimeMeshComponentStatic>(this, FName("VoxelItem_Mesh"));
+			NewObject<URealtimeMeshComponent>(this, FName("VoxelItem_Mesh"));
 		FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 
 		Mesh->SetupAttachment(RootComponent);
@@ -70,10 +71,16 @@ void AMCWorld_VoxelItem::BeginPlay()
 
 void AMCWorld_VoxelItem::UpdateMesh()
 {
+	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
 	if (Mesh)
 	{
 		if (MeshSection.Vertices.Num() > 2)
-			Mesh->ClearSection(0, 0);
+		{ // Clear Section
+			// Mesh->ClearSection(0, 0);
+			FRealtimeMeshSectionKey SectionKey;
+			FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+			RTMesh->RemoveSection(SectionKey, CompletionCallback);
+		}
 
 		MeshSection.Clear();
 
@@ -88,7 +95,17 @@ void AMCWorld_VoxelItem::UpdateMesh()
 		}
 		MeshSection.ElementID += Triangle_Num;
 
-		Mesh->CreateSectionFromComponents(0, 0, 0, MeshSection.Vertices, MeshSection.Triangles, MeshSection.Normals, MeshSection.UVs, MeshSection.VertexColors, MeshSection.Tangents, ERuntimeMeshUpdateFrequency::Infrequent, true);
+		{ // Create Section
+			FRealtimeMeshSectionKey SectionKey;
+			FRealtimeMeshSectionConfig Config;
+			FRealtimeMeshStreamRange StreamRange;
+			bool bShouldCreateCollision = true;
+			FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+
+			// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
+			RTMesh->CreateSection(SectionKey, Config, StreamRange, bShouldCreateCollision, CompletionCallback);
+		}
+		// Mesh->CreateSectionFromComponents(0, 0, 0, MeshSection.Vertices, MeshSection.Triangles, MeshSection.Normals, MeshSection.UVs, MeshSection.VertexColors, MeshSection.Tangents, ERuntimeMeshUpdateFrequency::Infrequent, true);
 		Mesh->SetMaterial(0, Material);
 	}
 }

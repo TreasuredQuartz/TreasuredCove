@@ -7,6 +7,19 @@
 // #include "Classes/PlayFabClientAPI.h"
 #include "Playfab_GameInstanceSubsystem.generated.h"
 
+USTRUCT(BlueprintType)
+struct FPlayFabAccountAttributes
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY()
+    FString PlayerID;
+    UPROPERTY()
+    FString Level;
+    UPROPERTY()
+    FString XP;
+};
 
 /**
  * 
@@ -20,10 +33,14 @@ class TREASUREDCOVE_API UPlayfab_GameInstanceSubsystem : public UGameInstanceSub
 private:
     // PlayFabID (Must match corrosponding ID for title in PlayFab catelog)
     FString GameTitleId;
+    FString PlayerId;
 
 public:
     // Default Constructor
     UPlayfab_GameInstanceSubsystem();
+
+    UFUNCTION(BlueprintPure, BlueprintCallable)
+    FString GetPlayerID() const { return PlayerId; };
 
 public:
     // Begin USubsystem
@@ -48,11 +65,11 @@ public:
 
     // Delegate for PlayFab login success
     UFUNCTION()
-    void OnLoginSuccess(const FClientLoginResult& result, UObject* customData);
+    void OnLoginSuccess(const struct FClientLoginResult result, UObject* customData);
 
     // Delegate for PlayFab login failure
     UFUNCTION()
-    void OnLoginFailure(const FPlayFabError& error, UObject* customData);
+    void OnLoginFailure(FPlayFabError error, UObject* customData);
 
     UFUNCTION()
     void IniializeInventory();
@@ -60,6 +77,18 @@ public:
     // Delegate for Playfab inventory success
     UFUNCTION()
     void GetInventoryOnSuccess(FClientGetUserInventoryResult& Result, UObject* CustomData);
+
+public:
+    UFUNCTION()
+    void GetUserLevel(FString UserId);
+
+    // Delegate For PlayFab retrevial of user attributes
+    UFUNCTION()
+    void GetUserLevelOnSuccess(const struct FClientGetUserDataResult& result, UObject* customData);
+
+    UFUNCTION()
+    void UpdateUserLevel(FString UserId, FString Level, FString XP);
+
     // End PlayFab_GameInstanceSubsystem
 
     // */

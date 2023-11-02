@@ -7,7 +7,7 @@
 
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Camera/CameraComponent.h"
-#include "Components/RuntimeMeshComponentStatic.h"
+#include "realtimeMeshComponent.h"
 
 #include "UnrealEditorSubsystem.h"
 #include "Kismet/GameplayStatics.h"
@@ -184,8 +184,8 @@ void AProceduralPlanet::Initialize()
 	{
 		if (RuntimeMeshs[i] == nullptr)
 		{
-			URuntimeMeshComponentStatic* meshComp =
-				NewObject<URuntimeMeshComponentStatic>(this, FName("Landscape_RMesh_%s" + FString::FromInt(i)));
+			URealtimeMeshComponent* meshComp =
+				NewObject<URealtimeMeshComponent>(this, FName("Landscape_RMesh_%s" + FString::FromInt(i)));
 			FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 
 			meshComp->SetupAttachment(RootComponent);
@@ -229,7 +229,7 @@ void AProceduralPlanet::GenerateHeight()
 
 void AProceduralPlanet::GenerateMaterial()
 {
-	for (URuntimeMeshComponentStatic* Mesh : RuntimeMeshs)
+	for (URealtimeMeshComponent* Mesh : RuntimeMeshs)
 	{
 		if (Mesh && Settings.MaterialSettings.Material_Parent)
 		{

@@ -8,6 +8,7 @@
 #include "ProceduralMiniMap.generated.h"
 
 class UProceduralMeshComponent;
+class URealtimeMeshComponent;
 
 struct FProceduralMeshBuffer
 {
@@ -62,7 +63,7 @@ public:
 		return Section.UVs;
 	}
 
-	const TArray<FRuntimeMeshTangent>& GetTangents()
+	const TArray<FVector>& GetTangents()
 	{
 		return Section.Tangents;
 	}
@@ -122,7 +123,7 @@ public:
 	TArray<FVector> TestDirections;
 
 	UPROPERTY()
-	URuntimeMeshComponentStatic* Mesh;
+	URealtimeMeshComponent* Mesh;
 	UPROPERTY()
 	TArray<UMaterialInterface*> Materials;
 

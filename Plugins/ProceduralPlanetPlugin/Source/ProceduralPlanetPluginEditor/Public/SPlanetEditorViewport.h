@@ -27,6 +27,10 @@ public:
 	//// End SEditorViewport Interface ////
 
 	//// Begin FGCObject Interface ////
+	FString GetReferencerName() const
+	{
+		return "SPlanetEditorViewport";
+	}
 	void AddReferencedObjects(FReferenceCollector& Collector) override;
 	//// End FGCObject Interface ////
 

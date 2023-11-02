@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "RuntimeMeshCore.h"
+// #include "RuntimeMeshCore.h"
 #include "UObject/NoExportTypes.h"
 
 #include "PlanetMeshSettings.h"
@@ -13,7 +13,7 @@
 // 100,000
 // constexpr int PlanetSize = 100000;
 
-class URuntimeMeshComponentStatic;
+class URealtimeMeshComponent;
 class UPlanetQuadTree;
 
 struct FPlanetMeshSection
@@ -25,14 +25,14 @@ public:
 		Triangles(TArray<int32>()),
 		Normals(TArray<FVector>()),
 		UVs(TArray<FVector2D>()),
-		Tangents(TArray<struct FRuntimeMeshTangent>()),
+		Tangents(TArray<FVector>()),
 		VertexColors(TArray<FColor>())
 	{}
 
 public:
 	uint32 ElementID = 0;
 	UMaterialInterface* Material;
-	ERuntimeMeshUpdateFrequency UpdateFrequency = ERuntimeMeshUpdateFrequency::Frequent;
+	// ERealtimeMeshUpdateFrequency UpdateFrequency = ERealtimeMeshUpdateFrequency::Frequent;
 	bool bEnableCollision = false;
 
 public:
@@ -40,7 +40,7 @@ public:
 	TArray<int32> Triangles;
 	TArray<FVector> Normals;
 	TArray<FVector2D> UVs;
-	TArray<struct FRuntimeMeshTangent> Tangents;
+	TArray<FVector> Tangents;
 	TArray<FColor> VertexColors;
 	uint32 NumTriangles = 0;
 
@@ -72,7 +72,7 @@ public:
 
 public:
 	UPlanetQuadTree* QuadTree;
-	URuntimeMeshComponentStatic* RuntimeMesh;
+	URealtimeMeshComponent* RuntimeMesh;
 
 	FVector PlanetLocation;
 
@@ -88,7 +88,7 @@ public:
 
 public:
 	void Initialize(FPlanetShapeGenerator inGenerator, FPlanetMeshSettings inMeshSettings, 
-		URuntimeMeshComponentStatic& inMesh, FVector inLocalUp);
+		URealtimeMeshComponent& inMesh, FVector inLocalUp);
 	void ConstructMesh(const FVector& NewLocation);
 	void CalculateNoise();
 	void OnCameraLocationUpdated(const FVector& NewLocation);

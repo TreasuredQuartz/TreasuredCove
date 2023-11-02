@@ -9,8 +9,9 @@
 #include "SimplexNoiseBPLibrary.h"
 #include "MCWorld_BuildingHelperMacros.h"
 
-#include "Components/RuntimeMeshComponentStatic.h"
-#include "Providers/RuntimeMeshProviderStatic.h"
+#include "RealtimeMeshComponent.h"
+#include "RealtimeMeshSimple.h"
+
 #include "Engine/AssetManager.h"
 #include "Engine/Engine.h"
 #include "Engine/Selection.h"
@@ -249,7 +250,7 @@ void AMCWorld_Voxel::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inC
 	{
 		FString String = "NewVoxel_Land_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
 		FName Name = FName(*String);
-		Mesh = NewObject<URuntimeMeshComponentStatic>(this, Name);
+		Mesh = NewObject<URealtimeMeshComponent>(this, Name);
 		Mesh->SetCollisionObjectType(ECC_WorldStatic);
 		Mesh->SetCollisionResponseToAllChannels(ECR_Block);
 		Mesh->RegisterComponent();
@@ -261,7 +262,7 @@ void AMCWorld_Voxel::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inC
 	{
 		FString String = "NewVoxel_Water_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
 		FName Name = FName(*String);
-		WaterMesh = NewObject<URuntimeMeshComponentStatic>(this, Name); 
+		WaterMesh = NewObject<URealtimeMeshComponent>(this, Name); 
 		WaterMesh->SetCollisionObjectType(ECC_WorldStatic);
 		FCollisionResponseContainer CollisionResponse(ECR_Block);
 		CollisionResponse.Pawn = ECR_Overlap;
@@ -1275,9 +1276,14 @@ void AMCWorld_Voxel::UpdateMesh()
 		UE_LOG(LogTemp, Warning, TEXT("Procedural Mesh is null!"));
 		return;
 	}
+
+	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
 	if (!BlockDataTable)
 	{
-		Mesh->RemoveAllSectionsForLOD(0);
+		// Mesh->RemoveAllSectionsForLOD(0);
+		FRealtimeMeshSectionGroupKey SectionGroupKey;
+		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+		RTMesh->RemoveSectionGroup(SectionGroupKey, CompletionCallback);
 		return;
 	}
 
@@ -1437,14 +1443,32 @@ void AMCWorld_Voxel::UpdateMesh()
 		if (MeshSections[i].Vertices.Num() <= 2) continue;
 		// 
 		{
-			Mesh->ClearSection(0, i);
-			Mesh->CreateSectionFromComponents(0, i, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Average, MeshSections[i].bEnableCollision);
+			// Mesh->ClearSection(0, i);
+			// Mesh->CreateSectionFromComponents(0, i, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Average, MeshSections[i].bEnableCollision);
+			
+			{ // Clear Section
+				FRealtimeMeshSectionKey SectionKey;
+				FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+				RTMesh->RemoveSection(SectionKey, CompletionCallback);
+			}
+
+			{ // Create Section
+				FRealtimeMeshSectionKey SectionKey;
+				FRealtimeMeshSectionConfig Config;
+				FRealtimeMeshStreamRange StreamRange;
+				bool bShouldCreateCollision = true;
+				FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+
+				// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
+				RTMesh->CreateSection(SectionKey, Config, StreamRange, bShouldCreateCollision, CompletionCallback);
+			}
+
 			Mesh->SetMaterial(i, MeshSections[i].Material);
 
 			if (i == WATER - 1)
 			{
-				WaterMesh->ClearSection(0, 0);
-				WaterMesh->CreateSectionFromComponents(0, 0, 0, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Average, true);
+				// WaterMesh->ClearSection(0, 0);
+				// WaterMesh->CreateSectionFromComponents(0, 0, 0, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Average, true);
 				WaterMesh->SetMaterial(0, MeshSections[i].Material);
 				
 			}

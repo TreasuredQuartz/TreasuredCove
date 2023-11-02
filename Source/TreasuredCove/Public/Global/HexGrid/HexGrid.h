@@ -8,6 +8,7 @@
 #include "HexGrid.generated.h"
 
 class UHexTile;
+class URealtimeMeshComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAddTileDelegate, const FVector2D&, TileLocation, uint8, TileType);
 
@@ -31,7 +32,7 @@ private:
 	FVector Scale3D;
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	URuntimeMeshComponentStatic* Mesh;
+	URealtimeMeshComponent* Mesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UInstancedStaticMeshComponent* MeshCollisionInstances;

@@ -3,7 +3,8 @@
 
 #include "PlanetLandscape.h"
 #include "PlanetQuadTree.h"
-#include "Components/RuntimeMeshComponentStatic.h"
+#include "RealtimeMeshComponent.h"
+#include "RealtimeMeshSimple.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -15,11 +16,11 @@ UPlanetLandscape::UPlanetLandscape() :
 	axisB(FVector(0,0,0))
 {
 	RuntimeMesh =
-		CreateDefaultSubobject<URuntimeMeshComponentStatic>(TEXT("RuntimeMesh"));
+		CreateDefaultSubobject<URealtimeMeshComponent>(TEXT("RuntimeMesh"));
 }
 
 void UPlanetLandscape::Initialize(FPlanetShapeGenerator inGenerator, FPlanetMeshSettings inMeshSettings, 
-	URuntimeMeshComponentStatic& inMesh, FVector inLocalUp)
+	URealtimeMeshComponent& inMesh, FVector inLocalUp)
 {
 	this->ShapeGenerator = inGenerator;
 	this->MeshSettings = inMeshSettings;
@@ -34,6 +35,9 @@ void UPlanetLandscape::Initialize(FPlanetShapeGenerator inGenerator, FPlanetMesh
 // @desc See Sebastian Leagure (Procedural Planets)
 void UPlanetLandscape::ConstructMesh(const FVector& NewLocation)
 {
+	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
+
+
 	if (RuntimeMesh)
 	{
 		int32 i, cur;
@@ -41,7 +45,12 @@ void UPlanetLandscape::ConstructMesh(const FVector& NewLocation)
 		{
 			for (i = 0; i < MeshSections.Num(); ++i)
 			{
-				RuntimeMesh->ClearSection(0, i);
+				{ // Clear Section
+					FRealtimeMeshSectionKey SectionKey;
+					FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+					RTMesh->RemoveSection(SectionKey, CompletionCallback);
+				}
+				// RuntimeMesh->ClearSection(0, i);
 				MeshSections[i].ClearAllData();
 			}
 		}
@@ -98,9 +107,19 @@ void UPlanetLandscape::ConstructMesh(const FVector& NewLocation)
 			}
 			else
 			{
-				RuntimeMesh->CreateSectionFromComponents(0, i, 0,
-					MeshSection.Vertices, MeshSection.Triangles, MeshSection.Normals, MeshSection.UVs, MeshSection.VertexColors, MeshSection.Tangents,
-					MeshSection.UpdateFrequency, MeshSection.bEnableCollision);
+				{ // Create Section
+					FRealtimeMeshSectionKey SectionKey;
+					FRealtimeMeshSectionConfig Config;
+					FRealtimeMeshStreamRange StreamRange;
+					bool bShouldCreateCollision = true;
+					FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+
+					// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
+					RTMesh->CreateSection(SectionKey, Config, StreamRange, bShouldCreateCollision, CompletionCallback);
+				}
+				// RuntimeMesh->CreateSectionFromComponents(0, i, 0,
+				//	MeshSection.Vertices, MeshSection.Triangles, MeshSection.Normals, MeshSection.UVs, MeshSection.VertexColors, MeshSection.Tangents,
+				//	MeshSection.UpdateFrequency, MeshSection.bEnableCollision);
 			}
 
 			++i;
@@ -126,8 +145,16 @@ void UPlanetLandscape::CalculateNoise()
 
 		if (RuntimeMesh)
 		{
-			RuntimeMesh->UpdateSectionFromComponents(0, ++cur,
-				newVertsPosition, MeshSection.Triangles, MeshSection.Normals, MeshSection.UVs, MeshSection.VertexColors, MeshSection.Tangents);
+			URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
+			{
+				FRealtimeMeshSectionGroupKey SectionGroupKey;
+				URealtimeMeshStreamSet* MeshData = nullptr;
+				FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+				// Mesh->UpdateSectionFromComponents(0, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents);
+				RTMesh->UpdateSectionGroup(SectionGroupKey, MeshData, CompletionCallback);
+			}
+			// RuntimeMesh->UpdateSectionFromComponents(0, ++cur,
+			//	newVertsPosition, MeshSection.Triangles, MeshSection.Normals, MeshSection.UVs, MeshSection.VertexColors, MeshSection.Tangents);
 			// Mesh->UpdateMeshSection(0, newVertsPosition, normals, uvs, colors, tangents);
 		}
 	}

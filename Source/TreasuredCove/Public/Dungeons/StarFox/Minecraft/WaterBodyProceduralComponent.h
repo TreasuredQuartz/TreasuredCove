@@ -31,7 +31,7 @@ protected:
 	void OnUpdateBody(bool bWithExclusionVolumes) override;
 
 #if WITH_EDITOR
-	virtual TArray<TSharedRef<FTokenizedMessage>> CheckWaterBodyStatus() const override;
+	virtual TArray<TSharedRef<FTokenizedMessage>> CheckWaterBodyStatus() override;
 #endif // WITH_EDITOR
 
 protected:

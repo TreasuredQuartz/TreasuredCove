@@ -2,7 +2,8 @@
 
 
 #include "Global/Actors/Items/KatanaCreator.h"
-#include "RuntimeMeshComponentStatic.h"
+#include "RealtimeMeshComponent.h"
+#include "RealtimeMeshSimple.h"
 
 UKatanaCreator::UKatanaCreator()
 {
@@ -15,10 +16,10 @@ void UKatanaCreator::GenerateKatana()
 	UPart* CurPart = Parts[0];
 	int32 PartVertNum = 0;
 	int32 LODDepth = 0;
-	FRuntimeMeshCollisionVertexStream CollisionVerts;
-	FRuntimeMeshCollisionTriangleStream CollisionTris;
+	// FRealtimeMeshCollisionVertexStream CollisionVerts;
+	// FRealtimeMeshCollisionTriangleStream CollisionTris;
 
-	while (CurPart != nullptr)
+	/*while (CurPart != nullptr)
 	{
 		if (CurPart->HasInnerParts())
 		{
@@ -40,7 +41,7 @@ void UKatanaCreator::GenerateKatana()
 		}
 
 		PartVertNum += Section.Vertices.Num();
-	}
+	}*/
 
 	for (UPart* Part : Parts)
 	{
@@ -48,21 +49,21 @@ void UKatanaCreator::GenerateKatana()
 
 		for (FVector Vert : Section.Vertices)
 		{
-			CollisionVerts.Add(Vert);
+			//CollisionVerts.Add(Vert);
 		}
 
 		for (int32 i = 0; i < Section.Triangles.Num(); i += 3)
 		{
-			CollisionTris.Add(Section.Triangles[i] + PartVertNum, Section.Triangles[i + 1] + PartVertNum, Section.Triangles[i + 2] + PartVertNum);
+			//CollisionTris.Add(Section.Triangles[i] + PartVertNum, Section.Triangles[i + 1] + PartVertNum, Section.Triangles[i + 2] + PartVertNum);
 		}
 
 		PartVertNum += Section.Vertices.Num();
 	}
 
-	FRuntimeMeshCollisionData CollisionData;
-	CollisionData.Vertices = CollisionVerts;
-	CollisionData.Triangles = CollisionTris;
-	Mesh->SetCollisionMesh(CollisionData);
+	// FRealtimeMeshCollisionData CollisionData;
+	// CollisionData.Vertices = CollisionVerts;
+	// CollisionData.Triangles = CollisionTris;
+	// Mesh->SetCollisionMesh(CollisionData);
 }
 
 FProceduralMeshSection UPart::GenerateSection()
@@ -90,7 +91,7 @@ FProceduralMeshSection UPart::GenerateSection()
 			Section.Normals.Add(Normal);
 			Section.UVs.Add(UV);
 			Section.VertexColors.Add(Color);
-			Section.Tangents.Add(FRuntimeMeshTangent());
+			Section.Tangents.Add(FVector::ZeroVector);
 		}
 	}
 

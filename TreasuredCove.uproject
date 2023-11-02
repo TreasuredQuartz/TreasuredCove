@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.2",
+	"EngineAssociation": "5.3",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -80,16 +80,7 @@
 			"Name": "PlayFab",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/217fdf581b784571af03d3fb6580368f",
-			"WhitelistPlatforms": [
-				"XB1",
-				"WinGDK",
-				"XSX",
-				"Win64",
-				"Switch",
-				"PS4",
-				"PS5"
-			],
-			"SupportedTargetPlatforms": [
+			"PlatformAllowList": [
 				"XB1",
 				"WinGDK",
 				"XSX",

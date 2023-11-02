@@ -30,7 +30,7 @@ public class ProceduralPlanetPlugin : ModuleRules
 				// ... add other public dependencies that you statically link with here ...
 				"SimplexNoise",
 				"ProceduralMeshComponent",
-				"RuntimeMeshComponent",
+				"RealtimeMeshComponent",
             }
 			);
 			

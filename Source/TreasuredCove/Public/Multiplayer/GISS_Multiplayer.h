@@ -110,4 +110,6 @@ public:
 	UMultiplayerLoadoutManager* GetLoadoutManager();
 
 public:
+	UFUNCTION()
+	void UpdatePlayerLevel(FString PlayerID);
 };

@@ -8,6 +8,9 @@
 #include "GALibrary.h"
 #include "GameplayTileData.h"
 
+#include "RealtimeMeshComponent.h"
+#include "RealtimeMeshSimple.h"
+
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Sampling/SphericalFibonacci.h"
 
@@ -101,7 +104,7 @@ void AHexGrid::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inChunkLi
 	{
 		FString String = "NewVoxel_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
 		FName Name = FName(*String);
-		Mesh = NewObject<URuntimeMeshComponentStatic>(this, Name);
+		Mesh = NewObject<URealtimeMeshComponent>(this, Name);
 		Mesh->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
 		Mesh->RegisterComponent();
 		// PMesh->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
@@ -436,14 +439,31 @@ void AHexGrid::ConstructMesh()
 		}
 	}*/
 
-	Mesh->ClearSection(0, 0);
+	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
+
+	{ // Clear Section
+		FRealtimeMeshSectionKey SectionKey;
+		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+		RTMesh->RemoveSection(SectionKey, CompletionCallback);
+	}
+	// Mesh->ClearSection(0, 0);
 
 	// For each MeshSection, Create a new mesh section
 	for (int i = 0; i < MeshSections.Num(); ++i)
 	{
 		if (MeshSections[i].Vertices.Num() > 0)
 		{
-			Mesh->CreateSectionFromComponents(0, i, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Infrequent, false);
+			{ // Create Section
+				FRealtimeMeshSectionKey SectionKey;
+				FRealtimeMeshSectionConfig Config;
+				FRealtimeMeshStreamRange StreamRange;
+				bool bShouldCreateCollision = false;
+				FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+
+				// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
+				RTMesh->CreateSection(SectionKey, Config, StreamRange, bShouldCreateCollision, CompletionCallback);
+			}
+			// Mesh->CreateSectionFromComponents(0, i, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Infrequent, false);
 			if (Materials.IsValidIndex(i)) Mesh->SetMaterial(i, Materials[i]);
 		}
 		else
@@ -473,8 +493,27 @@ void AHexGrid::UpdateMeshSection(int32 MeshSectionIndex)
 		MeshSections[MeshSectionIndex].Append(TileSection);
 	}
 
-	Mesh->ClearSection(0, MeshSectionIndex);
-	Mesh->CreateSectionFromComponents(0, MeshSectionIndex, MeshSectionIndex, MeshSections[MeshSectionIndex].Vertices, MeshSections[MeshSectionIndex].Triangles, MeshSections[MeshSectionIndex].Normals, MeshSections[MeshSectionIndex].UVs, MeshSections[MeshSectionIndex].VertexColors, MeshSections[MeshSectionIndex].Tangents); 
+	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
+
+	{ // Clear Section
+		FRealtimeMeshSectionKey SectionKey;
+		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+		RTMesh->RemoveSection(SectionKey, CompletionCallback);
+	}
+	// Mesh->ClearSection(0, MeshSectionIndex);
+	
+	{ // Create Section
+		FRealtimeMeshSectionKey SectionKey;
+		FRealtimeMeshSectionConfig Config;
+		FRealtimeMeshStreamRange StreamRange;
+		bool bShouldCreateCollision = false;
+		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+
+		// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
+		RTMesh->CreateSection(SectionKey, Config, StreamRange, bShouldCreateCollision, CompletionCallback);
+	}
+	// Mesh->CreateSectionFromComponents(0, MeshSectionIndex, MeshSectionIndex, MeshSections[MeshSectionIndex].Vertices, MeshSections[MeshSectionIndex].Triangles, MeshSections[MeshSectionIndex].Normals, MeshSections[MeshSectionIndex].UVs, MeshSections[MeshSectionIndex].VertexColors, MeshSections[MeshSectionIndex].Tangents); 
+	
 	if (Materials.IsValidIndex(MeshSectionIndex)) Mesh->SetMaterial(MeshSectionIndex, Materials[MeshSectionIndex]);
 }
 
@@ -483,6 +522,7 @@ void AHexGrid::UpdateMesh()
 	if (Tiles.IsEmpty())
 		UE_LOG(LogTemp, Warning, TEXT("No Tiles"));
 
+	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
 	TArray<FProceduralMeshSection> MeshSections;
 	MeshSections.SetNum(6);
 
@@ -503,7 +543,11 @@ void AHexGrid::UpdateMesh()
 	{
 		if (MeshSections[i].Vertices.Num() > 0)
 		{
-			Mesh->UpdateSectionFromComponents(0, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents);
+			FRealtimeMeshSectionGroupKey SectionGroupKey;
+			URealtimeMeshStreamSet* MeshData = nullptr;
+			FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+			// Mesh->UpdateSectionFromComponents(0, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents);
+			RTMesh->UpdateSectionGroup(SectionGroupKey, MeshData, CompletionCallback);
 		}
 	}
 }

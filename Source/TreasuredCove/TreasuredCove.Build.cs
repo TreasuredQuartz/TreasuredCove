@@ -41,14 +41,16 @@ public class TreasuredCove : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] 
 		{ 
 			"ProceduralMeshComponent", 
-			"RuntimeMeshComponent",
+			"RealtimeMeshComponent",
 			"GameplayTowns", 
 			"PhysXFlyingVehicles", 
 			"DlgSystem",
             "GenericGraphRuntime",
             "UnrealEd",
             "PlayFab",
-			"SenseSystem"
+            "PlayFabCpp", 
+			"PlayFabCommon",
+            "SenseSystem"
 		});
 
 		// Uncomment if you are using Slate UI

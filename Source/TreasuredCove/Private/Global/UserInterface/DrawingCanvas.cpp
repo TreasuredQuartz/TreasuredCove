@@ -38,9 +38,9 @@ UDrawingCanvas::UDrawingCanvas()
 
 UDrawingCanvas::~UDrawingCanvas()
 {
-	canvasBrushMask.Release();
-	canvasPixelData.Release();
-	echoUpdateTextureRegion.Release();
+	canvasBrushMask.Reset();
+	canvasPixelData.Reset();
+	echoUpdateTextureRegion.Reset();
 }
 
 void UDrawingCanvas::InitializeCanvas(const int32 pixelsH, const int32 pixelsV)

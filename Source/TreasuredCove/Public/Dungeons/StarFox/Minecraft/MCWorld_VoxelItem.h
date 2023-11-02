@@ -8,7 +8,7 @@
 #include "MCWorld_VoxelItem.generated.h"
 
 class UGameplayTileData;
-class URuntimeMeshComponentStatic;
+class URealtimeMeshComponent;
 class URotatingMovementComponent;
 class UBobbingMovementComponent;
 
@@ -24,7 +24,7 @@ class TREASUREDCOVE_API AMCWorld_VoxelItem :
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VoxelItem", Meta = (AllowPrivateAccess = "true"))
-	URuntimeMeshComponentStatic* Mesh;
+	URealtimeMeshComponent* Mesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VoxelItem", Meta = (AllowPrivateAccess = "true"))
 	URotatingMovementComponent* Rotation;

@@ -5,6 +5,8 @@
 #include "MultiplayerLoadout.h"
 #include "MultiplayerLoadoutManager.h"
 
+#include "PlayFab_GameInstanceSubsystem.h"
+
 #include "AdvancedIdentityLibrary.h"
 #include "SGMultiplayerLoadouts.h"
 #include "kismet/GameplayStatics.h"
@@ -190,4 +192,11 @@ UMultiplayerLoadoutManager* UGISS_Multiplayer::GetLoadoutManager()
 {
 	if (!LoadoutManager) LoadoutManager = NewObject<UMultiplayerLoadoutManager>();
 	return LoadoutManager;
+}
+
+
+
+void UGISS_Multiplayer::UpdatePlayerLevel(FString PlayerID)
+{
+	GetGameInstance()->GetSubsystem<UPlayfab_GameInstanceSubsystem>()->UpdateUserLevel(PlayerID, FString::FromInt(AccountAttributes.Level), FString::FromInt(AccountAttributes.Experience));
 }

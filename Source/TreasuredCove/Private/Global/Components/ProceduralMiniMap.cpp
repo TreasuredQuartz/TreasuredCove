@@ -2,6 +2,8 @@
 
 
 #include "Global/Components/ProceduralMiniMap.h"
+#include "RealtimeMeshComponent.h"
+#include "RealtimeMeshSimple.h"
 
 // const int32 VoxelTriangles[] = { 2, 1, 0, 0, 3, 2 };
 const FVector VoxelNormalsTop[] = { FVector(0, 0, 1), FVector(0, 0, 1), FVector(0, 0, 1), FVector(0, 0, 1) };
@@ -20,7 +22,7 @@ UProceduralMiniMap::UProceduralMiniMap()
 
 	// ...
 	Mesh =
-		CreateDefaultSubobject<URuntimeMeshComponentStatic>(FName("Mini-Map Mesh"));
+		CreateDefaultSubobject<URealtimeMeshComponent>(FName("Mini-Map Mesh"));
 
 	TestDirections =
 		TArray<FVector>{ FVector(0, 0, 1), FVector(0, 0, -1), 
@@ -246,9 +248,25 @@ void UProceduralMiniMap::UpdateMesh()
 		}
 	}//*/
 
-	Mesh->ClearSection(0, 0);
+	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
 
-	Mesh->CreateSectionFromComponents(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
+	{ // Clear Section
+		FRealtimeMeshSectionKey SectionKey;
+		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+		RTMesh->RemoveSection(SectionKey, CompletionCallback);
+	}
+
+	{ // Create Section
+		FRealtimeMeshSectionKey SectionKey;
+		FRealtimeMeshSectionConfig Config;
+		FRealtimeMeshStreamRange StreamRange;
+		bool bShouldCreateCollision = false;
+		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+
+		// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
+		RTMesh->CreateSection(SectionKey, Config, StreamRange, bShouldCreateCollision, CompletionCallback);
+	}
+
 	Mesh->SetMaterial(0, VertexBuffer.GetMaterial());
 }
 

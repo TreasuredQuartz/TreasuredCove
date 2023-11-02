@@ -12,7 +12,7 @@
 #include "Components/TimelineComponent.h"
 #include "ProceduralPlanet.generated.h"
 
-class URuntimeMeshComponentStatic;
+class URealtimeMeshComponent;
 class UCameraComponent;
 class UPlanetLandscape;
 
@@ -36,7 +36,7 @@ private:
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "false"))
-	TArray<URuntimeMeshComponentStatic*> RuntimeMeshs;
+	TArray<URealtimeMeshComponent*> RuntimeMeshs;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "false"))
 	TArray<UPlanetLandscape*> Landscapes;
 
