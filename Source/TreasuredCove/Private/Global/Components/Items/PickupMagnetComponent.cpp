@@ -28,6 +28,10 @@ UPickupMagnetComponent::UPickupMagnetComponent()
 
 void UPickupMagnetComponent::OnRegister()
 {
+	Super::OnRegister();
+
+	if (!PickupMagnetOverlap) return;
+
 	if (GetOwner())
 	{
 		if (!GetOwner()->GetRootComponent())
@@ -46,9 +50,7 @@ void UPickupMagnetComponent::OnRegister()
 		PickupMagnetOverlap->SetupAttachment(this);
 	}
 
-	Super::OnRegister();
-
-	PickupMagnetOverlap->RegisterComponent();
+	if (GetWorld()) PickupMagnetOverlap->RegisterComponent();
 }
 
 // Called when the game starts

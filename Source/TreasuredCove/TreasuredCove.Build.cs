@@ -21,6 +21,7 @@ public class TreasuredCove : ModuleRules
             "Engine",
             "EnhancedInput",
             "InputCore", 
+			"Json",
 			"GameplayAbilities",
 			"GameplayTags",
 			"GameplayTasks",

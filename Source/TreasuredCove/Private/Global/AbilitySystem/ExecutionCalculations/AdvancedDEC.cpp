@@ -66,6 +66,8 @@ void UAdvancedDEC::Execute_Implementation(const FGameplayEffectCustomExecutionPa
 	AActor* SourceActor = ExecutionParams.GetSourceAbilitySystemComponent()->GetOwner();
 	AActor* TargetActor = ExecutionParams.GetTargetAbilitySystemComponent()->GetOwner();
 
+	ExecutionParams.GetOwningSpec().GetContext().GetHitResult();
+
 	AGAProjectile* Proj = Cast<AGAProjectile>(ExecutionParams.GetOwningSpec().GetContext().GetEffectCauser());
 	if (Proj) UE_LOG(LogTemp, Warning, TEXT("Effect Causer is projectile!"))
 

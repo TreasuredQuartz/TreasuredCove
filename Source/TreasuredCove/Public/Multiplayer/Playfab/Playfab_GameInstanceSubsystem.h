@@ -4,8 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "PlayFab.h"
+#include "Core/PlayFabError.h"
+#include "Core/PlayFabClientDataModels.h"
 // #include "Classes/PlayFabClientAPI.h"
 #include "Playfab_GameInstanceSubsystem.generated.h"
+
+namespace PlayFab
+{
+    struct FPlayFabCppError;
+
+    namespace ClientModels
+    {
+        struct FRegisterPlayFabUserResult;
+        struct FGetUserDataResult;
+        struct FLoginResult;
+    }
+}
 
 USTRUCT(BlueprintType)
 struct FPlayFabAccountAttributes
@@ -16,31 +31,41 @@ public:
     UPROPERTY()
     FString PlayerID;
     UPROPERTY()
-    FString Level;
+    int32 Level;
     UPROPERTY()
-    FString XP;
+    int32 XP;
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributesChanged, const FPlayFabAccountAttributes&, NewAttributes);
 
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType)
 class TREASUREDCOVE_API UPlayfab_GameInstanceSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
     
 private:
+    PlayFabClientPtr clientAPI = nullptr;
+
     // PlayFabID (Must match corrosponding ID for title in PlayFab catelog)
     FString GameTitleId;
-    FString PlayerId;
+    FPlayFabAccountAttributes PlayerAccountAttributes;
+
+public:
+    UPROPERTY(BlueprintAssignable)
+    FOnAttributesChanged OnAttributesChanged;
 
 public:
     // Default Constructor
     UPlayfab_GameInstanceSubsystem();
 
     UFUNCTION(BlueprintPure, BlueprintCallable)
-    FString GetPlayerID() const { return PlayerId; };
+    FString GetPlayerID() const { return PlayerAccountAttributes.PlayerID; };
+
+    FPlayFabAccountAttributes& GetAccountAttributes() { return PlayerAccountAttributes; };
 
 public:
     // Begin USubsystem
@@ -59,18 +84,6 @@ public:
     UFUNCTION(BlueprintCallable)
     void SignUp(FString Username, FString Email, FString Password);
 
-    // Delegate for account creation success
-    UFUNCTION()
-    void OnRegisterSuccess(const FClientRegisterPlayFabUserResult& result, UObject* customData);
-
-    // Delegate for PlayFab login success
-    UFUNCTION()
-    void OnLoginSuccess(const struct FClientLoginResult result, UObject* customData);
-
-    // Delegate for PlayFab login failure
-    UFUNCTION()
-    void OnLoginFailure(FPlayFabError error, UObject* customData);
-
     UFUNCTION()
     void IniializeInventory();
 
@@ -82,14 +95,20 @@ public:
     UFUNCTION()
     void GetUserLevel(FString UserId);
 
-    // Delegate For PlayFab retrevial of user attributes
     UFUNCTION()
-    void GetUserLevelOnSuccess(const struct FClientGetUserDataResult& result, UObject* customData);
-
-    UFUNCTION()
-    void UpdateUserLevel(FString UserId, FString Level, FString XP);
+    void UpdateUserLevel(FString UserId, int32 Level, int32 XP);
 
     // End PlayFab_GameInstanceSubsystem
+
+    // Delegate for account creation success
+    void OnRegisterSuccess(const struct PlayFab::ClientModels::FRegisterPlayFabUserResult & result);
+    // Delegate for PlayFab login success
+    void OnLoginSuccess(const struct PlayFab::ClientModels::FLoginResult & SuccessResult);
+    // Delegate for PlayFab login failure
+    void OnLoginFailure(const struct PlayFab::FPlayFabCppError& ErrorResult) const;
+    // Delegate For PlayFab retrevial of user attributes
+    void GetUserLevelOnSuccess(const struct PlayFab::ClientModels::FGetUserDataResult & SuccessResult);
+ 
 
     // */
 };

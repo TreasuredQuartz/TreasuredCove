@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ASHealth.h"
-#include "GACharacter.h"
+#include "HealthComponent.h"
 
 #include "AbilitySystemComponent.h"
 
@@ -39,16 +39,16 @@ void UASHealth::PreAttributeChange(const FGameplayAttribute& Attribute, float& N
 		NewValue = FMath::Clamp(NewValue, 0.f, MaxHealth.GetCurrentValue());
 		// UE_LOG(LogTemp, Warning, TEXT("Health Value:%f"), NewValue);
 
-		AGACharacter* CharacterOwner = Cast<AGACharacter>(GetOwningActor());
-		if (CharacterOwner)
+		UHealthComponent* HealthComp = Cast<UHealthComponent>(GetOwningActor()->GetComponentByClass(UHealthComponent::StaticClass()));
+		if (HealthComp)
 		{
 			if (Health.GetCurrentValue() == MaxHealth.GetCurrentValue())
 			{
-				CharacterOwner->AddGameplayTag(CharacterOwner->FullHealthTag);
+				HealthComp->AddFullHealthTag();
 			}
 			else
 			{
-				CharacterOwner->RemoveGameplayTag(CharacterOwner->FullHealthTag);
+				HealthComp->RemoveFullHealthTag();
 			}
 		}
 	}
@@ -62,15 +62,15 @@ void UASHealth::PreAttributeChange(const FGameplayAttribute& Attribute, float& N
 	}
 	else if (Attribute == MaxHealthProperty)
 	{
-		NewValue = FMath::Clamp(NewValue, 1.f, NewValue);
+		NewValue = FMath::Clamp(NewValue, Health.GetCurrentValue(), NewValue);
 	}
 	else if (Attribute == MaxStaminaProperty)
 	{
-		NewValue = FMath::Clamp(NewValue, 1.f, NewValue);
+		NewValue = FMath::Clamp(NewValue, Stamina.GetCurrentValue(), NewValue);
 	} 
 	else if (Attribute == MaxManaProperty)
 	{
-		NewValue = FMath::Clamp(NewValue, 1.f, NewValue);
+		NewValue = FMath::Clamp(NewValue, Mana.GetCurrentValue(), NewValue);
 	}
 }
 
@@ -89,7 +89,7 @@ bool UASHealth::PreGameplayEffectExecute(FGameplayEffectModCallbackData &Data)
 	bool bModifiedAttributeIsMaxMana = Data.EvaluatedData.Attribute.GetUProperty() == FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, MaxMana));
 	bool bModifiedAttributeIsMana = Data.EvaluatedData.Attribute.GetUProperty() == FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, Mana));
 
-	// Is the attribute being modified one of our attributes
+	// Is the attribute being modified is one of our attributes
 	if (bModifiedAttributeIsHealth || bModifiedAttributeIsMaxHealth || bModifiedAttributeIsStamina || bModifiedAttributeIsMaxStamina || bModifiedAttributeIsMana || bModifiedAttributeIsMaxMana)
 	{
 		// GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "An Attribute was modified");
@@ -236,6 +236,7 @@ void UASHealth::PostGameplayEffectExecute(const struct FGameplayEffectModCallbac
 	if (SourceAbilitySystem)
 	{
 		AActor* SourceActor = SourceAbilitySystem->GetOwner();
+		UHealthComponent* HealthComp = Cast<UHealthComponent>(GetOwningActor()->GetComponentByClass(UHealthComponent::StaticClass()));
 
 		if (SourceActor)
 		{
@@ -255,7 +256,11 @@ void UASHealth::PostGameplayEffectExecute(const struct FGameplayEffectModCallbac
 
 			if (bDamaged)
 			{
-				OnDamaged.Broadcast(SourceActor, AttributeType, DeltaAmount, Data.EvaluatedData.Magnitude);
+				float DamageRecieved = DeltaAmount;
+				FOnHealthDamagedResult Result = FOnHealthDamagedResult(Health.GetCurrentValue(), DamageRecieved, FName("None"), GetOwningActor(), SourceActor, NewObject<UDamageType>());
+				HealthComp->OnHealthDamaged.Broadcast(Result);
+				if (Health.GetCurrentValue() == 0) HealthComp->Die(GetOwningActor(), SourceActor);
+				// OnDamaged.Broadcast(SourceActor, AttributeType, DeltaAmount, Data.EvaluatedData.Magnitude);
 
 				/*AGACharacter* OwningCharacter = Cast<AGACharacter>(GetOwningActor());
 

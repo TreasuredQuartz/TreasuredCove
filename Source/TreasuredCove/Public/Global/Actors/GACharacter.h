@@ -95,6 +95,7 @@ enum class EHeldInputType : uint8
 #pragma endregion
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKill, AActor*, ResponsibleActor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGAEnded, const UGameplayAbility*, AbilityEndedData);
 
 UCLASS(Blueprintable)

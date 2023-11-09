@@ -62,6 +62,10 @@ void AGAProjectile::OnHitPawn_Implementation(const FHitResult& HitResult)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Projectile trace hit pawn!"));
 		
+		FGameplayEffectContextHandle Context = EffectSpecHandleFromAbility.Data->GetContext();
+		Context.AddSourceObject(this);
+		Context.AddHitResult(HitResult);
+		EffectSpecHandleFromAbility.Data->SetContext(Context);
 		UGALibrary::ApplyGESpecHandleToTargetDataSpecsHandle(EffectSpecHandleFromAbility, UGALibrary::AbilityTargetDataFromActor(HitResult.GetActor()));
 		if (AGACharacter* HitCharacter = Cast<AGACharacter>(HitResult.GetActor()))
 		{

@@ -112,4 +112,7 @@ public:
 public:
 	UFUNCTION()
 	void UpdatePlayerLevel(FString PlayerID);
+
+	UFUNCTION()
+	void UpdatePlayerOnlineAttributes(const struct FPlayFabAccountAttributes& Attributes);
 };

@@ -7,13 +7,13 @@
 #include "MultiplayerMapInfo.generated.h"
 
 USTRUCT(BlueprintType)
-struct TREASUREDCOVE_API FMultiplayerMapInfo
+struct TREASUREDCOVE_API FMultiplayerMapInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer|Map")
-	FName MapName;
+	FText MapName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer|Map")
 	FString MapLevel;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Multiplayer|Map")
@@ -23,7 +23,7 @@ public:
 	
 public:	
 	// Sets default values for this actor's properties
-	FMultiplayerMapInfo() : MapName(FName()),
+	FMultiplayerMapInfo() : MapName(FText()),
 		MapLevel(""),
 		Gamemode(EGamemodeType::SinglePlayer),
 		Icon(nullptr)
@@ -32,21 +32,20 @@ public:
 public:
 	friend uint32 GetTypeHash(const FMultiplayerMapInfo& Other)
 	{
-		return GetTypeHash(Other.MapName) + 
-			GetTypeHash(Other.Gamemode);
+		return GetTypeHash(Other.MapLevel);
 	}
 
 public:
 	bool operator ==(const FMultiplayerMapInfo& Other) const
 	{
-		return this->MapName == Other.MapName &&
+		return this->MapName.EqualTo(Other.MapName) &&
 			this->Gamemode == Other.Gamemode &&
 			this->MapLevel == Other.MapLevel;
 	}
 
 	bool operator !=(const FMultiplayerMapInfo& Other) const
 	{
-		return this->MapName != Other.MapName ||
+		return !this->MapName.EqualTo(Other.MapName) ||
 			this->Gamemode != Other.Gamemode ||
 			this->MapLevel != Other.MapLevel;
 	}

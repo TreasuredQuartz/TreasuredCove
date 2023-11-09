@@ -2,13 +2,12 @@
 
 
 #include "Playfab/Playfab_GameInstanceSubsystem.h"
-#include "Classes/PlayFabUtilities.h"
-#include "PlayFabClientAPI.h"
 #include "AdvancedSessions.h"
 
+#include "Core/PlayFabClientAPI.h"
+
 #include "Kismet/GameplayStatics.h"
-#include "PlayFabJsonObject.h"
-#include "PlayFabJsonValue.h"
+#include "JsonValue.h"
 
 
 UPlayfab_GameInstanceSubsystem::UPlayfab_GameInstanceSubsystem()
@@ -30,115 +29,159 @@ void UPlayfab_GameInstanceSubsystem::Deinitialize()
 
 
 #pragma region Logins
-// Initial login screen uses this function. When expanding to multiple platforms, consider a change to this approach.
-void UPlayfab_GameInstanceSubsystem::LoginWithEmail(FString Email, FString Password)
-{
-	FClientLoginWithEmailAddressRequest Request;
-	Request.Email = Email;
-	Request.Password = Password;
-	UPlayFabClientAPI::FDelegateOnSuccessLoginWithEmailAddress OnSuccess;
-	UPlayFabClientAPI::FDelegateOnFailurePlayFabError OnFailure;
-
-	OnSuccess.BindUFunction(this, FName("OnLoginSuccess"));
-	OnFailure.BindUFunction(this, FName("OnLoginFailure"));
-
-	UE_LOG(LogTemp, Warning, TEXT("PlayFab: \n   Begin Login..."));
-	UPlayFabClientAPI::LoginWithEmailAddress(Request, OnSuccess, OnFailure, nullptr);
-}
-
 void UPlayfab_GameInstanceSubsystem::SignUp(FString Username, FString Email, FString Password)
 {
-	FClientRegisterPlayFabUserRequest Request;
+	using namespace PlayFab;
+	using namespace ClientModels;
+
+	clientAPI = IPlayFabModuleInterface::Get().GetClientAPI();
+
+	FRegisterPlayFabUserRequest Request;
 	Request.DisplayName = Username;
 	Request.Email = Email;
 	Request.Password = Password;
 	Request.Username = Username;
-	UPlayFabClientAPI::FDelegateOnSuccessRegisterPlayFabUser OnSuccess;
-	UPlayFabClientAPI::FDelegateOnFailurePlayFabError OnFailure;
+
+
+	UPlayFabClientAPI::FRegisterPlayFabUserDelegate OnSuccess;
+	FPlayFabErrorDelegate OnFailure;
 
 	OnSuccess.BindUFunction(this, FName("OnRegisterSuccess"));
 	OnFailure.BindUFunction(this, FName("OnLoginFailure"));
 
-	UPlayFabClientAPI::RegisterPlayFabUser(Request, OnSuccess, OnFailure, nullptr);
+	clientAPI->RegisterPlayFabUser(Request, OnSuccess, OnFailure);
 }
 
-void UPlayfab_GameInstanceSubsystem::OnRegisterSuccess(const FClientRegisterPlayFabUserResult& result, UObject* customData)
+void UPlayfab_GameInstanceSubsystem::OnRegisterSuccess(const PlayFab::ClientModels::FRegisterPlayFabUserResult& SuccessResult)
 {
+	GetAccountAttributes().PlayerID = SuccessResult.PlayFabId;
 	UGameplayStatics::OpenLevel(GetWorld(), FName("Lobby"), true, FString("listen"));
 }
 
-void UPlayfab_GameInstanceSubsystem::OnLoginSuccess(FClientLoginResult result, UObject* customData)
+// Initial login screen uses this function. When expanding to multiple platforms, consider a change to this approach.
+void UPlayfab_GameInstanceSubsystem::LoginWithEmail(FString Email, FString Password)
 {
-	PlayerId = result.PlayFabId;
+	using namespace PlayFab;
+	using namespace ClientModels;
+
+	clientAPI = IPlayFabModuleInterface::Get().GetClientAPI();
+
+	FLoginWithEmailAddressRequest Request;
+	Request.Email = Email;
+	Request.Password = Password;
+
+	UPlayFabClientAPI::FLoginWithEmailAddressDelegate OnSuccess;
+	FPlayFabErrorDelegate OnFailure;
+
+	OnSuccess.BindUObject(this, &UPlayfab_GameInstanceSubsystem::OnLoginSuccess);
+	OnFailure.BindUObject(this, &UPlayfab_GameInstanceSubsystem::OnLoginFailure);
+
+	UE_LOG(LogTemp, Warning, TEXT("PlayFab: \n   Begin Login..."));
+	clientAPI->LoginWithEmailAddress(Request, OnSuccess, OnFailure);
+}
+
+void UPlayfab_GameInstanceSubsystem::OnLoginSuccess(const PlayFab::ClientModels::FLoginResult& SuccessResult)
+{
+	UE_LOG(LogTemp, Warning, TEXT("   Login Successful! \n   Opening Lobby..."));
+	GetAccountAttributes().PlayerID = SuccessResult.PlayFabId;
 	UGameplayStatics::OpenLevel(GetWorld(), FName("Lobby"));
 }
 
-void UPlayfab_GameInstanceSubsystem::OnLoginFailure(FPlayFabError error, UObject* customData)
+void UPlayfab_GameInstanceSubsystem::OnLoginFailure(const PlayFab::FPlayFabCppError& ErrorResult) const
 {
-	UE_LOG(LogTemp, Warning, TEXT("PlayFab: \n   Error Name: %s\n   Error Message: %s\n   Error Details: %s\n"), *error.ErrorName, *error.ErrorMessage, *error.ErrorDetails);
-
-	FClientLoginWithSteamRequest Request;
-	UPlayFabClientAPI::FDelegateOnSuccessLoginWithSteam OnSuccess;
-	UPlayFabClientAPI::FDelegateOnFailurePlayFabError OnFailure;
-
-	UPlayFabClientAPI::LoginWithSteam(Request, OnSuccess, OnFailure, nullptr);
+	UE_LOG(LogTemp, Warning, TEXT("   LoginFailed!\n   Error Name: %s\n   Error Message: %s\n   Error Details:"), *ErrorResult.ErrorName, *ErrorResult.ErrorMessage);
+	for (TPair<FString, FString> Pair : ErrorResult.ErrorDetails.Array())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("   %s: %s"), *Pair.Key, *Pair.Value);
+	}
 }
 #pragma endregion
 
 
 void UPlayfab_GameInstanceSubsystem::IniializeInventory()
 {
-	FClientGetUserInventoryRequest Request;
+	/*FClientGetUserInventoryRequest Request;
 	Request.AuthenticationContext;
 	Request.CustomTags;
 	UPlayFabClientAPI::FDelegateOnSuccessGetUserInventory OnSuccess;
 	UPlayFabClientAPI::FDelegateOnFailurePlayFabError OnFailure;
 
-	UPlayFabClientAPI::GetUserInventory(Request, OnSuccess, OnFailure, nullptr);
+	UPlayFabClientAPI::GetUserInventory(Request, OnSuccess, OnFailure, nullptr);*/
 };
 
 void UPlayfab_GameInstanceSubsystem::GetInventoryOnSuccess(FClientGetUserInventoryResult& Result, UObject* CustomData)
 {
-	for (const auto& Item : Result.Inventory)
+	// for (const auto& Item : Result.Inventory)
 	{
-		FName(Item->GetField("ItemId")->AsString());
+		// FName(Item->GetField("ItemId")->AsString());
 	}
 }
 
 void UPlayfab_GameInstanceSubsystem::GetUserLevel(FString UserId)
 {
-	FClientGetUserDataRequest Request;
+	using namespace PlayFab;
+	using namespace ClientModels;
+
+	UE_LOG(LogTemp, Warning, TEXT("PlayFab:   GettingUserLevel..."));
+
+	clientAPI = IPlayFabModuleInterface::Get().GetClientAPI();
+
+	FGetUserDataRequest Request;
 	Request.PlayFabId = UserId;
-	Request.Keys = "Level";
+	Request.Keys.Add("Level");
+	Request.Keys.Add("XP");
 
-	UPlayFabClientAPI::FDelegateOnSuccessGetUserData OnSuccess;
-	OnSuccess.BindUFunction(this, FName("GetUserLevelOnSuccess"));
-	UPlayFabClientAPI::FDelegateOnFailurePlayFabError OnFailure;
+	UPlayFabClientAPI::FGetUserDataDelegate OnSuccess;
+	OnSuccess.BindUObject(this, &UPlayfab_GameInstanceSubsystem::GetUserLevelOnSuccess);
+	FPlayFabErrorDelegate OnFailure;
 
-	UPlayFabClientAPI::GetUserData(Request, OnSuccess, OnFailure, nullptr);
+	clientAPI->GetUserData(Request, OnSuccess, OnFailure);
 }
 
-void UPlayfab_GameInstanceSubsystem::GetUserLevelOnSuccess(const FClientGetUserDataResult& result, UObject* customData)
+void UPlayfab_GameInstanceSubsystem::GetUserLevelOnSuccess(const PlayFab::ClientModels::FGetUserDataResult& SuccessResult)
 {
-	UPlayFabJsonObject* Data = result.Data;
-	UPlayFabJsonObject* InnerData = Data->GetField(Data->GetFieldNames()[0])->AsObject();	// Attribute
-	InnerData->GetStringField(InnerData->GetFieldNames()[0]);								// Value
+	using namespace PlayFab;
+	using namespace ClientModels;
+
+	UE_LOG(LogTemp, Warning, TEXT("   Got User Data!\n   Extracting Data..."));
+
+
+	TMap<FString, FUserDataRecord> Data = SuccessResult.Data;
+	{
+		TArray<FString> Keys;
+		Data.GetKeys(Keys);
+		for (const FString& Key : Keys)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Key: [%s], Value: [%s]"), *Key, *Data[Key].Value);
+
+			if (Data.Contains("Level")) GetAccountAttributes().Level = FCString::Atoi(*Data["Level"].Value);
+			if (Data.Contains("XP")) GetAccountAttributes().XP = FCString::Atoi(*Data["XP"].Value);
+		}
+	}
 }
 
-void UPlayfab_GameInstanceSubsystem::UpdateUserLevel(FString UserId, FString Level, FString XP)
+void UPlayfab_GameInstanceSubsystem::UpdateUserLevel(FString UserId, int32 Level, int32 XP)
 {
-	FClientExecuteCloudScriptRequest Request;
+	using namespace PlayFab;
+	using namespace ClientModels;
+
+	clientAPI = IPlayFabModuleInterface::Get().GetClientAPI();
+
+	FExecuteCloudScriptRequest Request;
 	Request.FunctionName = "UpdatePlayerLevel";
 
-	UPlayFabJsonObject* JsonObject = UPlayFabJsonObject::ConstructJsonObject(GetWorld());
-	JsonObject->SetField("Level", UPlayFabJsonValue::ConstructJsonValueString(GetWorld(), Level));
-	JsonObject->SetField("XP", UPlayFabJsonValue::ConstructJsonValueString(GetWorld(), XP));
+	TSharedPtr<FJsonObject> JsonObject = MakeShareable<FJsonObject>(new FJsonObject());
+	JsonObject->SetField("Level", MakeShareable<FJsonValueNumber>(new FJsonValueNumber(Level)));
+	JsonObject->SetField("XP", MakeShareable<FJsonValueNumber>(new FJsonValueNumber(XP)));
+
+	FJsonKeeper JsonKeeper(JsonObject);
 	Request.FunctionParameter = JsonObject;
 
-	UPlayFabClientAPI::FDelegateOnSuccessExecuteCloudScript OnSuccess;
-	UPlayFabClientAPI::FDelegateOnFailurePlayFabError OnFailure;
+	UPlayFabClientAPI::FExecuteCloudScriptDelegate OnSuccess;
+	FPlayFabErrorDelegate OnFailure;
 
-	UPlayFabClientAPI::ExecuteCloudScript(Request, OnSuccess, OnFailure, nullptr);
+	// UPlayFabClientAPI::ExecuteCloudScript(Request, OnSuccess, OnFailure, nullptr);
+	clientAPI->ExecuteCloudScript(Request, OnSuccess, OnFailure);
 }
 
 // */

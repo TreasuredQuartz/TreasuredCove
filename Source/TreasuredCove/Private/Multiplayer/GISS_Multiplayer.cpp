@@ -34,57 +34,20 @@ FAccountAttributes::FAccountAttributes() :
 
 void UGISS_Multiplayer::InitializeUserAccountAttributes(UPARAM(ref)FBPUserOnlineAccount& AccountInfo)
 {
-	FString DisplayNameValue;
-	FString ClanNameValue;
-	FString ExperienceValue;
-	FString LevelValue;
-	FString PrestigeValue;
-	FString RankIcon;
-
-	EBlueprintResultSwitch Result;
-
-	UAdvancedIdentityLibrary::GetUserAccountDisplayName(AccountInfo, DisplayNameValue);
-	AccountAttributes.DisplayName = FText::FromString(DisplayNameValue);
-
-	UAdvancedIdentityLibrary::GetUserAccountAttribute(AccountInfo, FString("Experience"), ExperienceValue, Result);
-	switch (Result)
-	{
-	case EBlueprintResultSwitch::OnSuccess:
-		AccountAttributes.Experience = FCString::Atoi(*ExperienceValue);
-		break;
-	case EBlueprintResultSwitch::OnFailure:
-		break;
-	}
-
-	UAdvancedIdentityLibrary::GetUserAccountAttribute(AccountInfo, FString("Level"), LevelValue, Result);
-	switch (Result)
-	{
-	case EBlueprintResultSwitch::OnSuccess:
-		UE_LOG(LogTemp, Warning, TEXT("PlayFab: Got Player Level!"));
-		AccountAttributes.Level = FCString::Atoi(*LevelValue);
-		break;
-	case EBlueprintResultSwitch::OnFailure:
-		UE_LOG(LogTemp, Warning, TEXT("PlayFab: Missed Player Level!"));
-		break;
-	}
-
-	UAdvancedIdentityLibrary::GetUserAccountAttribute(AccountInfo, FString("Prestige"), PrestigeValue, Result);
-	switch (Result)
-	{
-	case EBlueprintResultSwitch::OnSuccess:
-		AccountAttributes.Prestige = FCString::Atoi(*PrestigeValue);
-		break;
-	case EBlueprintResultSwitch::OnFailure:
-		break;
-	}
-	
-	GetLoadoutManager()->OnSuccess.AddDynamic(this, &UGISS_Multiplayer::SaveCustomLoadoutChanges);
+	GetLoadoutManager()->OnSuccess.AddUniqueDynamic(this, &UGISS_Multiplayer::SaveCustomLoadoutChanges);
 
 	// Set up the delegate.
-	FAsyncLoadGameFromSlotDelegate LoadedDelegate;
+	FAsyncLoadGameFromSlotDelegate LoadoutsLoadedDelegate;
+	FAsyncLoadGameFromSlotDelegate SettingsLoadedDelegate;
+
+	UPlayfab_GameInstanceSubsystem* PlayFab = GetGameInstance()->GetSubsystem<UPlayfab_GameInstanceSubsystem>();
+	PlayFab->OnAttributesChanged.AddUniqueDynamic(this, &UGISS_Multiplayer::UpdatePlayerOnlineAttributes);
+	PlayFab->GetUserLevel(PlayFab->GetAccountAttributes().PlayerID);
+
 	// USomeUObjectClass::LoadGameDelegateFunction is a void function that takes the following parameters: const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData
-	LoadedDelegate.BindUObject(this, &UGISS_Multiplayer::LoadCustomLoadouts);
-	UGameplayStatics::AsyncLoadGameFromSlot("CustomLoadouts", 0, LoadedDelegate);
+	LoadoutsLoadedDelegate.BindUObject(this, &UGISS_Multiplayer::LoadCustomLoadouts);
+	UGameplayStatics::AsyncLoadGameFromSlot("CustomLoadouts", 0, LoadoutsLoadedDelegate);
+	UGameplayStatics::AsyncLoadGameFromSlot("MultiplayerSettings", 0, SettingsLoadedDelegate);
 }
 
 void UGISS_Multiplayer::GetUserAccountAttributes(FAccountAttributes& Attributes)
@@ -198,5 +161,11 @@ UMultiplayerLoadoutManager* UGISS_Multiplayer::GetLoadoutManager()
 
 void UGISS_Multiplayer::UpdatePlayerLevel(FString PlayerID)
 {
-	GetGameInstance()->GetSubsystem<UPlayfab_GameInstanceSubsystem>()->UpdateUserLevel(PlayerID, FString::FromInt(AccountAttributes.Level), FString::FromInt(AccountAttributes.Experience));
+	GetGameInstance()->GetSubsystem<UPlayfab_GameInstanceSubsystem>()->UpdateUserLevel(PlayerID, AccountAttributes.Level, AccountAttributes.Experience);
+}
+
+void UGISS_Multiplayer::UpdatePlayerOnlineAttributes(const FPlayFabAccountAttributes& Attributes)
+{
+	AccountAttributes.Level = Attributes.Level;
+	AccountAttributes.Experience = Attributes.XP;
 }
