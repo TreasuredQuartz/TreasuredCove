@@ -11,10 +11,14 @@ UHealthComponent::UHealthComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 	PrimaryComponentTick.bCanEverTick = false;
 
+	SetIsReplicatedByDefault(true);
+
 	// ...
-	HealthSet = CreateDefaultSubobject<UASHealth>(TEXT("Health Attribute Set"));
+	HealthSet = nullptr;
+	ASC = nullptr;
 }
 
 
@@ -31,8 +35,35 @@ void UHealthComponent::BeginPlay()
 
 	if (ASC)
 	{
-		ASC->AddAttributeSetSubobject(HealthSet);
+		HealthSet = ASC->GetSet<UASHealth>();
+		if (!HealthSet)
+		{
+			UE_LOG(LogTemp, Error, TEXT("HealthComponent: Cannot initialize health component for owner [%s] with NULL health set on the ability system."), *GetNameSafe(GetOwner()));
+			return;
+		}
+
+		HealthSet->OnHealthModified.AddUObject(this, &ThisClass::HandleHealthModified);
+		HealthSet->OnMaxHealthModified.AddUObject(this, &ThisClass::HandleMaxHealthModified);
+		HealthSet->OnHealthZeroed.AddUObject(this, &ThisClass::HandleHealthZeroed);
 	}
+
+	OnHealthModified.Broadcast(FOnAttributeModifiedPayload(HealthSet->GetHealth(), HealthSet->GetHealth()));
+	OnMaxHealthModified.Broadcast(FOnAttributeModifiedPayload(HealthSet->GetMaxHealth(), HealthSet->GetMaxHealth()));
+}
+
+void UHealthComponent::OnUnregister()
+{
+	if (HealthSet)
+	{
+		HealthSet->OnHealthModified.RemoveAll(this);
+		HealthSet->OnMaxHealthModified.RemoveAll(this);
+		HealthSet->OnHealthZeroed.RemoveAll(this);
+	}
+
+	HealthSet = nullptr;
+	ASC = nullptr;
+
+	Super::OnUnregister();
 }
 
 void UHealthComponent::AddFullHealthTag() const
@@ -46,14 +77,19 @@ void UHealthComponent::RemoveFullHealthTag() const
 	ASC->RemoveLooseGameplayTag(FullHealthTag);
 }
 
-void UHealthComponent::DamageHealth(const FOnHealthDamagedResult& Result) const
+void UHealthComponent::HandleHealthModified(const FOnAttributeModifiedPayload& Payload) const
 {
-	OnHealthDamaged.Broadcast(Result);
+	OnHealthModified.Broadcast(Payload);
 }
 
-void UHealthComponent::Die(const AActor* Victim, const AActor* ResponsibleActor) const
+void UHealthComponent::HandleMaxHealthModified(const FOnAttributeModifiedPayload& Payload) const
 {
-	OnDeath.Broadcast(Victim, ResponsibleActor);
+	OnMaxHealthModified.Broadcast(Payload);
+}
+
+void UHealthComponent::HandleHealthZeroed(const FOnAttributeModifiedPayload& Payload) const
+{
+	OnHealthZeroed.Broadcast(Payload.Victim, Payload.Instigator);
 }
 
 

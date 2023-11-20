@@ -3,6 +3,7 @@
 #include "GAAIController.h"
 #include "GACharacter.h"
 
+#include "HealthComponent.h"
 #include "TownSystemComponent.h"
 #include "GameplayBuilding.h"
 
@@ -219,33 +220,19 @@ void AGAAIController::OnNewSense(const USensorBase* Sensor, int32 Channel, const
 
 		if (Sensor->SensorTag == FName("SensorSight"))
 		{
-			if (AGACharacter* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner<AGACharacter>())
+			if (AActor* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner())
 			{
-				if (SeenCharacter->GetIsDead())
+				if (UHealthComponent* HealthComp = SeenCharacter->GetComponentByClass<UHealthComponent>())
 				{
-					// GEngine->AddOnScreenDebugMessage(9, 5.f, FColor::Cyan, "Seen Character is dead!");
-					continue;
-				}
+					if (HealthComp->GetIsHealthZeroed())
+						continue;
 
-				/*FAICharacterInfo SeenInfo(SeenCharacter, SeenCharacter->GetActorLocation(), 0);
-
-				FAICharacterAwareness& AIState = SeenInfo.CurrentAIAwarenessTowardTarget;
-
-				AIState.SetCurrentSuspicion(1);
-
-				GetWorldTimerManager().SetTimer(SeenInfo.AwarenessTimerHandle, ReactionTime, true);
-				AwareOfCharacters.Add(SeenInfo);*/
-
-				if (CurrentEnemy == nullptr && Enemies.Contains(SeenCharacter))
-				{
-					// GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Cyan, "Updated Current Enemy.");
-					SeenCharacter->OnDeathDelegate.AddUniqueDynamic(this, &AGAAIController::OnEnemyDeath);
-					UpdateCurrentEnemy(SeenCharacter);
-					OnEnemyDiscovered();
-				}
-				else
-				{
-					// GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Cyan, "CurrentEnemy is not nullptr or enemies does not contain character.");
+					if (CurrentEnemy == nullptr && Enemies.Contains(SeenCharacter))
+					{
+						HealthComp->OnHealthZeroed.AddUniqueDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
+						UpdateCurrentEnemy(SeenCharacter);
+						OnEnemyDiscovered();
+					}
 				}
 			}
 		}
@@ -258,21 +245,16 @@ void AGAAIController::OnNewSense(const USensorBase* Sensor, int32 Channel, const
 			{
 				if (HeardActor != this && Enemies.Contains(HeardActor))
 				{
-					if (AGACharacter* HeardCharacter = Cast<AGACharacter>(HeardActor))
+					if (UHealthComponent* HealthComp = HeardActor->GetComponentByClass<UHealthComponent>())
 					{
-						if (HeardCharacter->GetIsDead())
+						if (HealthComp->GetIsHealthZeroed())
 							continue;
 					}
 
 					UpdateHeardSomething(true);
 					UpdateHeardLocation(HeardActor->GetActorLocation());
-					GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Cyan, "We heard The Player.");
 				}
 			}
-		}
-		else
-		{
-			// GEngine->AddOnScreenDebugMessage(10, 5.f, FColor::Cyan, "Owner of Component fails cast to AGACharacter.");
 		}
 	}
 }
@@ -290,11 +272,12 @@ void AGAAIController::OnLostSense(const USensorBase* Sensor, int32 Channel, cons
 
 		if (Sensor->SensorTag == FName("SensorSight"))
 		{
-			if (AGACharacter* SeenCharacter = Cast<AGACharacter>(Stimulus.StimulusComponent.Get()->GetOwner()))
+			if (AActor* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner())
 			{
 				if (CurrentEnemy == SeenCharacter)
 				{
-					SeenCharacter->OnDeathDelegate.RemoveDynamic(this, &AGAAIController::OnEnemyDeath);
+					if (UHealthComponent* HealthComp = SeenCharacter->GetComponentByClass<UHealthComponent>())
+						HealthComp->OnHealthZeroed.RemoveDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
 					UpdateCurrentEnemy(nullptr);
 					OnEnemyLost();
 				}
@@ -326,11 +309,13 @@ void AGAAIController::OnForgetSense(const USensorBase* Sensor, int32 Channel, co
 
 		if (Sensor->SensorTag == FName("SensorSight"))
 		{
-			if (AGACharacter* SeenCharacter = Cast<AGACharacter>(Stimulus.StimulusComponent.Get()->GetOwner()))
+			if (AActor* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner())
 			{
 				if (CurrentEnemy == SeenCharacter)
 				{
-					SeenCharacter->OnDeathDelegate.RemoveDynamic(this, &AGAAIController::OnEnemyDeath);
+					if (UHealthComponent* HealthComp = SeenCharacter->GetComponentByClass<UHealthComponent>())
+						HealthComp->OnHealthZeroed.RemoveDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
+
 					UpdateCurrentEnemy(nullptr);
 					OnEnemyLost();
 				}
@@ -351,6 +336,11 @@ void AGAAIController::OnEnemyDiscovered_Implementation()
 void AGAAIController::OnEnemyLost_Implementation()
 {
 
+}
+
+void AGAAIController::OnEnemyHealthZeroed(const AActor* Victim, const AActor* ResponsibleActor)
+{
+	OnEnemyDeath();
 }
 
 void AGAAIController::OnEnemyDeath()

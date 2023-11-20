@@ -5,49 +5,9 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
+#include "OnAttributeModifiedEvent.h"
 #include "HealthComponent.generated.h"
 
-USTRUCT(BlueprintType)
-struct FOnHealthDamagedResult
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float RemainingHealth;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DamageAmount;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName DamagedBoneName;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	AActor* Victim;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	AActor* ResponsibleActor;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UDamageType* DamageType;
-
-public:
-	FOnHealthDamagedResult() 
-		: RemainingHealth(0.0f)
-		, DamageAmount(0.0f)
-		, DamagedBoneName(FName("None"))
-		, Victim(nullptr)
-		, ResponsibleActor(nullptr)
-		, DamageType(nullptr)
-	{};
-
-	FOnHealthDamagedResult(float InRemainingHealth, float InDamageAmount, FName InBoneName, 
-		AActor* InVictim, AActor* InResponsibleActor, UDamageType* InDamageType)
-		: RemainingHealth(InRemainingHealth)
-		, DamageAmount(InDamageAmount)
-		, DamagedBoneName(InBoneName)
-		, Victim(InVictim)
-		, ResponsibleActor(InResponsibleActor)
-		, DamageType(InDamageType)
-	{};
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthDamaged, const FOnHealthDamagedResult&, OnHealthDamagedResult);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthZeroed, const AActor*, Victim, const AActor*, ResponsibleActor);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -62,29 +22,37 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	//
+	virtual void OnUnregister() override;
 
 public:	
 	// Called every frame /* Disabled. */
 	// virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-public:
+private:
 	// Owner AbilitySystemComponent
 	class UAbilitySystemComponent* ASC;
 
+	// Returns if the character has any health
+	bool bIsHealthZeroed = false;
+public:
 	// The health attibutes
 	UPROPERTY(VisibleAnywhere, Category = "Character|Attributes")
-	class UASHealth* HealthSet;
+	TObjectPtr<const class UASHealth> HealthSet;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character|Attributes|Health|Tags")
 	FGameplayTag FullHealthTag;
 
-	// Damaged Delegate
+public:
+	// Heal Modified Delegate
 	UPROPERTY(BlueprintAssignable)
-	FOnHealthDamaged OnHealthDamaged;
+	FOnAttributeModifiedEvent_BP OnHealthModified;
 
-	// Death Delegate
 	UPROPERTY(BlueprintAssignable)
-	FOnHealthZeroed OnDeath;
+	FOnAttributeModifiedEvent_BP OnMaxHealthModified;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnHealthZeroed OnHealthZeroed;
 
 public:
 	//
@@ -95,8 +63,14 @@ public:
 	void RemoveFullHealthTag() const;
 
 	UFUNCTION()
-	void DamageHealth(const FOnHealthDamagedResult& Result) const;
+	void HandleHealthModified(const FOnAttributeModifiedPayload& Payload) const;
 
 	UFUNCTION()
-	void Die(const AActor* Victim, const AActor* ResponsibleActor) const;
+	void HandleMaxHealthModified(const FOnAttributeModifiedPayload& Payload) const;
+
+	UFUNCTION()
+	void HandleHealthZeroed(const FOnAttributeModifiedPayload& Payload) const;
+
+	UFUNCTION()
+	bool GetIsHealthZeroed() const { return bIsHealthZeroed; };
 };

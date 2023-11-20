@@ -41,6 +41,7 @@
 #include "LaunchingComponent.h"
 #include "MovementTrailComponent.h"
 #include "GAInputConfigData.h"
+#include "HealthComponent.h"
 
 // Misc
 #include "GameplayBuilding.h"
@@ -197,6 +198,10 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 		CreateDefaultSubobject<UMovementTrailComponent>(TEXT("Movement Trail"));
 	MovementTrail->SetSpawnActors(false);
 
+	// Health Component
+	HealthComponent =
+		CreateDefaultSubobject<UHealthComponent>(TEXT("Health"));
+
 	/* Default Character values */
 
 	// Camera tilt timeline
@@ -268,6 +273,10 @@ void AGACharacter::BeginPlay()
 	if (AIStimulus != nullptr)
 	{
 		AIStimulus->OnSensedFromSensor.AddUniqueDynamic(this, &AGACharacter::OnSensed);
+		if (AIStimulus->IsRegisteredForSense())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SenseStimulus is registered..."));
+		} else UE_LOG(LogTemp, Warning, TEXT("SenseStimulus is NOT registered..."));
 	}
 	if (HeldItem)
 	{
@@ -318,6 +327,8 @@ void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PC = Cast<AGAPlayerController>(GetController());
+	if (PC == nullptr)
+		return;
 
 	// Get the local player subsystem
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
@@ -998,12 +1009,12 @@ void AGACharacter::InitializeAttributeSet(UAttributeSet* Set)
 	UASHealth* HealthSet = Cast<UASHealth>(Set);
 	if (HealthSet)
 	{
-		HealthSet->OnDamaged.AddUniqueDynamic(this, &AGACharacter::OnDamaged);
-		HealthSet->OnHealed.AddUniqueDynamic(this, &AGACharacter::OnHealed);
+		// HealthSet->OnDamaged.AddUniqueDynamic(this, &AGACharacter::OnDamaged);
+		// HealthSet->OnHealed.AddUniqueDynamic(this, &AGACharacter::OnHealed);
+		// HealthSet->OnHealthModified.AddUniqueDynamic(this, &AGACharacter::OnHealthModified);
 
-		HealthSet->OnHealthModified.AddUniqueDynamic(this, &AGACharacter::OnHealthModified);
-		HealthSet->OnStaminaModified.AddUniqueDynamic(this, &AGACharacter::OnStaminaModified);
-		HealthSet->OnManaModified.AddUniqueDynamic(this, &AGACharacter::OnManaModified);
+		// HealthSet->OnStaminaModified.AddUniqueDynamic(this, &AGACharacter::OnStaminaModified);
+		// HealthSet->OnManaModified.AddUniqueDynamic(this, &AGACharacter::OnManaModified);
 		return;
 	}
 
@@ -2444,24 +2455,6 @@ bool AGACharacter::AttributeCheck(FGameplayAttribute TestAttribute, uint8 Diffic
 	return LocBool;
 }
 
-void AGACharacter::OnHealthModified(float Health, float MaxHealth)
-{
-	AIInfo.CurrentAITargetStats.CurrentHealth = Health;
-	AIInfo.CurrentAITargetStats.MaxHealth = MaxHealth;
-
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Health was modified!!");
-
-	if (Health <= 0)
-	{
-		Death();
-	}
-
-	if (PC)
-	{
-		PC->OnHealthModified_Client(Health, MaxHealth);
-	}
-}
-
 void AGACharacter::OnStaminaModified(float Stamina, float MaxStamina)
 {
 	if(PC)
@@ -2614,13 +2607,6 @@ void AGACharacter::Death()
 	GetMovementComponent()->Deactivate();
 
 	OnDeath();
-	OnDeathDelegate.Broadcast();
-
-	/*for (UActorComponent* Component : GetComponents())
-	{
-		if (Cast<UCameraComponent>(Component) || Cast<USpringArmComponent>(Component)) continue;
-		Component->Deactivate();
-	}*/
 }
 #pragma endregion
 
@@ -3105,7 +3091,7 @@ void AGACharacter::UpdateSightRotation()
 }
 
 // Called on Attribute decrease
-void AGACharacter::OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
+/*void AGACharacter::OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "Damage was taken!!");
 
@@ -3157,23 +3143,8 @@ void AGACharacter::OnDamaged(AActor* SourceActor, EAttributeType AttributeType, 
 	}
 
 	// AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser
-	UGameplayStatics::ApplyDamage(this, DeltaAmount, SourceActor->GetInstigatorController(), SourceActor, UDamageType::StaticClass());
-}
-
-// Called on Attribute increase
-void AGACharacter::OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue)
-{
-	if (PC)
-	{
-		PC->OnHealed_Client(SourceActor, AttributeType, DeltaAmount, NewValue);
-	}
-	else if (AC)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "Health was given!!");
-
-		AC->OnHealed(SourceActor, AttributeType, DeltaAmount, NewValue);
-	}
-}
+	// UGameplayStatics::ApplyDamage(this, DeltaAmount, SourceActor->GetInstigatorController(), SourceActor, UDamageType::StaticClass());
+}*/
 
 // Called when sensed by another character
 void AGACharacter::OnSensed(const USensorBase* Sensor, int32 Channel, EOnSenseEvent SenseEvent)

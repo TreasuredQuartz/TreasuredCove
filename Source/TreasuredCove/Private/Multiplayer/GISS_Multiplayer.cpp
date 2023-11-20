@@ -23,7 +23,7 @@ FAccountAttributes::FAccountAttributes() :
 	Portrait(nullptr),
 	EmblemIcon(nullptr),
 	EquippedCallingCards(),
-	Loadouts(TArray<UMultiplayerLoadout*>())
+	Loadouts()
 {
 	Loadouts.SetNumZeroed(5);
 	for (int i = 0; i < 5; ++i)

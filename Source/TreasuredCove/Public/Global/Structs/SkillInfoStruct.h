@@ -27,6 +27,11 @@ public:
 	FName AbilityName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
 	EAbilityAquiredStatus AquiredStatus;
+
+	FSkillInfo() 
+		: AbilityName(FName())
+		, AquiredStatus(EAbilityAquiredStatus::Locked)
+	{}
 };
 
 USTRUCT(BlueprintType)
@@ -44,6 +49,13 @@ public:
 	//
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
 	UTexture2D* Texture;
+
+public:
+	FSkillInfoRow() 
+		: Name(FText())
+		, Class(nullptr)
+		, Texture(nullptr)
+	{}
 };
 
 USTRUCT(BlueprintType)
@@ -57,4 +69,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
 	TArray<FSkillInfo> Skills;
+
+public:
+	FGASkillTreeTier() 
+		: AquiredStatus(EAbilityAquiredStatus::Locked)
+		, Skills()
+	{}
 };

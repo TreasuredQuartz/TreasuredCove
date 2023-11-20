@@ -107,6 +107,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void OnEnemyLost();
 	UFUNCTION()
+	void OnEnemyHealthZeroed(const AActor* Victim, const AActor* ResponsibleActor);
+	UFUNCTION()
 	void OnEnemyDeath();
 
 	TArray<UBehaviorTree*> BehaviorTreeAssets;

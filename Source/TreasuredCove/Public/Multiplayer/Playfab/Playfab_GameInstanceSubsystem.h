@@ -34,6 +34,13 @@ public:
     int32 Level;
     UPROPERTY()
     int32 XP;
+
+public:
+    FPlayFabAccountAttributes() 
+        : PlayerID("") 
+        , Level(0)
+        , XP(0)
+    {}
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributesChanged, const FPlayFabAccountAttributes&, NewAttributes);

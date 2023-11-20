@@ -27,6 +27,13 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag InputTag;
+
+public:
+	FAbilitySet_GameplayAbility() 
+		: Ability(nullptr)
+		, AbilityLevel(0)
+		, InputTag(FGameplayTag())
+	{}
 };
 
 /** Container for FGameplayAbilitySpecHandles.

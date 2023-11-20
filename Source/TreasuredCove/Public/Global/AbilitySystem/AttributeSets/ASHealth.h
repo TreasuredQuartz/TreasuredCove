@@ -5,16 +5,11 @@
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
 #include "AttributeType.h"
+#include "AttributeMacros.h"
+#include "OnAttributeModifiedEvent.h"
 #include "ASHealth.generated.h"
 
 struct FGameplayEffectModCallbackData;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnDamagedDelegate, AActor*, Instigator, EAttributeType, AttributeType, float, Amount, float, NewValue);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealedDelegate, AActor*, Instigator, EAttributeType, AttributeType, float, Amount, float, NewValue);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthModifiedDelegate, float, Health, float, MaxHealth);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStaminaModifiedDelegate, float, Stamina, float, MaxStamina);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnManaModifiedDelegate, float, Mana, float, MaxMana);
 
 /**
  * 
@@ -26,19 +21,27 @@ class TREASUREDCOVE_API UASHealth :
 	GENERATED_BODY()
 
 private:
-	bool bDamaged;
-	bool bHealed;
-	float DeltaAmount;
-	EAttributeType AttributeType;
+	bool bHealthZeroed;
+	float HealthBeforeAttributeChange;
+
+private:
+	UFUNCTION()
+	void OnRep_Health(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	void OnRep_MaxHealth(const FGameplayAttributeData& OldValue);
 
 public:
 	// Constructor
 	UASHealth();
 
+	ATTRIBUTE_ACCESSORS(UASHealth, Health);
+	ATTRIBUTE_ACCESSORS(UASHealth, MaxHealth);
+
 	// All health properties
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Health")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHealth, Category = "Attributes|Health")
 	FGameplayAttributeData MaxHealth;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Health")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Attributes|Health")
 	FGameplayAttributeData Health;
 
 	// All stamina properties
@@ -59,22 +62,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Health")
 	FGameplayAttributeData DefenseMultiplier;
 
+public:
+
 	//
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	//
-	virtual bool PreGameplayEffectExecute(FGameplayEffectModCallbackData &Data) override;
+	virtual bool PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data) override;
 	//
-	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data) override;
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
-	UPROPERTY(BlueprintAssignable)
-	FOnDamagedDelegate OnDamaged;
-	UPROPERTY(BlueprintAssignable)
-	FOnHealedDelegate OnHealed;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnHealthModifiedDelegate OnHealthModified;
-	UPROPERTY(BlueprintAssignable)
-	FOnStaminaModifiedDelegate OnStaminaModified;
-	UPROPERTY(BlueprintAssignable)
-	FOnManaModifiedDelegate OnManaModified;
+	// Declared as mutable because pointer to set will be const
+	mutable FOnAttributeModifiedEvent OnHealthModified;
+	// Declared as mutable because pointer to set will be const
+	mutable FOnAttributeModifiedEvent OnMaxHealthModified;
+	// Declared as mutable because pointer to set will be const
+	mutable FOnAttributeModifiedEvent OnHealthZeroed;
 };

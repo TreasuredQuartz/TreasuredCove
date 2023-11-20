@@ -60,6 +60,7 @@ class UFloatingItemInfoComponent;
 class UFootprintComponent;
 class UTimelineComponent;
 class UGACharacterMovementComponent;
+class UHealthComponent;
 class UInventoryComponent;
 class ULaunchingComponent;
 class UMovementTrailComponent;
@@ -94,8 +95,6 @@ enum class EHeldInputType : uint8
 };
 #pragma endregion
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKill, AActor*, ResponsibleActor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGAEnded, const UGameplayAbility*, AbilityEndedData);
 
 UCLASS(Blueprintable)
@@ -488,6 +487,7 @@ public:
 	// Attributes to save
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities")
 	TArray<FSavedAttribute> AttributesToSave;
+
 #pragma region Components
 public:
 	//
@@ -579,6 +579,9 @@ public:
 	// Spawn Hints for tracking players and visual indicators for hearing footsteps
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UFootprintComponent* FootprintComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UHealthComponent* HealthComponent;
 
 	//////////////////////////////////////////////////////
 #pragma endregion
@@ -750,9 +753,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
 	void OnDeath();
 
-	//
-	UFUNCTION()
-	void OnHealthModified(float Health, float MaxHealth);
 	UFUNCTION()
 	void OnStaminaModified(float Stamina, float MaxStamina);
 	UFUNCTION()
@@ -867,10 +867,6 @@ public:
 	FAICharacterStats GetAIStats() { return FAICharacterStats(AIInfo.CurrentAITargetStats); }
 	//
 	UFUNCTION()
-	void OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
-	UFUNCTION()
-	void OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
-	UFUNCTION()
 	void OnSensed(const USensorBase* Sensor, int32 Channel, EOnSenseEvent SenseEvent);
 	UFUNCTION()
 	void OnHeard();
@@ -934,8 +930,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
 	void Puncture(FVector ImpactLocation, FVector ImpactNormal, FVector ImpactExitPoint, float ImpactRadius, FVector ImpactForce);
 
-	UPROPERTY(BlueprintAssignable)
-	FOnDeath OnDeathDelegate;
 	uint8 GetTeamID() const;
 	uint8 GetActiveMenuCount() const;
 	uint8 GetSubMenuCount() const;
