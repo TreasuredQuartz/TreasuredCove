@@ -75,13 +75,14 @@ public:
 	FName HeardSomethingKey;
 	FName WarPartyRoleKey;
 public:
+	bool IsPotentialEnemy(APawn* TargetPawn) const;
 	UFUNCTION(BlueprintCallable, Category = "AIController | Senses")
 	void AddEnemy(AActor* NewEnemy);
 	void GetCharacterAIStats();
 	UFUNCTION()
 	void UpdateCurrentBuilding(AGameplayBuilding* CurrentBuilding);
 	void UpdateTargetBuilding(AGameplayBuilding* TargetBuilding);
-	void UpdateCurrentEnemy(AActor* CurrentEnemy);
+	void UpdateCurrentEnemy(APawn* CurrentEnemy);
 	void UpdateDesiredLocation(const FVector& DesiredLocation);
 	void UpdateIsBusy(bool bIsBusy);
 	void UpdateHeardSomething(bool bHeardSomething);
@@ -114,7 +115,7 @@ public:
 	TArray<UBehaviorTree*> BehaviorTreeAssets;
 
 	AGACharacter* CharacterRef;
-	AActor* CurrentEnemy;
+	APawn* CurrentEnemy;
 	TArray<AActor*> Enemies;
 	TArray<AActor*> Friends;
 public:

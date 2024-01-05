@@ -8,6 +8,9 @@
 #include "OnAttributeModifiedEvent.h"
 #include "HealthComponent.generated.h"
 
+class UAbilitySystemComponent;
+class UASHealth;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthZeroed, const AActor*, Victim, const AActor*, ResponsibleActor);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -24,6 +27,10 @@ protected:
 	virtual void BeginPlay() override;
 	//
 	virtual void OnUnregister() override;
+	//
+	void InitializeWithAbilitySystem(UAbilitySystemComponent* InASC);
+	//
+	void UninitializeFromAbilitySystem();
 
 public:	
 	// Called every frame /* Disabled. */
@@ -31,14 +38,14 @@ public:
 
 private:
 	// Owner AbilitySystemComponent
-	class UAbilitySystemComponent* ASC;
+	UAbilitySystemComponent* ASC;
 
 	// Returns if the character has any health
 	bool bIsHealthZeroed = false;
 public:
 	// The health attibutes
 	UPROPERTY(VisibleAnywhere, Category = "Character|Attributes")
-	TObjectPtr<const class UASHealth> HealthSet;
+	TObjectPtr<const UASHealth> HealthSet;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Character|Attributes|Health|Tags")
 	FGameplayTag FullHealthTag;

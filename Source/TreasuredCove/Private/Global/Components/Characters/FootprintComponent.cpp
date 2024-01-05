@@ -3,6 +3,7 @@
 
 #include "Global/Components/Characters/FootprintComponent.h"
 #include "Global/Actors/FootprintActor.h"
+#include "SenseStimulusComponent.h"
 
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -20,6 +21,9 @@ UFootprintComponent::UFootprintComponent()
 void UFootprintComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	USenseStimulusComponent* SenseStimulus = GetOwner()->GetComponentByClass<USenseStimulusComponent>();
+	SenseStimulus->ReportSenseEvent(FName("SensorHearing"));
 }
 
 void UFootprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

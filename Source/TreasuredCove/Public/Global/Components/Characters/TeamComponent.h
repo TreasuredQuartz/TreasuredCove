@@ -30,16 +30,19 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// Called to initialize team manager.
+	UFUNCTION(BlueprintCallable, Category = "Team")
 	void FormTeam();
 
 	// Called to add a teammate to the team data object
+	UFUNCTION(BlueprintCallable, Category = "Team")
 	void AddTeammate(UTeamComponent* NewTeammate);
 
 	// Convience function to add a group of teammates at once. Just calls AddTeammate for each element in the given array.
 	void AddTeammates(TArray<UTeamComponent*>& NewTeammates);
 
 	// Event to inform other teammates of attackers.
-	void InformOfEnemy(APawn* InEnemy);
+	UFUNCTION(BlueprintCallable, Category = "Team")
+	void InformOfEnemy(UTeamComponent* InEnemy);
 
 	// Event to inform other teammates that we are injured
 	void InformOfInjury();
@@ -48,6 +51,7 @@ public:
 	void InformOfObjective(AActor* InObjective);
 
 	// Accessor for all teammates to share data.
+	UFUNCTION(BlueprintPure, BlueprintCallable)
 	UTeamManager* GetSharedData() const;
 
 	// Ensure single shared manager for all teammates.

@@ -30,28 +30,42 @@ void UHealthComponent::BeginPlay()
 	// ...
 	if (IAbilitySystemInterface* ASI = Cast<IAbilitySystemInterface>(GetOwner()))
 	{
-		ASC = ASI->GetAbilitySystemComponent();
+		InitializeWithAbilitySystem(ASI->GetAbilitySystemComponent());
 	}
+}
 
-	if (ASC)
+void UHealthComponent::OnUnregister()
+{
+	UninitializeFromAbilitySystem();
+
+	Super::OnUnregister();
+}
+
+void UHealthComponent::InitializeWithAbilitySystem(UAbilitySystemComponent* InASC)
+{
+	ASC = InASC;
+	if (!ASC)
 	{
-		HealthSet = ASC->GetSet<UASHealth>();
-		if (!HealthSet)
-		{
-			UE_LOG(LogTemp, Error, TEXT("HealthComponent: Cannot initialize health component for owner [%s] with NULL health set on the ability system."), *GetNameSafe(GetOwner()));
-			return;
-		}
-
-		HealthSet->OnHealthModified.AddUObject(this, &ThisClass::HandleHealthModified);
-		HealthSet->OnMaxHealthModified.AddUObject(this, &ThisClass::HandleMaxHealthModified);
-		HealthSet->OnHealthZeroed.AddUObject(this, &ThisClass::HandleHealthZeroed);
+		UE_LOG(LogTemp, Error, TEXT("HealthComponent: Cannot initialize health component for owner [%s] with NULL ability system."), *GetNameSafe(GetOwner()));
+		return;
 	}
+
+	HealthSet = ASC->AddSet<UASHealth>();;
+	if (!HealthSet)
+	{
+		UE_LOG(LogTemp, Error, TEXT("HealthComponent: Cannot initialize health component for owner [%s] with NULL health set on the ability system."), *GetNameSafe(GetOwner()));
+		return;
+	}
+
+	HealthSet->OnHealthModified.AddUObject(this, &ThisClass::HandleHealthModified);
+	HealthSet->OnMaxHealthModified.AddUObject(this, &ThisClass::HandleMaxHealthModified);
+	HealthSet->OnHealthZeroed.AddUObject(this, &ThisClass::HandleHealthZeroed);
 
 	OnHealthModified.Broadcast(FOnAttributeModifiedPayload(HealthSet->GetHealth(), HealthSet->GetHealth()));
 	OnMaxHealthModified.Broadcast(FOnAttributeModifiedPayload(HealthSet->GetMaxHealth(), HealthSet->GetMaxHealth()));
 }
 
-void UHealthComponent::OnUnregister()
+void UHealthComponent::UninitializeFromAbilitySystem()
 {
 	if (HealthSet)
 	{
@@ -62,8 +76,6 @@ void UHealthComponent::OnUnregister()
 
 	HealthSet = nullptr;
 	ASC = nullptr;
-
-	Super::OnUnregister();
 }
 
 void UHealthComponent::AddFullHealthTag() const
@@ -91,7 +103,6 @@ void UHealthComponent::HandleHealthZeroed(const FOnAttributeModifiedPayload& Pay
 {
 	OnHealthZeroed.Broadcast(Payload.Victim, Payload.Instigator);
 }
-
 
 // Called every frame
 //void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

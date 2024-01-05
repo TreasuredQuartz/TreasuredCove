@@ -36,14 +36,14 @@ void UTeamComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 void UTeamComponent::FormTeam()
 {
 	Manager = NewObject<UTeamManager>();
-	Manager->AddTeammate(this);
+	Manager->AddTeammate(GetOwner<APawn>()->GetController());
 }
 
 void UTeamComponent::AddTeammate(UTeamComponent* NewTeammate)
 {
 	if (!Manager) FormTeam();
 
-	Manager->AddTeammate(NewTeammate);
+	Manager->AddTeammate(NewTeammate->GetOwner<APawn>()->GetController());
 }
 
 void UTeamComponent::AddTeammates(TArray<UTeamComponent*>& NewTeammates)
@@ -54,14 +54,14 @@ void UTeamComponent::AddTeammates(TArray<UTeamComponent*>& NewTeammates)
 	}
 }
 
-void UTeamComponent::InformOfEnemy(APawn* InEnemy)
+void UTeamComponent::InformOfEnemy(UTeamComponent* InEnemy)
 {
-	Manager->InformOfEnemy(InEnemy);
+	Manager->InformOfEnemy(InEnemy->GetOwner<APawn>()->GetController());
 }
 
 void UTeamComponent::InformOfInjury()
 {
-	Manager->InformOfInjury(this);
+	Manager->InformOfInjury(GetOwner<APawn>()->GetController());
 }
 
 void UTeamComponent::InformOfObjective(AActor* InObjective)

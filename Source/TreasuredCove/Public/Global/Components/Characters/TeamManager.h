@@ -8,31 +8,57 @@
 
 class UTeamComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNewAttackerAdded, APawn*, AttackerPawn, APawn*, TeamateInformerPawn);
+
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class TREASUREDCOVE_API UTeamManager : public UObject
 {
 	GENERATED_BODY()
 	
-public:
+private:
 	// Every attacker against the team
-	TArray<APawn*> Attackers;
+	TArray<AController*> Attackers;
 
 	// Every teammember
-	TArray<UTeamComponent*> Team;
+	TArray<AController*> Team;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Team")
+	FString TeamTag;
+
+public:
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TArray<AController*> GetTeamMembersControllers() const { return Team; };
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TArray<AController*> GetEnemiesControllers() const { return Attackers; };
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TArray<APawn*> GetPhysicalTeamMembers() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TArray<APawn*> GetPhysicalEnemies() const;
 
 public:
 	// Adds additional component to inner array.
-	void AddTeammate(UTeamComponent* NewTeammate);
+	UFUNCTION(BlueprintCallable)
+	void AddTeammate(AController* NewTeammate);
 
 	// Adds additional attacker to inner array.
-	void InformOfEnemy(APawn* InEnemy);
+	UFUNCTION(BlueprintCallable)
+	void InformOfEnemy(AController* InEnemy);
 
 	// Fires delegate to alert teammates of injury.
-	void InformOfInjury(UTeamComponent* InjuredTeammate);
+	void InformOfInjury(AController* InjuredTeammate);
 
 	// Fires delegate to alert about objective.
 	void InformOfObjective(AActor* Objective);
+
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnNewAttackerAdded OnNewAttackerAdded;
 };

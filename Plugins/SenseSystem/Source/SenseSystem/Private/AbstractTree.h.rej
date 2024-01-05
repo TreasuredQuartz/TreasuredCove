@@ -1,0 +1,29 @@
+diff a/Plugins/SenseSystem/Source/SenseSystem/Private/AbstractTree.h b/Plugins/SenseSystem/Source/SenseSystem/Private/AbstractTree.h	(rejected hunks)
+@@ -1269,24 +1269,22 @@
+ 	{
+ 		const auto& Box = SelfNode.GetTreeBox();
+ 		const auto Center = Box.GetCenter();
+-		const auto HalfExtent = Box.GetExtent() * 0.5f;
++		const auto HalfExtent = Box.GetExtent() * 0.5;
+ 
+ 		for (int32 i = 0; i < SubNodesNum; ++i)
+ 		{
+ 			IndexQtType& Param = SelfNode.SubNodes[i];
+ 			if (Param == MaxIndexQt)
+ 			{
+-				PointType HelP = HalfExtent;
+-				Real* const RESTRICT h = reinterpret_cast<Real*>(&HelP);
+ 				for (int32 j = 0; j < DimensionSize; ++j)
+ 				{
+ 					if (1 & (i >> j))
+ 					{
+-						h[j] = -h[j];
++						HalfExtent[j] = -HalfExtent[j];
+ 					}
+ 				}
+ 
+-				Param = Pool.Add(TreeNodeType(SelfNode.Self_ID, BoxType::BuildAABB(Center + HelP, HalfExtent)));
++				Param = Pool.Add(TreeNodeType(SelfNode.Self_ID, BoxType::BuildAABB(Center + HalfExtent, HalfExtent)));
+ 				Pool[Param].Self_ID = Param;
+ 			}
+ 		}

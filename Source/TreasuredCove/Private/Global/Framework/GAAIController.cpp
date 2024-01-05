@@ -5,6 +5,8 @@
 
 #include "HealthComponent.h"
 #include "TownSystemComponent.h"
+#include "TeamComponent.h"
+#include "TeamManager.h"
 #include "GameplayBuilding.h"
 
 // Sense System Plugin
@@ -70,6 +72,14 @@ void AGAAIController::BeginPlay()
 void AGAAIController::OnPossess(APawn* PossessedPawn)
 {
 	Super::OnPossess(PossessedPawn);
+
+	if (USenseReceiverComponent* SenseReciever = PossessedPawn->GetComponentByClass<USenseReceiverComponent>())
+	{
+		SenseReciever->OnNewSense.AddDynamic(this, &AGAAIController::OnNewSense);
+		SenseReciever->OnCurrentSense.AddDynamic(this, &AGAAIController::OnCurrentSense);
+		SenseReciever->OnLostSense.AddDynamic(this, &AGAAIController::OnLostSense);
+		SenseReciever->OnForgetSense.AddDynamic(this, &AGAAIController::OnForgetSense);
+	}
 
 	CharacterRef = Cast<AGACharacter>(PossessedPawn);
 }
@@ -148,11 +158,12 @@ void AGAAIController::UpdateCurrentBuilding(AGameplayBuilding* CurrentBuilding)
 		Blackboard->SetValueAsObject(CurrentBuildingKey, CurrentBuilding);
 }
 
-void AGAAIController::UpdateCurrentEnemy(AActor* NewEnemy)
+void AGAAIController::UpdateCurrentEnemy(APawn* NewEnemy)
 {
 	CurrentEnemy = NewEnemy;
-	if (Blackboard)
-		Blackboard->SetValueAsObject(CurrentEnemyKey, CurrentEnemy);
+	if (Blackboard) Blackboard->SetValueAsObject(CurrentEnemyKey, CurrentEnemy);
+
+	SetFocus(CurrentEnemy);
 }
 
 void AGAAIController::UpdateDesiredLocation(const FVector& DesiredLocation)
@@ -193,6 +204,38 @@ void AGAAIController::UpdateWarPartyRollKey(bool bIsFollower)
 
 //----- Sensory Responses -----//
 
+bool AGAAIController::IsPotentialEnemy(APawn* TargetPawn) const
+{
+	if (UTeamComponent* Team = GetPawn()->GetComponentByClass<UTeamComponent>())
+	{
+		if (UTeamManager* Manager = Team->GetSharedData())
+		{
+			if (Manager->GetPhysicalEnemies().Contains(TargetPawn))
+			{
+				return true;
+			}
+			else
+			{
+				/*UE_LOG(LogTemp, Warning, TEXT("GAAIController: Seen [%s]"), *GetNameSafe(TargetPawn));
+
+				UE_LOG(LogTemp, Warning, TEXT("GAAIController: Has Enemies..."));
+				for (APawn* Enemy : Manager->GetEnemies())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("            [%s]"), *GetNameSafe(Enemy));
+				}
+
+				UE_LOG(LogTemp, Warning, TEXT("GAAIController: Has Teamembers..."));
+				for (UTeamComponent* Enemy : Manager->GetTeamMembers())
+				{
+					UE_LOG(LogTemp, Warning, TEXT("            [%s]"), *GetNameSafe(Enemy->GetOwner<APawn>()));
+				}*/
+			}
+		}
+	}
+
+	return false;
+}
+
 void AGAAIController::AddEnemy(AActor* NewEnemy)
 {
 	Enemies.Add(NewEnemy);
@@ -220,14 +263,15 @@ void AGAAIController::OnNewSense(const USensorBase* Sensor, int32 Channel, const
 
 		if (Sensor->SensorTag == FName("SensorSight"))
 		{
-			if (AActor* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner())
+			// UE_LOG(LogTemp, Warning, TEXT("GAAIController: Saw Something!"));
+			if (APawn* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner<APawn>())
 			{
 				if (UHealthComponent* HealthComp = SeenCharacter->GetComponentByClass<UHealthComponent>())
 				{
 					if (HealthComp->GetIsHealthZeroed())
 						continue;
 
-					if (CurrentEnemy == nullptr && Enemies.Contains(SeenCharacter))
+					if (CurrentEnemy == nullptr && IsPotentialEnemy(SeenCharacter))
 					{
 						HealthComp->OnHealthZeroed.AddUniqueDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
 						UpdateCurrentEnemy(SeenCharacter);
@@ -241,9 +285,9 @@ void AGAAIController::OnNewSense(const USensorBase* Sensor, int32 Channel, const
 			if (CurrentEnemy != nullptr)
 				continue;
 
-			if (AActor* HeardActor = Stimulus.StimulusComponent.Get()->GetOwner()->GetOwner())
+			if (APawn* HeardActor = Stimulus.StimulusComponent.Get()->GetOwner()->GetOwner<APawn>())
 			{
-				if (HeardActor != this && Enemies.Contains(HeardActor))
+				if (HeardActor != GetPawn() && IsPotentialEnemy(HeardActor))
 				{
 					if (UHealthComponent* HealthComp = HeardActor->GetComponentByClass<UHealthComponent>())
 					{
@@ -272,7 +316,7 @@ void AGAAIController::OnLostSense(const USensorBase* Sensor, int32 Channel, cons
 
 		if (Sensor->SensorTag == FName("SensorSight"))
 		{
-			if (AActor* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner())
+			if (APawn* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner<APawn>())
 			{
 				if (CurrentEnemy == SeenCharacter)
 				{
@@ -309,7 +353,7 @@ void AGAAIController::OnForgetSense(const USensorBase* Sensor, int32 Channel, co
 
 		if (Sensor->SensorTag == FName("SensorSight"))
 		{
-			if (AActor* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner())
+			if (APawn* SeenCharacter = Stimulus.StimulusComponent.Get()->GetOwner<APawn>())
 			{
 				if (CurrentEnemy == SeenCharacter)
 				{
@@ -335,7 +379,7 @@ void AGAAIController::OnEnemyDiscovered_Implementation()
 
 void AGAAIController::OnEnemyLost_Implementation()
 {
-
+	ClearFocus(EAIFocusPriority::Gameplay);
 }
 
 void AGAAIController::OnEnemyHealthZeroed(const AActor* Victim, const AActor* ResponsibleActor)

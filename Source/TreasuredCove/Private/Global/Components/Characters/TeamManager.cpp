@@ -4,22 +4,62 @@
 #include "Global/Components/Characters/TeamManager.h"
 #include "Global/Components/Characters/TeamComponent.h"
 
-void UTeamManager::AddTeammate(UTeamComponent* NewTeammate)
+void UTeamManager::AddTeammate(AController* NewTeammate)
 {
-	if (Team.Contains(NewTeammate)) return;
+	if (NewTeammate == nullptr || Team.Contains(NewTeammate)) return;
 
 	Team.Add(NewTeammate);
-	NewTeammate->SetManager(this);
+	if (APawn* Pawn = NewTeammate->GetPawn())
+	{
+		if (UTeamComponent* TComp = Pawn->GetComponentByClass<UTeamComponent>())
+		{
+			TComp->SetManager(this);
+		}
+	}
 }
 
-void UTeamManager::InformOfEnemy(APawn* InEnemy)
+void UTeamManager::InformOfEnemy(AController* InEnemy)
 {
-	if (!Attackers.Contains(InEnemy)) Attackers.Add(InEnemy);
+	if (InEnemy == nullptr) return;
+
+	if (Attackers.Contains(InEnemy)) return;
+
+	Attackers.Add(InEnemy);
 }
 
-void UTeamManager::InformOfInjury(UTeamComponent* InjuredTeammate)
+void UTeamManager::InformOfInjury(AController* InjuredTeammate)
 {
 
+}
+
+TArray<APawn*> UTeamManager::GetPhysicalTeamMembers() const
+{
+	TArray<APawn*> TeamMembers;
+
+	for (AController* Member : Team)
+	{
+		if (APawn* Pawn = Member->GetPawn())
+		{
+			TeamMembers.Add(Pawn);
+		}
+	}
+
+	return TeamMembers;
+}
+
+TArray<APawn*> UTeamManager::GetPhysicalEnemies() const
+{
+	TArray<APawn*> Enemies;
+
+	for (AController* InEnemy : Attackers)
+	{
+		if (APawn* EnemyPawn = InEnemy->GetPawn())
+		{
+			Enemies.Add(EnemyPawn);
+		}
+	}
+	
+	return Enemies;
 }
 
 void UTeamManager::InformOfObjective(AActor* Objective)
