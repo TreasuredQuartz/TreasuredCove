@@ -76,7 +76,7 @@ public:
 	void HandleMaxHealthModified(const FOnAttributeModifiedPayload& Payload) const;
 
 	UFUNCTION()
-	void HandleHealthZeroed(const FOnAttributeModifiedPayload& Payload) const;
+	void HandleHealthZeroed(const FOnAttributeModifiedPayload& Payload);
 
 	UFUNCTION()
 	bool GetIsHealthZeroed() const { return bIsHealthZeroed; };

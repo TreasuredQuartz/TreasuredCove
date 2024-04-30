@@ -16,6 +16,8 @@ void UASHealth::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetim
 
 	DOREPLIFETIME_CONDITION_NOTIFY(UASHealth, Health, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UASHealth, MaxHealth, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UASHealth, HealthRegenRate, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UASHealth, HealthRegenDelay, COND_None, REPNOTIFY_Always);
 }
 
 void UASHealth::OnRep_Health(const FGameplayAttributeData& OldValue)
@@ -32,6 +34,7 @@ void UASHealth::OnRep_Health(const FGameplayAttributeData& OldValue)
 
 	if (!bHealthZeroed && CurrentHealth <= 0.0f)
 	{
+		GEngine->AddOnScreenDebugMessage(-3, 5, FColor::Blue, FString("Replicated Health Zeroed Called"));
 		OnHealthZeroed.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), CurrentHealth));
 	}
 
@@ -45,8 +48,23 @@ void UASHealth::OnRep_MaxHealth(const FGameplayAttributeData& OldValue)
 	OnMaxHealthModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetMaxHealth()));
 }
 
+void UASHealth::OnRep_HealthRegenRate(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UASHealth, HealthRegenRate, OldValue);
+
+	OnMaxHealthModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetHealthRegenRate()));
+}
+
+void UASHealth::OnRep_HealthRegenDelay(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UASHealth, HealthRegenDelay, OldValue);
+
+	OnMaxHealthModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetHealthRegenDelay()));
+}
+
 UASHealth::UASHealth()
-	: MaxHealth(10.f)
+	: bHealthZeroed(false)
+	, MaxHealth(10.f)
 	, Health(10.f)
 	, MaxStamina(10.f)
 	, Stamina(10.f)
@@ -63,16 +81,19 @@ void UASHealth::PreAttributeChange(const FGameplayAttribute& Attribute, float& N
 
 	// Get all property members here that should be checked after modification
 	FProperty* HealthProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, Health));
+	FProperty* MaxHealthProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, MaxHealth));
+	FProperty* HealthRegenRateProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, HealthRegenRate));
+	FProperty* HealthRegenDelayProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, HealthRegenDelay));
+
 	FProperty* StaminaProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, Stamina));
 	FProperty* ManaProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, Mana));
-	FProperty* MaxHealthProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, MaxHealth));
 	FProperty* MaxStaminaProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, MaxStamina));
 	FProperty* MaxManaProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, MaxMana));
 
 	// Now we need to increment through all property members that could be modified
 	if (Attribute == HealthProperty)
 	{
-		NewValue = FMath::Clamp(NewValue, 0.f, MaxHealth.GetCurrentValue());
+		NewValue = FMath::Clamp(NewValue, 0.0f, MaxHealth.GetCurrentValue());
 		// UE_LOG(LogTemp, Warning, TEXT("Health Value:%f"), NewValue);
 
 		UHealthComponent* HealthComp = GetOwningActor()->GetComponentByClass<UHealthComponent>();
@@ -88,6 +109,18 @@ void UASHealth::PreAttributeChange(const FGameplayAttribute& Attribute, float& N
 			}
 		}
 	}
+	else if (Attribute == MaxHealthProperty)
+	{
+		NewValue = FMath::Clamp(NewValue, Health.GetCurrentValue(), NewValue);
+	}
+	else if (Attribute == HealthRegenRateProperty)
+	{
+		NewValue = FMath::Clamp(NewValue, 0, NewValue);
+	}
+	else if (Attribute == HealthRegenDelayProperty)
+	{
+		NewValue = FMath::Clamp(NewValue, 0, NewValue);
+	}
 	else if (Attribute == StaminaProperty)
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, MaxStamina.GetCurrentValue());
@@ -95,10 +128,6 @@ void UASHealth::PreAttributeChange(const FGameplayAttribute& Attribute, float& N
 	else if (Attribute == ManaProperty)
 	{
 		NewValue = FMath::Clamp(NewValue, 0.f, MaxMana.GetCurrentValue());
-	}
-	else if (Attribute == MaxHealthProperty)
-	{
-		NewValue = FMath::Clamp(NewValue, Health.GetCurrentValue(), NewValue);
 	}
 	else if (Attribute == MaxStaminaProperty)
 	{
@@ -129,25 +158,30 @@ void UASHealth::PostGameplayEffectExecute(const struct FGameplayEffectModCallbac
 	AActor* Instigator = EffectContext.GetOriginalInstigator();
 	AActor* Causer = EffectContext.GetEffectCauser();
 
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::SanitizeFloat(GetHealth()));
+
 	if (SourceAbilitySystem)
 	{
 		AActor* SourceActor = SourceAbilitySystem->GetOwner();
 
 		if (SourceActor)
 		{
+			const float CurrentHealth = GetHealth();
+
 			// If health has actually changed activate callbacks
-			if (GetHealth() != HealthBeforeAttributeChange)
+			if (CurrentHealth != HealthBeforeAttributeChange)
 			{
 				OnHealthModified.Broadcast(FOnAttributeModifiedPayload(HealthBeforeAttributeChange, GetHealth(), GetOwningActor(), Causer, Instigator, &Data.EffectSpec));
 			}
 
-			if ((GetHealth() <= 0.0f) && !bHealthZeroed)
+			if (!bHealthZeroed && (CurrentHealth <= 0.0f))
 			{
+				GEngine->AddOnScreenDebugMessage(-2, 5, FColor::Blue, FString("Health Zeroed Called"));
 				OnHealthZeroed.Broadcast(FOnAttributeModifiedPayload(HealthBeforeAttributeChange, GetHealth(), GetOwningActor(), Causer, Instigator, &Data.EffectSpec));
 			}
 
 			// Check health again in case an event above changed it.
-			bHealthZeroed = (GetHealth() <= 0.0f);
+			bHealthZeroed = (CurrentHealth <= 0.0f);
 		}
 		else
 		{

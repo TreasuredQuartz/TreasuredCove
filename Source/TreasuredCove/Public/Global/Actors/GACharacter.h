@@ -62,6 +62,7 @@ class UTimelineComponent;
 class UGACharacterMovementComponent;
 class UHealthComponent;
 class UInventoryComponent;
+class UEquipmentComponent;
 class ULaunchingComponent;
 class UMovementTrailComponent;
 class UPickupMagnetComponent;
@@ -228,17 +229,6 @@ protected:
 
 	//////////////////////////////////////////////////////
 
-public:
-	//
-	UPROPERTY(replicated, EditAnywhere, BlueprintReadWrite, Category = "Character|Inventory|Equipment")
-	AGAActor* HeldItem;
-	UPROPERTY(replicated, EditAnywhere, BlueprintReadWrite, Category = "Character|Inventory|Equipment")
-	AGAActor* StowedItem;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Inventory|Equipment")
-	AGAActor* Armor;
-
-	//////////////////////////////////////////////////////
-
 protected:
 	//
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
@@ -271,6 +261,8 @@ protected:
 	void BeginQuickSelect();
 	// 
 	void EndQuickSelect();
+	//
+	bool ShouldPrioritizeWeapon() const;
 	// 
 	void BeginPrimary();
 	// 
@@ -347,8 +339,10 @@ protected:
 	// Called when player-controlled from the F key or controller top face button
 	void Switch_Input(const FInputActionValue& Value);
 
-	void AbilityInputTagPressed(FGameplayTag);
-	void AbilityInputTagReleased(FGameplayTag);
+	UFUNCTION()
+	void AbilityInputTagPressed(FGameplayTag Tag);
+	UFUNCTION()
+	void AbilityInputTagReleased(FGameplayTag Tag);
 
 	// Called when "MoveForawrd" passed a value
 	void MoveForward(float Val);
@@ -531,6 +525,10 @@ public:
 	// Repository Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	URepositoryComponent* Repository;
+
+	// Equipment Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UEquipmentComponent* Equipment;
 
 	// Item Magnet Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -748,7 +746,8 @@ public:
 
 	// Called when Health Attribute is <= 0, 
 	// will call blueprint version.
-	void Death();
+	UFUNCTION()
+	void Death(const AActor* ResponsibleActor, const AActor* Victim);
 	// Called internally when health attribute <= 0
 	UFUNCTION(BlueprintImplementableEvent, Category = "Gameplay")
 	void OnDeath();
@@ -790,10 +789,14 @@ public:
 	virtual void AddItemToInventory_Implementation(AGAActor* Item) override; 
 	virtual void AddItemToRepository_Implementation(const FString& Category, const FItemKey& Item) override;
 
-	/** Inventory Interface */
+	/** Equipment Interface */
 
-	AActor* GetHeldItem();
-	AActor* GetStowedItem();
+	UFUNCTION(Blueprintpure, BlueprintCallable, Category = "Inventory")
+	AGAActor* GetHeldItem() const;
+	UFUNCTION(Blueprintpure, BlueprintCallable, Category = "Inventory")
+	AGAActor* GetStowedItem() const;
+
+	/** Inventory Interface */
 	
 	void AddPickupPrompt();
 

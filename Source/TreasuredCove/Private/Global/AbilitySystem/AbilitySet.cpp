@@ -37,6 +37,8 @@ void UAbilitySet::GiveToAbilitySystem(UAbilitySystemComponent* InASC, FAbilitySe
 
 	for (int32 AbilityIndex = 0; AbilityIndex < Abilities.Num(); ++AbilityIndex)
 	{
+		if (!Abilities.IsValidIndex(AbilityIndex)) continue;
+
 		const FAbilitySet_GameplayAbility& AbilityToGrant = Abilities[AbilityIndex];
 
 		if (!IsValid(AbilityToGrant.Ability))

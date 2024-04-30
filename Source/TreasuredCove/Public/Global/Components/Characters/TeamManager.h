@@ -44,9 +44,15 @@ public:
 	TArray<APawn*> GetPhysicalEnemies() const;
 
 public:
+	// Reserves enough space to contain the new team size.
+	void SetTeamSize(int32 NewTeamSize);
+
 	// Adds additional component to inner array.
 	UFUNCTION(BlueprintCallable)
 	void AddTeammate(AController* NewTeammate);
+
+	// Removes an old teammate from the inner array.
+	void RemoveTeammate(AController* OldTeammate);
 
 	// Adds additional attacker to inner array.
 	UFUNCTION(BlueprintCallable)

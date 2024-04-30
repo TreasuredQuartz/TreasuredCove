@@ -3,6 +3,7 @@
 
 #include "Global/UserInterface/Widgets/ItemEditor.h"
 #include "GACharacter.h"
+#include "GAActor.h"
 #include "RepositoryInterface.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -30,7 +31,7 @@ void UItemEditor::OnAddedToCharacter(bool bInIsHeldItem)
 	if (Character)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AGACharacter is valid!!!"));
-		AActor* Item = bInIsHeldItem ? Character->GetHeldItem() : Character->GetStowedItem();
+		AGAActor* Item = bInIsHeldItem ? Character->GetHeldItem() : Character->GetStowedItem();
 
 		if (Item)
 		{

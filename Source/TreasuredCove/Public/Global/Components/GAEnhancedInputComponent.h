@@ -27,13 +27,15 @@ void UGAEnhancedInputComponent::BindAbilityActions(const UAbilityInputConfigData
 {
 	check(InputConfig);
 
-	for (const FTaggedInputAction& Action : InputConfig->TaggedInputActions)
+	for (int32 i = 0; i < InputConfig->TaggedInputActions.Num(); i++)
 	{
+		const FTaggedInputAction& Action = InputConfig->TaggedInputActions[i];
+
 		if (Action.InputAction && Action.InputTag.IsValid())
 		{
 			if (PressedFunc)
 			{
-				BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Triggered, Object, PressedFunc, Action.InputTag).GetHandle());
+				BindHandles.Add(BindAction(Action.InputAction, ETriggerEvent::Started, Object, PressedFunc, Action.InputTag).GetHandle());
 			}
 
 			if (ReleasedFunc)

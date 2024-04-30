@@ -3,6 +3,12 @@
 
 #include "Zombie_Manager.h"
 #include "Zombie_Spawner.h"
+#include "Zombie_SettingsConfig.h"
+#include "TeamComponent.h"
+#include "TeamManager.h"
+#include "GACharacterMovementComponent.h"
+#include "AbilitySystemComponent.h"
+#include "ASHealth.h"
 
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
@@ -26,28 +32,67 @@ void AZombie_Manager::BeginPlay()
 	RandomStream = FRandomStream(RandomSeed);
 	CurrentSpawnedEnemies = 0;
 	WaveCount = 0;
+	ZombieTeamManager = NewObject<UTeamManager>();
+}
+
+bool AZombie_Manager::DetermineZombieCanSprint() const
+{
+	switch (WaveCount)
+	{
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+			return false;
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		case 8:
+		case 9:
+			return (FMath::RandRange(1, 20) <= WaveCount * 1.f);
+			break;
+		default:
+			return true;
+	}
 }
 
 void AZombie_Manager::SpawnEnemies()
 {
 	ensure(Spawners.Num() > 0);
 
-	uint8 MaxEnemies = MaxEnemiesAtOnce + (UserArray.Num() * MaxEnemiesPerPlayer);
+	uint8 MaxEnemies = Settings->GetMaxEnemiesAtOnce(UserArray.Num());
 
 	if (CurrentSpawnedEnemies <= MaxEnemies && CurrentSpawnedEnemies <= TotalEnemiesToSpawn)
 	{
 		const int32 Index = RandomStream.RandRange(0, Spawners.Num() - 1);
 		if (const auto* Zombie = Spawners[Index]->SpawnZombie())
 		{
+			if (UTeamComponent* TeamComp = Zombie->GetComponentByClass<UTeamComponent>())
+			{
+				ZombieTeamManager->AddTeammate(Zombie->GetController());
+			}
+
+			if (UGACharacterMovementComponent* MoveComp = Zombie->GetComponentByClass<UGACharacterMovementComponent>())
+			{
+				MoveComp->SetCanSprint(DetermineZombieCanSprint());
+			}
+
+			if (UAbilitySystemComponent* AbilitySystem = Zombie->GetComponentByClass<UAbilitySystemComponent>())
+			{
+				FProperty* HealthProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, Health));
+				AbilitySystem->SetNumericAttributeBase(HealthProperty, 8 * WaveCount);
+			}
+
 			++CurrentSpawnedEnemies;
 			++TotalSpawnedEnemies;
 
-			if (TotalEnemiesToSpawn == TotalSpawnedEnemies)
+			if (TotalSpawnedEnemies == TotalEnemiesToSpawn)
 			{
 				GetWorldTimerManager().ClearTimer(SpawnTimerHandle);
 			}
 		}
-		UE_LOG(LogTemp, Warning, TEXT("Current Zombie count: %d\n Max Zombies at once: %d\n Total Spawned Zombies: %d"), CurrentSpawnedEnemies, MaxEnemies, TotalEnemiesToSpawn);
+		UE_LOG(LogTemp, Warning, TEXT("Current Zombie count: %d\n Max Zombies at once: %d\n Total Spawned Zombies: %d\n Total Zombies to spawn: %d"), CurrentSpawnedEnemies, MaxEnemies, TotalSpawnedEnemies, TotalEnemiesToSpawn);
 	}
 	else
 	{
@@ -55,11 +100,28 @@ void AZombie_Manager::SpawnEnemies()
 	}
 }
 
-void AZombie_Manager::SpawnedEnemyRemoved(AActor* RemovedActor, AActor* ResponsibleActor)
+void AZombie_Manager::SpawnedEnemyRemoved(const AActor* RemovedActor, const AActor* ResponsibleActor)
 {
 	--CurrentSpawnedEnemies;
 
-	UE_LOG(LogTemp, Warning, TEXT("Spawned Enemy was removed..."));
+	if (Cast<APawn>(RemovedActor))
+	{
+		ZombieTeamManager->RemoveTeammate(Cast<APawn>(RemovedActor)->GetController());
+	}
+
+	if (WaveCount > 2 && WaveCount < 10)
+	{
+		for (AController* Controller : ZombieTeamManager->GetTeamMembersControllers())
+		{
+			if (Controller && Controller->GetPawn())
+			{
+				if (UGACharacterMovementComponent* MoveComp = Controller->GetPawn()->GetComponentByClass<UGACharacterMovementComponent>())
+				{
+					MoveComp->SetCanSprint(true);
+				}
+			}
+		}
+	}
 
 	if (!RemovedActor || !ResponsibleActor || RemovedActor == ResponsibleActor)
 	{
@@ -70,12 +132,16 @@ void AZombie_Manager::SpawnedEnemyRemoved(AActor* RemovedActor, AActor* Responsi
 		{
 			if (SpawnTimerHandle.IsValid()) return;
 			
-			GetWorldTimerManager().SetTimer(SpawnTimerHandle, TimeBetweenSpawns, true);
+			GetWorldTimerManager().SetTimer(SpawnTimerHandle, Settings->GetZombieSpawnRate(), true);
 			return;
 		}
 	}
 
-	if (APawn* Pawn = Cast<APawn>(ResponsibleActor))
+	/*******************************************************************************************************/
+	/**/ UE_LOG(LogTemp, Warning, TEXT("Zombie killed; %d Zombies left in wave."), ZombieTeamManager->GetTeamMembersControllers().Num()); /**/
+	/*******************************************************************************************************/
+
+	if (const APawn* Pawn = Cast<APawn>(ResponsibleActor))
 	{
 		AddPoints(Pawn, 50);
 	}
@@ -84,7 +150,7 @@ void AZombie_Manager::SpawnedEnemyRemoved(AActor* RemovedActor, AActor* Responsi
 	{
 		FTimerDelegate StartDel;
 		StartDel.BindUFunction(this, FName("StartWave"), StartWaveTimerHandle);
-		GetWorldTimerManager().SetTimer(StartWaveTimerHandle, StartDel, TimeBetweenWaves, false);
+		GetWorldTimerManager().SetTimer(StartWaveTimerHandle, StartDel, Settings->TimeBetweenWaves, false, Settings->TimeBetweenWaves);
 
 		EndWave();
 	}
@@ -92,41 +158,30 @@ void AZombie_Manager::SpawnedEnemyRemoved(AActor* RemovedActor, AActor* Responsi
 
 void AZombie_Manager::StartWave()
 {
+	check(Settings);
+
 	++WaveCount;
 	TotalSpawnedEnemies = 0;
 	CurrentSpawnedEnemies = 0;
-	UE_LOG(LogTemp, Warning, TEXT("Wave %d: Starting"), WaveCount);
-
-	if (WaveCount < 5)
-	{
-		uint8 MaxEnemies = MaxEnemiesAtOnce + (UserArray.Num() * MaxEnemiesPerPlayer);
-		TotalEnemiesToSpawn = MaxEnemies * (WaveCount / 5.f);
-	}
-	else if (WaveCount < 10)
-	{
-		TotalEnemiesToSpawn = MaxEnemiesAtOnce + (UserArray.Num() * MaxEnemiesPerPlayer);
-	}
-	else
-	{
-		float Multiplier = WaveCount * 0.15;
-		uint8 MaxEnemies = MaxEnemiesAtOnce + (UserArray.Num() * MaxEnemiesPerPlayer);
-		TotalEnemiesToSpawn = Multiplier + MaxEnemies;
-	}
+	TotalEnemiesToSpawn = Settings->GetTotalEnemiesToSpawn(WaveCount, UserArray.Num());
 
 	// Activate all Spawners
 	FTimerDelegate SpawnDel;
 	SpawnDel.BindUFunction(this, FName("SpawnEnemies"), SpawnTimerHandle);
-	GetWorldTimerManager().SetTimer(SpawnTimerHandle, SpawnDel, TimeBetweenSpawns, true);
-	// GetWorldTimerManager().SetTimer(SpawnTimerHandle, TimeBetweenSpawns, true);
+	const float ZombieSpawnRates = Settings->GetZombieSpawnRate();
+	GetWorldTimerManager().SetTimer(SpawnTimerHandle, SpawnDel, ZombieSpawnRates, true, ZombieSpawnRates);
 
 	// Get all Player States
 	for (APlayerState* PS : UserArray)
 	{
 		const APawn* Pawn = PS->GetPawn();
-		UGameplayStatics::PlaySound2D(Pawn, WaveStartSound);
+		ZombieTeamManager->InformOfEnemy(PS->GetOwningController());
+		UGameplayStatics::PlaySound2D(Pawn, Settings->WaveStartSound);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Wave %d: Start."), WaveCount);
+	/**************************************************************************/
+	/**/ UE_LOG(LogTemp, Warning, TEXT("Wave %d: Starting..."), WaveCount); /**/
+	/**************************************************************************/
 }
 
 void AZombie_Manager::EndWave()
@@ -135,10 +190,12 @@ void AZombie_Manager::EndWave()
 	for (APlayerState* PS : UserArray)
 	{
 		const APawn* Pawn = PS->GetPawn();
-		UGameplayStatics::PlaySound2D(Pawn, WaveEndSound);
+		UGameplayStatics::PlaySound2D(Pawn, Settings->WaveEndSound);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Wave End."));
+	/************************************************************************/
+	/**/ UE_LOG(LogTemp, Warning, TEXT("Wave %d: Ending..."), WaveCount); /**/
+	/************************************************************************/
 }
 
 void AZombie_Manager::AddUser(APawn* InPawn)
@@ -151,7 +208,7 @@ void AZombie_Manager::AddUser(APawn* InPawn)
 	}
 }
 
-void AZombie_Manager::AddPoints(APawn* InPawn, int InPoints)
+void AZombie_Manager::AddPoints(const APawn* InPawn, int InPoints)
 {
 	if (UserArray.IsEmpty()) return;
 
@@ -165,7 +222,7 @@ void AZombie_Manager::AddPoints(APawn* InPawn, int InPoints)
 	}
 }
 
-bool AZombie_Manager::CheckPoints(APawn* PawnToCheck, int PointsRequired)
+bool AZombie_Manager::CheckPoints(const APawn* PawnToCheck, int PointsRequired)
 {
 	bool bSucceeded = false;
 
@@ -185,7 +242,7 @@ bool AZombie_Manager::CheckPoints(APawn* PawnToCheck, int PointsRequired)
 	return bSucceeded;
 }
 
-void AZombie_Manager::ReducePoints(APawn* InPawn, int InPoints)
+void AZombie_Manager::ReducePoints(const APawn* InPawn, int InPoints)
 {
 	for (APlayerState* PS : UserArray)
 	{

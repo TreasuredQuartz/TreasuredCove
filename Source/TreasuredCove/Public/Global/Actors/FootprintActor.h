@@ -10,6 +10,22 @@
 class UStaticMeshComponent;
 class USenseStimulusComponent;
 class USensorBase;
+class UAudioComponent;
+
+UCLASS()
+class TREASUREDCOVE_API UFootprintSurfaceConfigData : public UDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UMaterialInterface* FootprintSurface;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	TArray<USoundBase*> FootprintSurfaceSounds;
+
+public:
+	USoundBase* GetRandomSurfaceSound() const;
+};
 
 UCLASS()
 class TREASUREDCOVE_API AFootprintActor : public AActor
@@ -24,11 +40,11 @@ private:
 	// The Footprintmask to use.
 	int FootprintType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(AllowPrivateAccess="true"))
-	TArray<UMaterialInterface*> FootprintSurfaces;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	TArray<UTexture*> FootprintMasks;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	TArray<UFootprintSurfaceConfigData*> FootprintSurfaceData;
 #pragma endregion
 public:	
 	// Sets default values for this actor's properties
@@ -52,6 +68,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USenseStimulusComponent* SenseStimulus;
 
+	// Aduio Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UAudioComponent* Audio;
 #pragma endregion
 public:	
 	// Called every frame

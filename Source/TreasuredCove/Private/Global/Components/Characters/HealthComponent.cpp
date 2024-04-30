@@ -99,8 +99,10 @@ void UHealthComponent::HandleMaxHealthModified(const FOnAttributeModifiedPayload
 	OnMaxHealthModified.Broadcast(Payload);
 }
 
-void UHealthComponent::HandleHealthZeroed(const FOnAttributeModifiedPayload& Payload) const
+void UHealthComponent::HandleHealthZeroed(const FOnAttributeModifiedPayload& Payload)
 {
+	bIsHealthZeroed = true;
+	GEngine->AddOnScreenDebugMessage(-2, 5, FColor::Blue, FString("HealthComponent: OnHealthZeroed Called"));
 	OnHealthZeroed.Broadcast(Payload.Victim, Payload.Instigator);
 }
 

@@ -58,14 +58,17 @@ UGAProjectileMovementComponent* AGAProjectile::GetProjectileMovementComponent()
 
 void AGAProjectile::OnHitPawn_Implementation(const FHitResult& HitResult)
 {
-	if (HitResult.GetActor() && HitResult.GetActor() != GetOwner() && HitResult.GetActor() != GetInstigator() && EffectSpecHandleFromAbility.IsValid() && UGALibrary::GetAbilitySystemComponent(HitResult.GetActor()))
+	if (HitResult.HasValidHitObjectHandle()  && HitResult.IsValidBlockingHit() && HitResult.GetActor() && HitResult.GetActor() != GetOwner() && HitResult.GetActor() != GetInstigator() && EffectSpecHandleFromAbility.IsValid() && UGALibrary::GetAbilitySystemComponent(HitResult.GetActor()))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Projectile trace hit pawn!"));
 		
 		FGameplayEffectContextHandle Context = EffectSpecHandleFromAbility.Data->GetContext();
-		Context.AddSourceObject(this);
-		Context.AddHitResult(HitResult);
-		EffectSpecHandleFromAbility.Data->SetContext(Context);
+		if (Context.IsValid())
+		{
+			Context.AddSourceObject(this);
+			Context.AddHitResult(HitResult, true);
+			EffectSpecHandleFromAbility.Data->SetContext(Context);
+		}
 		UGALibrary::ApplyGESpecHandleToTargetDataSpecsHandle(EffectSpecHandleFromAbility, UGALibrary::AbilityTargetDataFromActor(HitResult.GetActor()));
 		if (AGACharacter* HitCharacter = Cast<AGACharacter>(HitResult.GetActor()))
 		{

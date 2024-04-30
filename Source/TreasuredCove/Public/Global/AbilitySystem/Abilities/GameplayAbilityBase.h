@@ -10,6 +10,14 @@
 class AGAActor;
 class AGACharacter;
 
+UENUM(BlueprintType)
+enum class EMGAbilityActivationPolicy : uint8
+{
+	OnInputPressed,
+	OnInputHeld,
+	OnInputReleased
+};
+
 /**
  * 
  */
@@ -24,6 +32,11 @@ public:
 	FText AbilityDescription;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	UTexture2D* AbilityTexture;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	EMGAbilityActivationPolicy ActivationInputPolicy = EMGAbilityActivationPolicy::OnInputPressed;
+
+	//
+	EMGAbilityActivationPolicy GetActivationPolicy() const { return ActivationInputPolicy; };
 
 	// Returns helpful struct containing ability info
 	UFUNCTION(BlueprintCallable, Category = "GA_Base")

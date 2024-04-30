@@ -4,6 +4,14 @@
 #include "Global/Components/Characters/TeamManager.h"
 #include "Global/Components/Characters/TeamComponent.h"
 
+void UTeamManager::SetTeamSize(int32 NewTeamSize)
+{
+	if (NewTeamSize > 0)
+	{
+		Team.Reserve(NewTeamSize);
+	}
+}
+
 void UTeamManager::AddTeammate(AController* NewTeammate)
 {
 	if (NewTeammate == nullptr || Team.Contains(NewTeammate)) return;
@@ -16,6 +24,13 @@ void UTeamManager::AddTeammate(AController* NewTeammate)
 			TComp->SetManager(this);
 		}
 	}
+}
+
+void UTeamManager::RemoveTeammate(AController* OldTeammate)
+{
+	if (OldTeammate == nullptr || !Team.Contains(OldTeammate)) return;
+
+	Team.RemoveSwap(OldTeammate, false);
 }
 
 void UTeamManager::InformOfEnemy(AController* InEnemy)

@@ -31,7 +31,6 @@ void UGASystemComponent::AbilitySpecInputReleased(FGameplayAbilitySpec& Spec)
 
 void UGASystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {
-
 	if (InputTag.IsValid())
 	{
 		for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
@@ -58,6 +57,22 @@ void UGASystemComponent::AbilityInputTagReleased(const FGameplayTag& InputTag)
 			}
 		}
 	}
+}
+
+bool UGASystemComponent::HasAbilityInputTag(const FGameplayTag& InputTag) const
+{
+	if (InputTag.IsValid())
+	{
+		for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
+		{
+			if (AbilitySpec.Ability && (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag)))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 void UGASystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
@@ -88,7 +103,7 @@ void UGASystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
 				const UGameplayAbilityBase* AbilityCDO = CastChecked<UGameplayAbilityBase>(AbilitySpec->Ability);
 
 
-				// if (AbilityCDO->GetActivationPolicy() == EMGAbilityActivationPolicy::WhileInputActive)
+				if (AbilityCDO->GetActivationPolicy() == EMGAbilityActivationPolicy::OnInputHeld)
 				{
 					AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
 				}
@@ -116,7 +131,7 @@ void UGASystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
 				{
 					const UGameplayAbilityBase* AbilityCDO = CastChecked<UGameplayAbilityBase>(AbilitySpec->Ability);
 
-					// if (AbilityCDO->GetActivationPolicy() == EMGAbilityActivationPolicy::OnInputTriggered)
+					if (AbilityCDO->GetActivationPolicy() == EMGAbilityActivationPolicy::OnInputPressed)
 					{
 						AbilitiesToActivate.AddUnique(AbilitySpec->Handle);
 					}
@@ -150,6 +165,15 @@ void UGASystemComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
 				{
 					AbilitySpecInputReleased(*AbilitySpec);
 					//CancelAbilityHandle(SpecHandle);
+				}
+				else
+				{
+					const UGameplayAbilityBase* AbilityCDO = CastChecked<UGameplayAbilityBase>(AbilitySpec->Ability);
+
+					if (AbilityCDO->GetActivationPolicy() == EMGAbilityActivationPolicy::OnInputReleased)
+					{
+						TryActivateAbility(SpecHandle);
+					}
 				}
 			}
 		}

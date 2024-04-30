@@ -1664,8 +1664,9 @@ void UGACharacterMovementComponent::HangCheck()
 bool UGACharacterMovementComponent::IsInFrontOfWall(float vertical_tolerance)
 {
 	float CapsuleHalfHeight = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	float CapsuleWidth = CharacterOwner->GetCapsuleComponent()->GetUnscaledCapsuleRadius();
 	const FVector traceStart = GetPawnOwner()->GetActorLocation(); // +(WallRunDirection * 20.0f);
-	const FVector traceEnd = traceStart + (GetPawnOwner()->GetActorForwardVector() * 50);
+	const FVector traceEnd = traceStart + (GetPawnOwner()->GetActorForwardVector() * CapsuleWidth);
 	FHitResult hitResult;
 
 	// Create a helper lambda for performing the line trace

@@ -5,9 +5,11 @@
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include "SensorBase.h"
 #include "SenseStimulusComponent.h"
+#include "Components/AudioComponent.h"
 
 // Sets default values
 AFootprintActor::AFootprintActor()
@@ -27,6 +29,9 @@ AFootprintActor::AFootprintActor()
 	SenseStimulus =
 		CreateDefaultSubobject<USenseStimulusComponent>(TEXT("Sense Stimulus"));
 
+	Audio = 
+		CreateDefaultSubobject<UAudioComponent>(TEXT("Audio"));
+
 	SetRootComponent(SceneRoot);
 	FootprintMesh->SetupAttachment(SceneRoot);
 }
@@ -42,12 +47,14 @@ void AFootprintActor::BeginPlay()
 		SenseStimulus->ReportSenseEvent(FName("SensorHearing"));
 	}
 	
-	if (!(FootprintSurfaces.IsValidIndex(SurfaceType) && FootprintMasks.IsValidIndex(FootprintType))) 
+	if (!(FootprintSurfaceData.IsValidIndex(0) && FootprintMasks.IsValidIndex(FootprintType))) 
 		return;
 
-	UMaterialInstanceDynamic* MID = UMaterialInstanceDynamic::Create(FootprintSurfaces[SurfaceType], this);
+	UMaterialInstanceDynamic* MID = UMaterialInstanceDynamic::Create(FootprintSurfaceData[0]->FootprintSurface, this);
 	MID->SetTextureParameterValue(FName("Texture"), FootprintMasks[FootprintType]);
 	FootprintMesh->SetMaterial(0, MID);
+	Audio->SetSound(FootprintSurfaceData[0]->GetRandomSurfaceSound());
+	Audio->Play();
 }
 
 // Called every frame
@@ -125,3 +132,10 @@ void AFootprintActor::OnSeen_Implementation()
 
 }
 
+USoundBase* UFootprintSurfaceConfigData::GetRandomSurfaceSound() const
+{
+	const uint8 Min = 0;
+	const uint8 Max = FootprintSurfaceSounds.Num() - 1;
+
+	return FootprintSurfaceSounds[UKismetMathLibrary::RandomIntegerInRange(Min, Max)];
+}

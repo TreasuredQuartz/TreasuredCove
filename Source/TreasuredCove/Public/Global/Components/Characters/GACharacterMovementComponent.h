@@ -281,6 +281,9 @@ public:
 
 #pragma region Sprinting
 public:
+	// Allows the player to sprint if true, and does not if false.
+	FORCEINLINE UFUNCTION(BlueprintCallable, Category = "Character|Movement")
+	void SetCanSprint(bool bNewCanSprint) { bCanSprint = bNewCanSprint; };
 	//
 	FORCEINLINE bool CanEverSprint() const { return bCanSprint; };
 	//

@@ -4,6 +4,8 @@
 
 const UInputAction* UAbilityInputConfigData::FindInputActionForTag(const FGameplayTag& InputTag) const
 {
+	if (TaggedInputActions.IsEmpty()) return nullptr;
+
 	for (const FTaggedInputAction& TaggedInputAction : TaggedInputActions)
 	{
 		if (TaggedInputAction.InputAction && TaggedInputAction.InputTag == InputTag)

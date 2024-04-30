@@ -32,6 +32,7 @@
 #include "PickupInterface.h"
 #include "InventoryComponent.h"
 #include "RepositoryComponent.h"
+#include "EquipmentComponent.h"
 #include "PickupMagnetComponent.h"
 #include "CraftingComponent.h"
 #include "FloatingTextComponent.h"
@@ -152,6 +153,11 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 		CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 	Inventory->SetInventorySize(5);
 
+	// Equipment Component
+	Equipment =
+		CreateDefaultSubobject<UEquipmentComponent>(TEXT("Equipment"));
+	Equipment->SetInventorySize(5);
+
 	// Repository Component
 	Repository =
 		CreateDefaultSubobject<URepositoryComponent>(TEXT("Repository"));
@@ -252,6 +258,11 @@ void AGACharacter::BeginPlay()
 
 	AutoDetermineTeamIDByControllerType();
 	
+	if (HealthComponent != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Health Component OnHealthZeroed Regsitered..."));
+		HealthComponent->OnHealthZeroed.AddUniqueDynamic(this, &AGACharacter::Death);
+	}
 	if (WallRunTimelineCurve)
 	{
 		FOnTimelineFloat TimelineCallback;
@@ -277,10 +288,6 @@ void AGACharacter::BeginPlay()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("SenseStimulus is registered..."));
 		} else UE_LOG(LogTemp, Warning, TEXT("SenseStimulus is NOT registered..."));
-	}
-	if (HeldItem)
-	{
-		EquipItem(HeldItem);
 	}
 
 	check(RenamedAbilitySystem);
@@ -363,7 +370,7 @@ void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 		PEI->BindAction(InputActions->InputSwitch, ETriggerEvent::Triggered, this, &AGACharacter::Switch_Input);
 	}
 
-	PlayerInputComponent->BindAction("QuickSelect", IE_Pressed, this, &AGACharacter::BeginQuickSelect);
+	/*PlayerInputComponent->BindAction("QuickSelect", IE_Pressed, this, &AGACharacter::BeginQuickSelect);
 	PlayerInputComponent->BindAction("QuickSelect", IE_Released, this, &AGACharacter::EndQuickSelect);
 
 	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AGACharacter::BeginPause);
@@ -379,10 +386,10 @@ void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("Throw", IE_Released, this, &AGACharacter::EndThrow);
 
 	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &AGACharacter::BeginMelee);
-	PlayerInputComponent->BindAction("Melee", IE_Released, this, &AGACharacter::EndMelee);
+	PlayerInputComponent->BindAction("Melee", IE_Released, this, &AGACharacter::EndMelee);*/
 
-	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AGACharacter::BeginInteract);
-	PlayerInputComponent->BindAction("Interact", IE_Released, this, &AGACharacter::EndInteract);
+	// PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AGACharacter::BeginInteract);
+	// PlayerInputComponent->BindAction("Interact", IE_Released, this, &AGACharacter::EndInteract);
 }
 
 // Called when possessed by a new controller
@@ -398,7 +405,14 @@ void AGACharacter::PossessedBy(AController* NewController)
 		UE_LOG(LogTemp, Warning, TEXT("Ability System initializing..."));
 		InitializeAbilitySystem();
 
-		if (PC) PC->OnPostProcessInput.AddUniqueDynamic(RenamedAbilitySystem, &UGASystemComponent::ProcessAbilityInput);
+		if (HealthComponent)
+		{
+			// HealthComponent->InitializeComponent
+		}
+		if (PC)
+		{
+			PC->OnPostProcessInput.AddUniqueDynamic(RenamedAbilitySystem, &UGASystemComponent::ProcessAbilityInput);
+		}
 	}
 
 	if (AC)
@@ -418,7 +432,11 @@ void AGACharacter::PossessedBy(AController* NewController)
 // Called when control is taken away from this pawn
 void AGACharacter::UnPossessed()
 {
-	if (PC) PC->OnPostProcessInput.RemoveAll(RenamedAbilitySystem);
+	if (PC) 
+	{
+		PC->OnPostProcessInput.RemoveAll(RenamedAbilitySystem);
+		if (AGAActor* Item = GetHeldItem()) PC->OnPostProcessInput.RemoveAll(Item->GetAbilitySystemComponent());
+	}
 
 	Super::UnPossessed();
 }
@@ -429,8 +447,6 @@ void AGACharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AGACharacter, ActiveAbilityHandles);
-	DOREPLIFETIME(AGACharacter, HeldItem);
-	DOREPLIFETIME(AGACharacter, StowedItem);
 }
 
 // Called when server replicates controller to clients
@@ -999,8 +1015,9 @@ void AGACharacter::InitializeAbilitySystem()
 
 	// This should be a UDataAsset Instance. Meaning there is no need to spawn anything
 	// And data should be readily available for access.
-	if (InitialActiveAbilities) AquireAbilities(InitialActiveAbilities->GetAbilities(), ActiveAbilityHandles);
-	if (InitialPassiveAbilities) AquirePassives(InitialPassiveAbilities->GetAbilities());
+	FAbilitySet_GrantedHandles* OutHandles = nullptr;
+	if (InitialActiveAbilities) InitialActiveAbilities->GiveToAbilitySystem(GetAbilitySystemComponent(), OutHandles, this);
+	RenamedAbilitySystem->OnAbilityEnded.AddUObject(this, &AGACharacter::AbilityEnded);
 }
 
 // Called during ability system initialization
@@ -1237,6 +1254,23 @@ void AGACharacter::EndQuickSelect()
 	}
 }
 
+// Called to check whether we want to activate our weapon or our personal ability.
+bool AGACharacter::ShouldPrioritizeWeapon() const
+{
+	if (bWeaponPriority)
+	{
+		if (AGAActor* HeldItem = GetHeldItem())
+		{
+			if (HeldItem->GetClass()->ImplementsInterface(UControlInputInterface::StaticClass()))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 // Called to use the primary ability
 void AGACharacter::BeginPrimary()
 {
@@ -1253,8 +1287,9 @@ void AGACharacter::BeginPrimary()
 
 		GetWorldTimerManager().SetTimer(InputTimerHandle, InputDel, 0.1, true);
 
-		if (bWeaponPriority && HeldItem && HeldItem->GetClass()->ImplementsInterface(UControlInputInterface::StaticClass()))
+		if (ShouldPrioritizeWeapon())
 		{
+			AGAActor* HeldItem = GetHeldItem();
 			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Use Item Primary!"));
 			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, HeldItem->GetFName().ToString());
 
@@ -1277,7 +1312,7 @@ void AGACharacter::EndPrimary()
 	{
 		if (ActiveAbilityHandles[0].IsValid())
 		{
-			if (HeldItem) HeldItem->AbilitySystem->InputConfirm();
+			if (AGAActor* HeldItem = GetHeldItem()) HeldItem->AbilitySystem->InputConfirm();
 			RenamedAbilitySystem->CancelAbilityHandle(ActiveAbilityHandles[0]);
 		}
 		GetWorldTimerManager().ClearTimer(InputTimerHandle);
@@ -1300,9 +1335,13 @@ void AGACharacter::BeginSecondary()
 
 		GetWorldTimerManager().SetTimer(InputTimerHandle, InputDel, 0.1, true);
 
-		if (bWeaponPriority && HeldItem && HeldItem->GetClass()->ImplementsInterface(UControlInputInterface::StaticClass()))
+		if (ShouldPrioritizeWeapon())
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Use Item Secondary!"));
+			AGAActor* HeldItem = GetHeldItem();
+
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Use Item Primary!"));
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, HeldItem->GetFName().ToString());
+
 			IControlInputInterface::Execute_UseSecondary(HeldItem);
 		}
 		else if (ActiveAbilityHandles[1].IsValid())
@@ -1320,8 +1359,7 @@ void AGACharacter::EndSecondary()
 	}
 	else
 	{
-		if (HeldItem)
-			HeldItem->AbilitySystem->InputConfirm();
+		if (AGAActor* HeldItem = GetHeldItem()) HeldItem->AbilitySystem->InputConfirm();
 		GetWorldTimerManager().ClearTimer(InputTimerHandle);
 	}
 }
@@ -1365,12 +1403,7 @@ void AGACharacter::BeginSwitch()
 		
 		GetWorldTimerManager().SetTimer(InputTimerHandle, InputDel, 0.1, true);
 		
-		if (StowedItem /*&& SwitchAbilityHandle.IsValid()*/)
-		{
-			// AbilitySystem->TryActivateAbility(SwitchAbilityHandle);
-		
-			SwitchEquippedItems();
-		}
+		SwitchEquippedItems();
 	}
 }
 
@@ -1382,13 +1415,7 @@ void AGACharacter::EndSwitch()
 	}
 	else
 	{
-		if (HeldItem)
-		{
-			if (StowedItem)
-			{
-				SwitchEquippedItems();
-			}
-		}
+		SwitchEquippedItems();
 
 		GetWorldTimerManager().ClearTimer(InputTimerHandle);
 	}
@@ -1410,11 +1437,11 @@ void AGACharacter::BeginThrow()
 
 		GetWorldTimerManager().SetTimer(InputTimerHandle, InputDel, 0.1, true);
 
-		/*if (bWeaponPriority && HeldItem && HeldItem->GetClass()->ImplementsInterface(UControlInputInterface::StaticClass()))
+		if (ShouldPrioritizeWeapon())
 		{
-			IControlInputInterface::Execute_UseThrow(HeldItem);
+			AGAActor* HeldItem = GetHeldItem();
+			// IControlInputInterface::Execute_UseThrow(HeldItem);
 		}
-		else */
 		if (ActiveAbilityHandles.IsValidIndex(1))
 		{
 			RenamedAbilitySystem->TryActivateAbility(ActiveAbilityHandles[1]);
@@ -1455,8 +1482,9 @@ void AGACharacter::BeginMelee()
 
 		GetWorldTimerManager().SetTimer(InputTimerHandle, InputDel, 0.1, true);
 
-		if (bWeaponPriority && HeldItem && HeldItem->GetClass()->ImplementsInterface(UControlInputInterface::StaticClass()))
+		if (ShouldPrioritizeWeapon())
 		{
+			AGAActor* HeldItem = GetHeldItem();
 			IControlInputInterface::Execute_UseMelee(HeldItem);
 		}
 		else if (ActiveAbilityHandles[3].IsValid())
@@ -1493,11 +1521,6 @@ void AGACharacter::BeginInteract()
 		GetWorldTimerManager().ClearTimer(InputTimerHandle);
 
 		GetWorldTimerManager().SetTimer(InputTimerHandle, InputDel, 0.01, true);
-
-		if (bWeaponPriority && HeldItem && HeldItem->GetClass()->ImplementsInterface(UControlInputInterface::StaticClass()))
-		{
-			IControlInputInterface::Execute_UseMelee(HeldItem);
-		}
 
 		if (ActiveAbilityHandles[0].IsValid())
 		{
@@ -1543,9 +1566,10 @@ void AGACharacter::BeginUltimate()
 
 		GetWorldTimerManager().SetTimer(InputTimerHandle, InputDel, 0.1, true);
 
-		if (bWeaponPriority && HeldItem && HeldItem->GetClass()->ImplementsInterface(UControlInputInterface::StaticClass()))
+		if (ShouldPrioritizeWeapon())
 		{
-			IControlInputInterface::Execute_UseUp(HeldItem, 1);
+			AGAActor* HeldItem = GetHeldItem();
+			// IControlInputInterface::Execute_UseUltimate(HeldItem, 1);
 		}
 		else if (ActiveAbilityHandles[5].IsValid())
 		{
@@ -1688,11 +1712,16 @@ void AGACharacter::Switch_Input(const FInputActionValue& Value)
 }
 void AGACharacter::AbilityInputTagPressed(FGameplayTag Tag)
 {
-	RenamedAbilitySystem->AbilityInputTagPressed(Tag);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Pressed!");
+	AGAActor* HeldItem = GetHeldItem();
+	if (bWeaponPriority && HeldItem && HeldItem->AbilitySystem && HeldItem->AbilitySystem->HasAbilityInputTag(Tag)) HeldItem->AbilitySystem->AbilityInputTagPressed(Tag);
+	else RenamedAbilitySystem->AbilityInputTagPressed(Tag);
 }
 void AGACharacter::AbilityInputTagReleased(FGameplayTag Tag)
 {
-	RenamedAbilitySystem->AbilityInputTagReleased(Tag);
+	AGAActor* HeldItem = GetHeldItem();
+	if (bWeaponPriority && HeldItem && HeldItem->AbilitySystem && HeldItem->AbilitySystem->HasAbilityInputTag(Tag)) HeldItem->AbilitySystem->AbilityInputTagReleased(Tag);
+	else RenamedAbilitySystem->AbilityInputTagReleased(Tag);
 }
 #pragma endregion
 
@@ -1808,7 +1837,7 @@ void AGACharacter::LookRight(float Val)
 	if (!IsLocallyControlled())
 	{
 		FRotator NewRot = GetMesh()->GetRelativeRotation();
-		NewRot.Pitch = RemoteViewPitch * 360 / 255;
+		NewRot.Pitch = RemoteViewPitch * 360 / 256;
 
 		GetMesh()->SetRelativeRotation(NewRot);
 	}
@@ -2577,9 +2606,10 @@ void AGACharacter::PopulateSavedAttributes(const TArray<FSavedAttribute>& Attrib
 }
 
 // Called when damage exceeds health
-void AGACharacter::Death()
+void AGACharacter::Death(const AActor* ResponsibleActor, const AActor* Victim)
 {
 	bIsDead = true;
+	GEngine->AddOnScreenDebugMessage(-2, 5, FColor::Blue, FString("GACharacter: HealthZeroedCalled"));
 	UE_LOG(LogTemp, Warning, TEXT("Character has died..."));
 
 	if (PC)
@@ -2591,20 +2621,25 @@ void AGACharacter::Death()
 		PC->SetInputMode(UIOnly);
 		// PC->DisableInput(PC);
 	}
-	else if (AC)
-	{
-		AC->GetBrainComponent()->StopLogic("Dead");
-	}
 
 	ChangeViewpoint(false);
 	FloatingBarComponent->DestroyAllBars();
 	FVector LaunchVelocity;
 	LaunchingComponent->EndLaunch(LaunchVelocity);
 	GetMovementComponent()->StopMovementImmediately();
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-	GetMesh()->SetSimulatePhysics(true);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMovementComponent()->Deactivate();
+
+	GetMesh()->SetAllBodiesBelowSimulatePhysics(FName("pelvis"), true, true);
+	PhysicalAnimation->ApplyPhysicalAnimationProfileBelow(FName("pelvis"), FName("Default"), true);
+	PhysicalAnimation->SetStrengthMultiplyer(1.0f);
+
+	GetMesh()->SetCollisionProfileName(FName("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetAllBodiesSimulatePhysics(true);
+	GetMesh()->SetEnableGravityOnAllBodiesBelow(true, FName("pelvis"));
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 
 	OnDeath();
 }
@@ -2761,14 +2796,16 @@ FName AGACharacter::GetNameValue_Implementation(const FName ValueName) const
 /////			CHARACTER INVENTORY				//////
 //////////////////////////////////////////////////////
 
-AActor* AGACharacter::GetHeldItem()
+AGAActor* AGACharacter::GetHeldItem() const
 {
-	return HeldItem;
+	FString HeldItemSlotName = FString("HeldItem");
+	return Equipment->GetItemInNameSlot(HeldItemSlotName);
 }
 
-AActor* AGACharacter::GetStowedItem()
+AGAActor* AGACharacter::GetStowedItem() const
 {
-	return StowedItem;
+	FString StowedItemSlotName = FString("StowedItem");
+	return Equipment->GetItemInNameSlot(StowedItemSlotName);
 }
 
 void AGACharacter::PickupItem(AGAActor* Item)
@@ -2809,9 +2846,6 @@ void AGACharacter::EquipItem(AGAActor* Item)
 {
 	if (Item)
 	{
-		HeldItem = Item;
-		HeldItem->SetOwner(this);
-
 		if (PC)
 		{
 			PC->SetItemPriority_Client(bWeaponPriority);
@@ -2821,18 +2855,24 @@ void AGACharacter::EquipItem(AGAActor* Item)
 				FGAItemInfo Info = Weapon->GetItemInfo();
 				PC->OnEquipItem_Client(Item, Info);
 			}
-		}
-		else if (AC)
-		{
 
 		}
 
-		FAttachmentTransformRules ItemAttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-		HeldItem->AttachToComponent(this->GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(DominantHand) ? DominantHand : FName());
-		HeldItem->SetActorHiddenInGame(false);
-		HeldItem->IntializeAbilitySystem();
+		FAttachmentTransformRules ItemAttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false);
+		Item->AttachToComponent(GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(DominantHand) ? DominantHand : FName());
 
+		FString SlotName = FString("HeldItem");
+		Equipment->AddItem(Item, SlotName);
+
+		Item->SetOwner(this);
 		Item->OnEquipped();
+		if (Item->InputAbilityActions && PC)
+		{
+			// Get the EnhancedInputComponent
+			UGAEnhancedInputComponent* PEI = Cast<UGAEnhancedInputComponent>(InputComponent);
+			
+			Item->SetupPlayerAbilityInput(PEI, PC);
+		}
 	}
 }
 
@@ -2840,11 +2880,9 @@ void AGACharacter::StowItem(AGAActor* Item)
 {
 	if (Item)
 	{
-		StowedItem = Item;
-		StowedItem->SetOwner(this);
 		FAttachmentTransformRules ItemAttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-		StowedItem->AttachToComponent(this->GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(FName("spine_03")) ? FName("spine_03") : FName());
-		StowedItem->SetActorHiddenInGame(true);
+		Item->AttachToComponent(this->GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(FName("spine_03")) ? FName() : FName());
+		
 
 		if (PC)
 		{
@@ -2856,19 +2894,19 @@ void AGACharacter::StowItem(AGAActor* Item)
 				PC->OnStowedItem_Client(Info);
 			}
 		}
-		else if (AC)
-		{
 
-		}
-
+		FString SlotName = FString("StowedItem");
+		Equipment->AddItem(Item, SlotName);
 		// Item->OnStowed();
 	}
 }
 
 void AGACharacter::SwitchEquippedItems()
 {
-	AGAActor* TempItem = StowedItem;
-	StowItem(HeldItem);
+	AGAActor* TempItem = GetStowedItem();
+	GetHeldItem()->OnUnEquipped();
+	if (PC) PC->OnPostProcessInput.RemoveAll(GetHeldItem()->GetAbilitySystemComponent());
+	StowItem(GetHeldItem());
 	EquipItem(TempItem);
 }
 
@@ -2890,10 +2928,12 @@ void AGACharacter::StowItemFromInventory(uint8 Slot)
 
 void AGACharacter::AddStowedItemToInventory()
 {
-	if (StowedItem)
+	if (AGAActor* StowedItem = GetStowedItem())
 	{
 		StowedItem->SetActorHiddenInGame(true);
 		Inventory->AddItem(StowedItem);
+		FString SlotName = FString("StowedItem");
+		Equipment->RemoveItem(SlotName);
 
 		if (PC)
 		{
@@ -2905,17 +2945,17 @@ void AGACharacter::AddStowedItemToInventory()
 			}
 		}
 	}
-	
-	StowedItem = nullptr;
 }
 
 void AGACharacter::AddEquippedItemToInventory()
 {
-	if (HeldItem)
+	if (AGAActor* HeldItem = GetHeldItem())
 	{
 		HeldItem->OnUnEquipped();
 		HeldItem->SetActorHiddenInGame(true);
 		Inventory->AddItem(HeldItem);
+		FString SlotName = FString("HeldItem");
+		Equipment->RemoveItem(SlotName);
 
 		if (PC)
 		{
@@ -2927,8 +2967,6 @@ void AGACharacter::AddEquippedItemToInventory()
 			}
 		}
 	}
-
-	HeldItem = nullptr;
 }
 
 void AGACharacter::MoveItemWithinInventory(uint8 From, uint8 To)
@@ -2938,7 +2976,7 @@ void AGACharacter::MoveItemWithinInventory(uint8 From, uint8 To)
 
 void AGACharacter::DropEquippedItem(const FVector& DropVelocity)
 {
-	if (HeldItem)
+	if (AGAActor* HeldItem = GetHeldItem())
 	{
 		FVector EyesLocation;
 		FRotator EyesRotation;
@@ -2946,12 +2984,14 @@ void AGACharacter::DropEquippedItem(const FVector& DropVelocity)
 		FVector ItemLocation = EyesLocation + GetActorForwardVector() * 25;
 
 		HeldItem->SetActorLocation(ItemLocation);
+		HeldItem->OnUnEquipped();
 		HeldItem->OnDropped();
 		HeldItem->LaunchItem(DropVelocity, true, true);
 
 		if (PC) PC->OnDropItem_Client();
 
-		HeldItem = nullptr;
+		FString SlotName = FString("HeldItem");
+		Equipment->RemoveItem(SlotName);
 	}
 }
 
@@ -3082,7 +3122,7 @@ void AGACharacter::UpdateSightRotation()
 	if (PC)
 	{
 		FRotator DesiredRotation = PC->PlayerCameraManager->GetCameraRotation();
-		AISenses->SetWorldRotation(FRotator(DesiredRotation.Pitch, DesiredRotation.Yaw, DesiredRotation.Roll));
+		// AISenses->SetWorldRotation(DesiredRotation);
 	}
 	else if (AC)
 	{

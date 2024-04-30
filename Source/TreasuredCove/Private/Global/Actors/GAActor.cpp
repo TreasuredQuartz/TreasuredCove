@@ -3,7 +3,10 @@
 #include "GAActor.h"
 #include "GACharacter.h"
 #include "GASystemComponent.h"
+#include "GAPlayerController.h"
+#include "GAEnhancedInputComponent.h"
 #include "GameplayAbilityBase.h"
+#include "GAInputConfigData.h"
 #include "AbilitySet.h"
 #include "ItemMovementComponent.h"
 
@@ -80,7 +83,11 @@ void AGAActor::IntializeAbilitySystem()
 			}
 		}
 
-		if (InitialActiveAbilities) AquireAbilities(InitialActiveAbilities->GetAbilities(), CurrentActiveAbilityHandles);
+		if (Abilities)
+		{
+			FAbilitySet_GrantedHandles* OutHandles = nullptr;
+			Abilities->GiveToAbilitySystem(GetAbilitySystemComponent(), OutHandles, this);
+		}
 	}
 }
 
@@ -115,36 +122,74 @@ void AGAActor::AquireAbility(TSubclassOf<UGameplayAbility> InAbility, FGameplayA
 	}
 }
 
-void AGAActor::UsePrimary_Implementation()
+void AGAActor::AbilityInputTagPressed(FGameplayTag Tag)
 {
-	if (CurrentActiveAbilityHandles.IsValidIndex(0) && CurrentActiveAbilityHandles[0].IsValid())
+	if (AbilitySystem) AbilitySystem->AbilityInputTagPressed(Tag);
+}
+void AGAActor::AbilityInputTagReleased(FGameplayTag Tag)
+{
+	if (AbilitySystem) AbilitySystem->AbilityInputTagReleased(Tag);
+}
+
+void AGAActor::SetupPlayerAbilityInput(UGAEnhancedInputComponent* EIC, AGAPlayerController* PlayerController)
+{
+	if (EIC)
 	{
-		AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[0]);
+		EIC->BindAbilityActions(InputAbilityActions, this, &AGAActor::AbilityInputTagPressed, &AGAActor::AbilityInputTagReleased, /*out*/ CurrentActiveAbilityHandles);
 	}
-	else UE_LOG(LogTemp, Warning, TEXT("Item Primary not called."));
+	if (PlayerController)
+	{
+		PlayerController->OnPostProcessInput.AddUniqueDynamic(AbilitySystem, &UGASystemComponent::ProcessAbilityInput);
+	}
 }
 
-void AGAActor::UseSecondary_Implementation()
+void AGAActor::RemovePlayerAbilityInput(UGAEnhancedInputComponent* EIC, AGAPlayerController* PlayerController)
 {
-	if (CurrentActiveAbilityHandles.IsValidIndex(1) && CurrentActiveAbilityHandles[1].IsValid()) AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[1]);
-	else UE_LOG(LogTemp, Warning, TEXT("Item Secondary not called."));
+	if (EIC)
+	{
+		TArray<uint32> BindHandles;
+		for (uint32 Handle : CurrentActiveAbilityHandles)
+		{
+			EIC->RemoveBindingByHandle(Handle);
+		}
+	}
+	if (PlayerController)
+	{
+		PlayerController->OnPostProcessInput.RemoveAll(AbilitySystem);
+	}
 }
 
-void AGAActor::UseThrow_Implementation()
-{
-	if (CurrentActiveAbilityHandles.IsValidIndex(2) && CurrentActiveAbilityHandles[2].IsValid()) AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[2]);
-}
-
-void AGAActor::UseMelee_Implementation()
-{
-	if (CurrentActiveAbilityHandles.IsValidIndex(3) && CurrentActiveAbilityHandles[3].IsValid()) AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[3]);
-}
+//void AGAActor::UsePrimary_Implementation()
+//{
+//	if (CurrentActiveAbilityHandles.IsValidIndex(0) && CurrentActiveAbilityHandles[0].IsValid())
+//	{
+//		AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[0]);
+//	}
+//	else UE_LOG(LogTemp, Warning, TEXT("Item Primary not called."));
+//}
+//
+//void AGAActor::UseSecondary_Implementation()
+//{
+//	if (CurrentActiveAbilityHandles.IsValidIndex(1) && CurrentActiveAbilityHandles[1].IsValid()) AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[1]);
+//	else UE_LOG(LogTemp, Warning, TEXT("Item Secondary not called."));
+//}
+//
+//void AGAActor::UseThrow_Implementation()
+//{
+//	if (CurrentActiveAbilityHandles.IsValidIndex(2) && CurrentActiveAbilityHandles[2].IsValid()) AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[2]);
+//}
+//
+//void AGAActor::UseMelee_Implementation()
+//{
+//	if (CurrentActiveAbilityHandles.IsValidIndex(3) && CurrentActiveAbilityHandles[3].IsValid()) AbilitySystem->TryActivateAbility(CurrentActiveAbilityHandles[3]);
+//}
 
 void AGAActor::OnPickedUp_Implementation()
 {
 	bPickedUp = true;
 	SetActorEnableCollision(false);
 	DisableComponentsSimulatePhysics();
+	ItemMovement->Deactivate();
 }
 
 void AGAActor::OnDropped_Implementation()
@@ -154,6 +199,7 @@ void AGAActor::OnDropped_Implementation()
 	DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
+	ItemMovement->Activate();
 }
 
 void AGAActor::OnEquipped_Implementation()

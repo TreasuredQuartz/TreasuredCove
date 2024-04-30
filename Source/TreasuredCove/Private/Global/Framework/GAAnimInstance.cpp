@@ -7,6 +7,7 @@
 #include "GACharacterMovementComponent.h"
 #include "CustomMovementMode.h"
 #include "Components/CapsuleComponent.h"
+#include "AimOffsetComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -54,7 +55,7 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		Character->IsLocallyControlled() ? Character->bFirstPerson : false;
 
 	// Multiply by weapon's Twist/Turn multiplier
-	if (bFirstPerson)
+	if (bFirstPerson && false)
 	{
 		DominantHandTwist = FMath::RInterpTo(DominantHandTwist
 			, (ControlDirection - Character->GetControlRotation())
@@ -104,10 +105,12 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		return 0.f;
 	};
 
+	// Movement Direction
 	Direction = 
 		CalcDirection(Character->GetVelocity(), Character->GetActorRotation());
 
-	FRotator MeshDirection = 
+	// 
+	if (!bFirstPerson) FRotator MeshDirection = 
 		(ControlDirection - Character->GetActorRotation()).GetNormalized();
 
 	/*FRotator TempRotator =
@@ -140,7 +143,7 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		FRotator(AimYaw, AimPitch, 0);
 
 	CharacterItem =
-		nullptr; // Character->HeldItem;
+		Character->GetHeldItem();
 
 	if (!GetSkelMeshComponent())
 	{
@@ -156,17 +159,14 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 	
 	// The item is valid at this point
 	
-	USkeletalMeshComponent* ItemMesh =
-		nullptr; // CharacterItem->Mesh;
+	UAimOffsetComponent* ItemAimOffsetComponent = 
+		CharacterItem->GetComponentByClass<UAimOffsetComponent>();
 	
-	if (false /*ItemMesh*/)
+	if (ItemAimOffsetComponent)
 	{
-		FVector Location = ItemMesh->GetSocketLocation(FName("second_grip"));
-		FRotator Rotation = ItemMesh->GetSocketRotation(FName("second_grip"));
-		FVector OutLocation;
-		FRotator OutRotation;
-		GetSkelMeshComponent()->TransformToBoneSpace(FName("hand_l"), Location, Rotation, OutLocation, OutRotation);
-		LeftHandEffectorLocation = OutLocation;
+		AimOffsetAlpha = 1 - ItemAimOffsetComponent->GetAlpha();
+		AimOffsetAlphaLerp = FMath::Lerp(0.3, 1.f, AimOffsetAlpha);
+		AimOffset = ItemAimOffsetComponent->GetAimOffset();
 	}
 }
 
@@ -247,6 +247,8 @@ void UGAAnimInstance::UpdateIKPlacements(float DeltaTime)
 			ResetIK();
 			break;
 		}
+
+		if (bFirstPerson) IKPlacements_AimItem(DeltaTime);
 	}
 	else
 	{
@@ -268,8 +270,9 @@ void UGAAnimInstance::ResetBodyIK()
 
 void UGAAnimInstance::ResetArmIK()
 {
-	HandRotation = Character->GetActorRotation();
+	HandRotation = ControlDirection;
 	HandRotation.Yaw += 180;
+	HandRotation.Pitch *= -1;
 	LeftHandEffectorLocation = FVector::ZeroVector;
 	RightHandEffectorLocation = FVector::ZeroVector;
 }
@@ -282,8 +285,6 @@ void UGAAnimInstance::ResetLegIK()
 
 void UGAAnimInstance::IKPlacements_Walking(float DeltaTime)
 {
-	IKPlacements_AimItem(DeltaTime);
-
 	if (bFirstPerson)
 	{
 		return;
@@ -434,6 +435,8 @@ void UGAAnimInstance::IKPlacements_AimItem(float DeltaTime)
 	if (!CharacterItem || !bFirstPerson || true)
 	{
 		ResetArmIK();
+		RightHandEffectorLocation = AimOffset;
+		LeftHandEffectorLocation = AimOffset + ControlDirection.Vector() * 20;
 		return;
 	}
 

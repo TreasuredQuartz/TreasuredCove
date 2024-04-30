@@ -4,11 +4,9 @@
 #include "Zombie_Spawner.h"
 #include "Zombie_Manager.h"
 
-#include "GACharacter.h"
+#include "HealthComponent.h"
 
 #include "Engine/World.h"
-#include "Gameframework/Gamestate.h"
-#include "Gameframework/PlayerState.h"
 #include "kismet/GameplayStatics.h"
 
 // Sets default values
@@ -26,17 +24,35 @@ void AZombie_Spawner::BeginPlay()
 }
 
 //
-AActor* AZombie_Spawner::SpawnZombie() const
+FTransform AZombie_Spawner::GetSpawnTransform() const
+{
+	FTransform Transform = GetActorTransform();
+
+	FVector2D RandPoint = FMath::RandPointInCircle(GetSpawnRadius());
+
+	Transform.SetLocation(GetActorLocation() + FVector(RandPoint.X, RandPoint.Y, 0));
+
+	return Transform;
+}
+
+//
+APawn* AZombie_Spawner::SpawnZombie() const
 {
 	APawn* Zombie = nullptr;
 	if (UWorld* World = GetWorld())
 	{
-		Zombie = World->SpawnActor<APawn>(ActorToSpawn, GetTransform());
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		Zombie = World->SpawnActor<APawn>(ActorToSpawn, GetSpawnTransform(), Params);
 		if (Zombie)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Spawning Zombie..."));
 			Zombie->SpawnDefaultController();
-			Zombie->OnTakeAnyDamage.AddDynamic(this, &AZombie_Spawner::OnZombieDamaged);
+			if (UHealthComponent* HealthComp = Zombie->GetComponentByClass<UHealthComponent>())
+			{
+				HealthComp->OnHealthModified.AddDynamic(this, &AZombie_Spawner::OnZombieDamaged);
+				HealthComp->OnHealthZeroed.AddDynamic(this, &AZombie_Spawner::OnZombieDied);
+			}
 		}
 	}
 
@@ -44,9 +60,10 @@ AActor* AZombie_Spawner::SpawnZombie() const
 }
 
 //
-void AZombie_Spawner::OnZombieDamaged(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+void AZombie_Spawner::OnZombieDamaged(const FOnAttributeModifiedPayload& Payload)
 {
-	APawn* PawnCauser = Cast<APawn>(DamageCauser);
+	const APawn* PawnCauser = Cast<APawn>(Payload.Causer);
+	const AActor* DamagedActor = Payload.Victim;
 	
 	if (!PawnCauser || !DamagedActor || !Manager) return;
 
@@ -61,14 +78,15 @@ void AZombie_Spawner::OnZombieDamaged(AActor* DamagedActor, float Damage, const 
 	{
 		Manager->AddPoints(PawnCauser, 30);
 	}
+}
 
-	if (AGACharacter* Character = Cast<AGACharacter>(DamagedActor))
+void AZombie_Spawner::OnZombieDied(const AActor* Victim, const AActor* ResponsibleActor)
+{
+	Manager->SpawnedEnemyRemoved(Victim, ResponsibleActor);
+	if (UHealthComponent* HealthComp = Victim->GetComponentByClass<UHealthComponent>())
 	{
-		if (Character->AIInfo.CurrentAITargetStats.CurrentHealth <= 0)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Spawned Zombie has died..."));
-			Manager->SpawnedEnemyRemoved(DamagedActor, DamageCauser);
-		}
+		HealthComp->OnHealthModified.RemoveAll(this);
+		HealthComp->OnHealthZeroed.RemoveAll(this);
 	}
 }
 

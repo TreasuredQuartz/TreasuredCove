@@ -62,6 +62,8 @@ protected:
 	FVector LeftFootEffectorLocation;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector PelvisOffsetLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FVector AimOffset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float AimYaw;
@@ -71,6 +73,11 @@ protected:
 	float Speed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Direction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AimOffsetAlpha;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float AimOffsetAlphaLerp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bIsPlayerControlled;

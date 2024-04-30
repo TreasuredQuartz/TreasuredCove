@@ -49,7 +49,7 @@ void ULaunchingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 			break;
 		}
 
-		if (AttachedActor)
+		if (AttachedActor && AttachedActor->GetInstigatorController())
 		{
 			const FVector& ActorVelocity = AttachedActor->GetVelocity();
 			Location = AttachedActor->GetActorLocation() + Offset;

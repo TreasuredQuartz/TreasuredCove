@@ -90,6 +90,8 @@ public:
 	void UpdateWarPartyRollKey(bool bIsFollower);
 
 	UFUNCTION()
+	void OnDeath(const AActor* ResponsibleActor, const AActor* Victim);
+	UFUNCTION()
 	void OnDamaged(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);
 	UFUNCTION()
 	void OnHealed(AActor* SourceActor, EAttributeType AttributeType, float DeltaAmount, float NewValue);

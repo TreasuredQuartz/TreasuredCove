@@ -13,9 +13,11 @@
 #include "GAActor.generated.h"
 
 class UGASystemComponent;
-class UAbilitySet;
+class UAbilityInputConfigData;
 class UGameplayAbilityBase;
 class UItemMovementComponent;
+class UGAEnhancedInputComponent;
+class AGAPlayerController;
 
 /** This Class serves a dual purpose:
 * - Reduce Complexity of AGACharacter.
@@ -36,7 +38,7 @@ class TREASUREDCOVE_API AGAActor :
 private:
 	// These are the handles to the actual abilities 
 	// that will be given to us by the ability system
-	TArray< FGameplayAbilitySpecHandle > CurrentActiveAbilityHandles;
+	TArray< uint32 > CurrentActiveAbilityHandles;
 	//
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAActor|Animation", meta = (AllowPrivateAccess = true))
 	UBillboardComponent* DominantHandOffset;
@@ -88,16 +90,24 @@ public:
 	void AquireAbility(TSubclassOf<UGameplayAbility> InAbility, FGameplayAbilitySpecHandle& OutHandle);
 	// Array version of AquireAbility
 	void AquireAbilities(const TArray<TSubclassOf<UGameplayAbility>>& InAbilities, TArray<FGameplayAbilitySpecHandle>& OutHandles);
+	//
+	void AbilityInputTagPressed(FGameplayTag Tag);
+	//
+	void AbilityInputTagReleased(FGameplayTag Tag);
+	//
+	void SetupPlayerAbilityInput(UGAEnhancedInputComponent* EIC, AGAPlayerController* PlayerController);
+	//
+	void RemovePlayerAbilityInput(UGAEnhancedInputComponent* EIC, AGAPlayerController* PlayerController);
 
 	/** End AGActor Interface	*/
 
 
 	/**	Begin IControlInput Interface */
 
-	void UsePrimary_Implementation() override;
+	/*void UsePrimary_Implementation() override;
 	void UseSecondary_Implementation() override;
 	void UseThrow_Implementation() override;
-	void UseMelee_Implementation() override;
+	void UseMelee_Implementation() override;*/
 
 	/** End IControlInput Interface	*/
 
@@ -118,14 +128,17 @@ public:
 	void OnUnEquipped_Implementation();
 
 	/** End Item Interface */
-protected:
+public:
 	// The array of abilities that we currently can use
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
-	UAbilitySet* InitialActiveAbilities;
+	class UAbilitySet* Abilities;
 
 	// The Datatable to initialize our attribute sets from
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	UDataTable* InitialStatsTable;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	class UAbilityInputConfigData* InputAbilityActions;
 
 public:
 	// Root Component

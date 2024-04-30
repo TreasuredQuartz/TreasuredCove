@@ -28,6 +28,8 @@ public:
 	void AbilityInputTagPressed(const FGameplayTag& InputTag);
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
+	bool HasAbilityInputTag(const FGameplayTag& InputTag) const;
+
 	UFUNCTION()
 	void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
 };

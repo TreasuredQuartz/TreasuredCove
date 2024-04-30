@@ -6,7 +6,9 @@
 #include "GameplayManager.h"
 #include "Zombie_Manager.generated.h"
 
+class UZombie_SettingsConfig;
 class AZombie_Spawner;
+class UTeamManager;
 
 UCLASS()
 class TREASUREDCOVE_API AZombie_Manager 
@@ -24,37 +26,13 @@ public:
 	AZombie_Manager(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	int32 EnemyAdditionPerWaveBonus;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	int32 EnemyMovementBoostPerWave;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	int32 EnemyStatBoostPerWave;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	int32 MaxWaveMovementBoost;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	int32 MaxWaveStatBoost;
-
-	/* Audio */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	USoundBase* WaveStartSound;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	USoundBase* WaveEndSound;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	uint8 MaxEnemiesAtOnce = 24;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	uint8 MaxEnemiesPerPlayer = 6;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	float TimeBetweenSpawns = 1;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
-	float TimeBetweenWaves = 5;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ZombieManager|Rules")
 	TArray<AZombie_Spawner*> Spawners;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	bool DetermineZombieCanSprint() const;
 
 	UFUNCTION()
 	void SpawnEnemies();
@@ -63,19 +41,26 @@ protected:
 	uint32 TotalEnemiesToSpawn;
 	uint32 CurrentSpawnedEnemies;
 	uint32 TotalSpawnedEnemies;
+
+	UPROPERTY()
+	UTeamManager* ZombieTeamManager;
+	UPROPERTY(EditAnywhere, Category = "ZombieManager|Rules")
+	UZombie_SettingsConfig* Settings;
 public:
-	void SpawnedEnemyRemoved(AActor* RemovedActor, AActor* ResponsibleActor);
-	/*  */
+	/* Called from zombie spawners, when spawned zombies die. */
+	void SpawnedEnemyRemoved(const AActor* RemovedActor, const AActor* ResponsibleActor);
+	/* Triggers timers for spawning. */
 	UFUNCTION(BlueprintCallable)
 	void StartWave();
+	/* Ends timers, then sets timer to start next round. */
 	UFUNCTION(BlueprintCallable)
 	void EndWave();
 
 	UFUNCTION(BlueprintCallable)
-	void AddPoints(APawn* InPawn, int InPoints);
+	void AddPoints(const APawn* InPawn, int InPoints);
 	UFUNCTION(BlueprintCallable)
-	bool CheckPoints(APawn* PawnToCheck, int PointsRequired);
-	void ReducePoints(APawn* InPawn, int InPoints);
+	bool CheckPoints(const APawn* PawnToCheck, int PointsRequired);
+	void ReducePoints(const APawn* InPawn, int InPoints);
 
 	virtual void AddUser(APawn* InPawn) override;
 };

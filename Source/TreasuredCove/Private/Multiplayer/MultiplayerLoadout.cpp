@@ -5,7 +5,7 @@
 #include "GASkillTreeComponent.h"
 
 UMultiplayerLoadout::UMultiplayerLoadout() 
-	: Name(FText())				// I have defined default values in the header file, but occasionally get an error:
+	/* : Name(FText())				// I have defined default values in the header file, but occasionally get an error:
 	, TotalPoints(15)			//- "We are currently retrieving VTable ptr. Please use FVTableHelper constructor instead."
 	, CurrentPoints(0)			//- There was no default constructor (My Mistake), but I see no reason to duplicate the defaults.
 	, Primary()					//- So here is the default constructor. This can be uncommented if the error persists to 
@@ -15,7 +15,7 @@ UMultiplayerLoadout::UMultiplayerLoadout()
 	, Lethals()
 	, Perks()
 	, StrikePackages()
-	, WildCards()
+	, WildCards() // */
 {
 	// PerkComponent = CreateDefaultSubobject<UGASkillTreeComponent>(TEXT("Perk Component"));
 }
