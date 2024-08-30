@@ -242,7 +242,7 @@ bool AGAAIController::IsPotentialEnemy(APawn* TargetPawn) const
 			}
 		} else UE_LOG(LogTemp, Warning, TEXT("GAAIController: Manager is InValid!"));
 	}
-	else UE_LOG(LogTemp, Warning, TEXT("GAAIController: Team Component is InValid!"));
+	// else UE_LOG(LogTemp, Warning, TEXT("GAAIController: Team Component is InValid!"));
 
 	return false;
 }

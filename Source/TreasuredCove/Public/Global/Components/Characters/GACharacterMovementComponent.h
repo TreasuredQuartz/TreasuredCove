@@ -190,6 +190,10 @@ private:
 	float BrakingDecelerationClimbing = 4096;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Climbing", Meta = (AllowPrivateAccess = "true"))
 	float LedgeMaxHeight = 45.f;
+
+	// Vaulting Members
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Movement: Custom Movement|Vaulting", Meta = (AllowPrivateAccess = "true"))
+	uint8 bCanVault:1;
 #pragma endregion
 
 #pragma region Overrides
@@ -310,6 +314,8 @@ public:
 
 #pragma region Ledges
 public:
+	// 
+	FORCEINLINE bool CanEverVault() const { return bCanVault; };
 	// Checks for short walls we run may into
 	void CatchLedgeCheck();
 	// Checks for short walls we can vault
@@ -319,7 +325,7 @@ public:
 	// For moving onto a ledge while climbing
 	// void ClimbUpLedge();
 	// For crossing a short wall while walking/running
-	void VaultOverLedge();
+	void VaultOverLedge(float DeltaTime, int32 Iterations);
 	//
 	void StartVaulting();
 	//
@@ -345,7 +351,7 @@ public:
 	// Reutrns true if the keys required for wall running are down
 	bool AreRequiredKeysDown() const;
 	// Returns true if the player is next to a wall that can be wall run
-	bool IsNextToWall(float vertical_tolerance = 0.0f);
+	bool IsNextToWall(float vertical_tolerance = 0.0f, float horizontal_tolerance = 0.0f);
 	// Finds the wall run direction and side based on the specified surface normal
 	void FindWallRunDirectionAndSide(const FVector& surface_normal, FVector& direction, ENavType& side) const;
 	// Helper function that returns true if the specified surface normal can be wall run on
@@ -436,6 +442,8 @@ private:
 	FVector VaultEndLocation = FVector::ZeroVector;
 	// The direction the character is currently wall running in.
 	FVector WallRunDirection;
+	// The surface normal of the wall before climbing it as a ledge.
+	FVector WallLedgeNormal;
 	// The side of the wall the player is running on.
 	ENavType WallRunSide;
 	// Comparable to CurrentFloor but instead for walls

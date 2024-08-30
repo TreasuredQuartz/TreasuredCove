@@ -568,14 +568,17 @@ void UGACharacterMovementComponent::PhysWallRunning(float DeltaTime, int32 Itera
 		// Make sure we are next to a wall. Provide a vertical tolerance for the linetrace since it's possible the server has
 		// moved our character slightly since we've begun the wall run. In the event we're right at the top/bottom of a wall. we need this
 		// tolerance value so we don't Immediately fall off the wall
-		if (!IsNextToWall(LineTraceVerticalTolerance))
+		if (!IsNextToWall(LineTraceVerticalTolerance, LineTraceVerticalTolerance))
 		{
 			if (WallRunSide == ENavType::Front)
 			{
 				RunUpLedge(timeTick, Iterations);
+				continue;
 			}
 
-			continue;
+			StopWallRunning();
+			StartNewPhysics(timeTick, --Iterations);
+			return;
 		}
 
 		// Make sure the required wall run keys are still down
@@ -641,6 +644,8 @@ void UGACharacterMovementComponent::PhysWallRunning(float DeltaTime, int32 Itera
 			}
 			else
 			{
+				// Save our previous frame's wall
+				WallLedgeNormal = CurrentWall.HitResult.ImpactNormal;
 				FindWall(UpdatedComponent->GetComponentLocation(), CurrentWall, NULL);
 			}
 		}
@@ -683,16 +688,17 @@ void UGACharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iteratio
 		// Retain previous velocity value
 		const FVector OldVelocity = Velocity;
 
-		// Apply acceleration
-		if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
-		{
-			CalcVelocity(timeTick, GroundFriction, false, GetMaxBrakingDeceleration());
-		}
-
+		// Automated Climbing Ledge
 		if (bClimbingLedge)
 		{
 			ClimbLedge(timeTick, Iterations);
 			continue;
+		}
+
+		// Apply acceleration
+		if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
+		{
+			CalcVelocity(timeTick, GroundFriction, false, GetMaxBrakingDeceleration());
 		}
 
 		// Compute move parameters
@@ -703,6 +709,7 @@ void UGACharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iteratio
 
 		if (bZeroDelta)
 		{
+			MoveAlongWall(MoveVelocity, timeTick, &Hit);
 			remainingTime = 0.f;
 		}
 		else
@@ -733,6 +740,8 @@ void UGACharacterMovementComponent::PhysClimbing(float DeltaTime, int32 Iteratio
 		else
 		{
 			// FindFloor(UpdatedComponent->GetComponentLocation(), CurrentFloor, bZeroDelta, NULL);
+			// Save our previous frame's wall
+			WallLedgeNormal = CurrentWall.HitResult.ImpactNormal;
 			FindWall(UpdatedComponent->GetComponentLocation(), CurrentWall, NULL);
 
 			// If trace is not hitting a wall anymore
@@ -783,7 +792,6 @@ void UGACharacterMovementComponent::PhysVaulting(float DeltaTime, int32 Iteratio
 		// Time steps taken from delta time
 		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
 		remainingTime -= timeTick;
-		WallRunDuration += timeTick;
 
 		// Retain previous location value
 		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
@@ -849,10 +857,11 @@ void UGACharacterMovementComponent::MoveAlongWall(const FVector& InVelocity, flo
 void UGACharacterMovementComponent::ClimbLedge(float DeltaTime, int32 Iterations)
 {
 	FHitResult traceHit;
-	const FVector Forward = PawnOwner->GetActorForwardVector();
-	const FVector start = UpdatedComponent->GetComponentLocation() + (-1 * Forward * CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius());
-	const FVector end = start + (2.1 * FVector::DownVector * CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-	if (LineTrace(traceHit, start, end))
+	const FVector Forward = WallLedgeNormal;
+	const FVector CapsuleLocation = UpdatedComponent->GetComponentLocation();
+	const FVector start = CapsuleLocation + (Forward * CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius());
+	const FVector end = start + (-2.1 * UpdatedComponent->GetUpVector() * CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	if (LineTrace(traceHit, start, end)) // Is Something Underneath us...
 	{
 		bClimbingLedge = false;
 		StopClimbing();
@@ -861,15 +870,15 @@ void UGACharacterMovementComponent::ClimbLedge(float DeltaTime, int32 Iterations
 	}
 
 	FHitResult ForwardHit(1.0f);
-	const FRotator Rotation = UpdatedComponent->GetComponentRotation();// ComputeOrientRotationToWall(DeltaTime, CurrentWall.HitResult.ImpactNormal);
-	SafeMoveUpdatedComponent(Forward * MaxClimbSpeed * DeltaTime, Rotation, true, ForwardHit);
+	const FRotator Rotation = ComputeOrientRotationToWall(DeltaTime, WallLedgeNormal);
+	SafeMoveUpdatedComponent(-1 * Forward * GetMaxSpeed() * DeltaTime, Rotation, true, ForwardHit);
 
-	if (ForwardHit.bBlockingHit)
+	if (ForwardHit.bBlockingHit) // If we can't move forward...
 	{
 		FHitResult UpHit(1.0f);
-		SafeMoveUpdatedComponent(FVector::UpVector * MaxClimbSpeed * DeltaTime, Rotation, true, UpHit);
+		SafeMoveUpdatedComponent(UpdatedComponent->GetUpVector() * GetMaxSpeed() * DeltaTime, Rotation, true, UpHit);
 
-		if (UpHit.bBlockingHit)
+		if (UpHit.bBlockingHit) // If we can't move upward...
 		{
 			HangCheck();
 			return; // Something is preventing us from climbing upward.
@@ -879,10 +888,14 @@ void UGACharacterMovementComponent::ClimbLedge(float DeltaTime, int32 Iterations
 
 void UGACharacterMovementComponent::RunUpLedge(float DeltaTime, int32 Iterations)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Running Up Ledge..."));
+	const FVector CapsuleLocation = UpdatedComponent->GetComponentLocation();
+	// FindWall(CapsuleLocation, CurrentWall, true);
+
 	FHitResult traceHit;
-	const FVector Forward = PawnOwner->GetActorForwardVector();
-	const FVector start = UpdatedComponent->GetComponentLocation() + (-1 * Forward * CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius());
-	const FVector end = start + (2.1 * FVector::DownVector * CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	const FVector Forward = WallLedgeNormal;
+	const FVector start = CapsuleLocation + (Forward * CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius());
+	const FVector end = start + (-2.1 * UpdatedComponent->GetUpVector() * CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
 	if (LineTrace(traceHit, start, end))
 	{
 		StopWallRunning();
@@ -891,13 +904,13 @@ void UGACharacterMovementComponent::RunUpLedge(float DeltaTime, int32 Iterations
 	}
 
 	FHitResult ForwardHit(1.0f);
-	const FRotator Rotation = UpdatedComponent->GetComponentRotation();// ComputeOrientRotationToWall(DeltaTime, CurrentWall.HitResult.ImpactNormal);
-	SafeMoveUpdatedComponent(Forward * MaxClimbSpeed * DeltaTime, Rotation, true, ForwardHit);
+	const FRotator Rotation = ComputeOrientRotationToWall(DeltaTime, WallLedgeNormal);
+	SafeMoveUpdatedComponent(-1 * Forward * GetMaxSpeed() * DeltaTime, Rotation, true, ForwardHit);
 
 	if (ForwardHit.bBlockingHit)
 	{
 		FHitResult UpHit(1.0f);
-		SafeMoveUpdatedComponent(FVector::UpVector * MaxClimbSpeed * DeltaTime, Rotation, true, UpHit);
+		SafeMoveUpdatedComponent(UpdatedComponent->GetUpVector() * GetMaxSpeed() * DeltaTime, Rotation, true, UpHit);
 
 		if (UpHit.bBlockingHit)
 		{
@@ -907,9 +920,23 @@ void UGACharacterMovementComponent::RunUpLedge(float DeltaTime, int32 Iterations
 	}
 }
 
-void UGACharacterMovementComponent::VaultOverLedge()
+void UGACharacterMovementComponent::VaultOverLedge(float DeltaTime, int32 Iterations)
 {
+	FHitResult ForwardHit(1.0f);
+	const FVector Forward = WallLedgeNormal;
+	const FRotator Rotation = ComputeOrientRotationToWall(DeltaTime, WallLedgeNormal);
+	SafeMoveUpdatedComponent(-1 * Forward * GetMaxSpeed() * DeltaTime, Rotation, true, ForwardHit);
+	if (ForwardHit.bBlockingHit) // If we can't move forward...
+	{
+		FHitResult UpHit(1.0f);
+		SafeMoveUpdatedComponent(UpdatedComponent->GetUpVector() * GetMaxSpeed() * DeltaTime, Rotation, true, UpHit);
 
+		if (UpHit.bBlockingHit) // If we can't move upward...
+		{
+			HangCheck();
+			return; // Something is preventing us from climbing upward.
+		}
+	}
 }
 #pragma endregion
 
@@ -1011,6 +1038,12 @@ void UGACharacterMovementComponent::FindWall(const FVector& CapsuleLocation, FFi
 
 	check(CharacterOwner->GetCapsuleComponent());
 
+	if (bCanUseCachedLocation)
+	{
+		OutWallResult = CurrentWall;
+		return;
+	}
+
 	// Increase height check slightly if walking, to prevent floor height adjustment from later invalidating the floor result.
 	const float HeightCheckAdjust = (IsMovingOnWall() ? MAX_FLOOR_DIST + UE_KINDA_SMALL_NUMBER : -MAX_FLOOR_DIST);
 
@@ -1025,7 +1058,7 @@ void UGACharacterMovementComponent::FindWall(const FVector& CapsuleLocation, FFi
 		return (LineTrace(hitResult, start, end));
 	};
 
-	if (lineTrace(CapsuleLocation, CapsuleLocation + (100.0f * PawnOwner->GetActorForwardVector())))
+	if (lineTrace(CapsuleLocation, CapsuleLocation + (WallLineTraceDist * PawnOwner->GetActorForwardVector())))
 	{
 		OutWallResult.SetFromLineTrace(hitResult, 2.0f, true);
 	}
@@ -1059,6 +1092,7 @@ FRotator UGACharacterMovementComponent::ComputeOrientRotationToWall(float DeltaT
 	FVector Forward = -SurfaceNormal;
 	FVector Up = FVector::UpVector;
 	FVector Right = Up ^ Forward;
+	// SurfaceNormal.FindBestAxisVectors(Up, Right);
 
 	Forward.Normalize();
 	Right.Normalize();
@@ -1069,7 +1103,7 @@ FRotator UGACharacterMovementComponent::ComputeOrientRotationToWall(float DeltaT
 	const FRotator Rotation = RotMatrix.Rotator();
 
 	const FRotator Current = UpdatedComponent->GetComponentRotation();
-	return Current.Equals(Rotation) ? (Current + ((Rotation - Current).GetNormalized() * DeltaTime * 10)).GetNormalized() : Rotation;
+	return Current.Equals(Rotation) ? (Current + ((Current - Rotation).GetNormalized() * DeltaTime * 10)).GetNormalized() : Rotation;
 }
 
 FVector UGACharacterMovementComponent::CalculateFloorInfluence(const FVector& InSlope) const
@@ -1162,7 +1196,7 @@ bool UGACharacterMovementComponent::IsStepUpTooHigh(const FHitResult& Hit) const
 
 	FHitResult StepHit;
 	const FVector Start = OldLocation + FVector(0,0, MaxStepHeight);
-	const FVector End = Start + Velocity;
+	const FVector End = Start + (Velocity.GetSafeNormal() * PawnRadius);
 	return LineTrace(StepHit, Start, End);
 }
 
@@ -1181,12 +1215,12 @@ void UGACharacterMovementComponent::FindWallRunDirectionAndSide(const FVector& s
 	else if (WallAngle > 0.0)
 	{
 		side = ENavType::Right;
-		CrossVector = FVector(0.0f, 0.0f, 1.0f);
+		CrossVector = FVector::UpVector;
 	}
 	else
 	{
 		side = ENavType::Left;
-		CrossVector = FVector(0.0f, 0.0f, -1.0f);
+		CrossVector = FVector::DownVector;
 	}
 
 	// Find the direction parallel to the wall in the direction the player is moving
@@ -1554,7 +1588,7 @@ void UGACharacterMovementComponent::OnActorHit(AActor* SelfActor, AActor* OtherA
 	if (OtherActor && OtherActor->GetRootComponent() && OtherActor->GetRootComponent()->GetCollisionObjectType() == ECC_Pawn) return;
 
 	// Wall Section
-	if (!CanStepUp(Hit) || IsStepUpTooHigh(Hit))
+	if (!CanStepUp(Hit) || IsStepUpTooHigh(Hit)/**/)
 	{
 		VaultCheck(NormalImpulse, Hit);		// Short Walls
 		WallRunCheck(NormalImpulse, Hit);	// Run check first
@@ -1564,23 +1598,25 @@ void UGACharacterMovementComponent::OnActorHit(AActor* SelfActor, AActor* OtherA
 
 void UGACharacterMovementComponent::VaultCheck(const FVector& NormalImpulse, const FHitResult& Hit)
 {
-	if (!IsMovingOnGround() || IsSliding() || !IsSprinting() || 
+	if (!CanEverVault() || 
+		!IsMovingOnGround() || IsSliding() || !IsSprinting() || 
 		!CanSurfaceBeWallRan(Hit.ImpactNormal))
 		return;
 
 	FVector FloorBottom = FVector::ZeroVector;
-	if (IsNextToWall()) // Wall is at our waist height
+	if (IsInFrontOfWall()) // Wall is at our waist height
 	{
 		FHitResult TopHit;
 		const FVector TopStart = GetActorHeadLocation();
-		const FVector TopEnd = TopStart + UpdatedComponent->GetForwardVector() * 70;
+		float CapsuleWidth = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius();
+		const FVector TopEnd = TopStart + UpdatedComponent->GetForwardVector() * (CapsuleWidth + 10);
 		if (LineTrace(TopHit, TopStart, TopEnd)) // Wall is higher than our character
 		{
 			return;
 		}
 
 		FHitResult NewHit;
-		const FVector NewEnd = GetActorLocation() + UpdatedComponent->GetForwardVector() * 70;
+		const FVector NewEnd = GetActorLocation() + UpdatedComponent->GetForwardVector() * (CapsuleWidth + 10);
 		LineTrace(NewHit, TopHit.Location, NewEnd);
 
 		FloorBottom = NewHit.Location;
@@ -1589,7 +1625,8 @@ void UGACharacterMovementComponent::VaultCheck(const FVector& NormalImpulse, con
 	{
 		FHitResult BottomHit;
 		const FVector BottomStart = GetActorFeetLocation();
-		const FVector BottomEnd = BottomStart + UpdatedComponent->GetForwardVector() * 70;
+		float CapsuleWidth = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius();
+		const FVector BottomEnd = BottomStart + UpdatedComponent->GetForwardVector() * (CapsuleWidth + 10);
 		if (!LineTrace(BottomHit, BottomStart, BottomEnd)) // There is no obstructing wall
 		{
 			return;
@@ -1600,7 +1637,7 @@ void UGACharacterMovementComponent::VaultCheck(const FVector& NormalImpulse, con
 
 	FHitResult TopHit;
 	const FVector TopEnd = FloorBottom + FVector(0, 0, GetActorHeadLocation().Z);
-	if (LineTrace(TopHit, FloorBottom, TopEnd)) // Check our character can fit on the ledge
+	if (FloorBottom != FVector::ZeroVector && LineTrace(TopHit, FloorBottom, TopEnd)) // Check our character can fit on the ledge
 	{
 		if ((FloorBottom - TopHit.Location).Size() < GetCrouchedHalfHeight()) // Our character cannot fit even if crouched
 		{
@@ -1627,13 +1664,13 @@ void UGACharacterMovementComponent::WallRunCheck(const FVector& NormalImpulse, c
 		!CanSurfaceBeWallRan(Hit.ImpactNormal)) return;
 
 	FindWallRunDirectionAndSide(Hit.ImpactNormal, WallRunDirection, WallRunSide);
-	if (IsFalling() && Velocity.Z <= 1.f)
+	if (WallRunSide == ENavType::Front && (Velocity.Z <= 1.f || Velocity.Size() <= MaxWalkSpeed))
 	{
-		if (WallRunSide == ENavType::Front) return;
+		return; // Do not run up walls if in-air or upward velocity or forward velocity is very low
 	}
-	else
+	else if (WallRunSide != ENavType::Front && (!IsFalling() || Velocity.Size() <= MaxWalkSpeed))
 	{
-		if (WallRunSide != ENavType::Front) return;
+		 return; // Do not run on walls if on-ground
 	}
 	if (!IsNextToWall()) return;
 
@@ -1664,9 +1701,9 @@ void UGACharacterMovementComponent::HangCheck()
 bool UGACharacterMovementComponent::IsInFrontOfWall(float vertical_tolerance)
 {
 	float CapsuleHalfHeight = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-	float CapsuleWidth = CharacterOwner->GetCapsuleComponent()->GetUnscaledCapsuleRadius();
+	float CapsuleWidth = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius();
 	const FVector traceStart = GetPawnOwner()->GetActorLocation(); // +(WallRunDirection * 20.0f);
-	const FVector traceEnd = traceStart + (GetPawnOwner()->GetActorForwardVector() * CapsuleWidth);
+	const FVector traceEnd = traceStart + (GetPawnOwner()->GetActorForwardVector() * (CapsuleWidth + 10));
 	FHitResult hitResult;
 
 	// Create a helper lambda for performing the line trace
@@ -1704,7 +1741,7 @@ bool UGACharacterMovementComponent::IsInFrontOfWall(float vertical_tolerance)
 	return true;
 }
 
-bool UGACharacterMovementComponent::IsNextToWall(float vertical_tolerance)
+bool UGACharacterMovementComponent::IsNextToWall(float vertical_tolerance, float horizontal_tolerance)
 {
 	// Do a line trace from the player into the wall to make sure we're stil along the side of a wall
 	FVector crossVector = FVector();
@@ -1719,8 +1756,9 @@ bool UGACharacterMovementComponent::IsNextToWall(float vertical_tolerance)
 		crossVector = FVector(0.0f, 0.0f, 1.0f);
 		break;
 	}
-	const FVector traceStart = GetPawnOwner()->GetActorLocation() + (WallRunDirection * 20.0f);
-	const FVector traceEnd = traceStart + (FVector::CrossProduct(WallRunDirection, crossVector) * 70);
+	float CapsuleWidth = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius();
+	const FVector traceStart = GetPawnOwner()->GetActorLocation() + (WallRunDirection * 10.0f);
+	const FVector traceEnd = traceStart + (FVector::CrossProduct(WallRunDirection, crossVector) * (CapsuleWidth * 2));
 	FHitResult hitResult;
 
 	// Create a helper lambda for performing the line trace
@@ -1729,8 +1767,20 @@ bool UGACharacterMovementComponent::IsNextToWall(float vertical_tolerance)
 		return (LineTrace(hitResult, start, end));
 	};
 
+	// If a vertical tolerance and horizontal tolerance was provided we want to do four line traces - one above, one below, one forward, one backward the calculated line
+	if (vertical_tolerance > FLT_EPSILON && horizontal_tolerance > FLT_EPSILON)
+	{
+		// If both line traces miss the wall then return false, we're not next to a wall
+		if (lineTrace(FVector(traceStart.X, traceStart.Y, traceStart.Z + vertical_tolerance / 2.0f), FVector(traceEnd.X, traceEnd.Y, traceEnd.Z + vertical_tolerance / 2.0f)) == false &&
+			lineTrace(FVector(traceStart.X, traceStart.Y, traceStart.Z - vertical_tolerance / 2.0f), FVector(traceEnd.X, traceEnd.Y, traceEnd.Z - vertical_tolerance / 2.0f)) == false &&
+			lineTrace(FVector(traceStart.X, traceStart.Y + horizontal_tolerance / 2.0f, traceStart.Z), FVector(traceEnd.X, traceEnd.Y + horizontal_tolerance / 2.0f, traceEnd.Z)) == false &&
+			lineTrace(FVector(traceStart.X, traceStart.Y - horizontal_tolerance / 2.0f, traceStart.Z), FVector(traceEnd.X, traceEnd.Y - horizontal_tolerance / 2.0f, traceEnd.Z)) == false)
+		{
+			return false;
+		}
+	}
 	// If a vertical tolerance was provided we want to do two line traces - one above and one below the calculated line
-	if (vertical_tolerance > FLT_EPSILON)
+	else if (vertical_tolerance > FLT_EPSILON) 
 	{
 		// If both line traces miss the wall then return false, we're not next to a wall
 		if (lineTrace(FVector(traceStart.X, traceStart.Y, traceStart.Z + vertical_tolerance / 2.0f), FVector(traceEnd.X, traceEnd.Y, traceEnd.Z + vertical_tolerance / 2.0f)) == false &&
@@ -1739,7 +1789,17 @@ bool UGACharacterMovementComponent::IsNextToWall(float vertical_tolerance)
 			return false;
 		}
 	}
-	// If no vertical tolerance was provided we just want to do one line trace using the caclulated line
+	// If a vertical tolerance was provided we want to do two line traces - one above and one below the calculated line
+	else if (horizontal_tolerance > FLT_EPSILON)
+	{
+		// If both line traces miss the wall then return false, we're not next to a wall
+		if (lineTrace(FVector(traceStart.X, traceStart.Y + horizontal_tolerance / 2.0f, traceStart.Z), FVector(traceEnd.X, traceEnd.Y + horizontal_tolerance / 2.0f, traceEnd.Z)) == false &&
+			lineTrace(FVector(traceStart.X, traceStart.Y - horizontal_tolerance / 2.0f, traceStart.Z), FVector(traceEnd.X, traceEnd.Y - horizontal_tolerance / 2.0f, traceEnd.Z)) == false)
+		{
+			return false;
+		}
+	}
+	// If no vertical or horizontal tolerance was provided we just want to do one line trace using the caclulated line
 	else
 	{
 		// return false if the line trace misses the wall
@@ -1801,6 +1861,9 @@ bool UGACharacterMovementComponent::DoJump(bool bReplayingMoves)
 				Velocity += ((FVector::ZeroVector - PawnOwner->GetActorForwardVector()) + FVector::UpVector) * JumpZVelocity;
 				StopClimbing();
 				SetMovementMode(MOVE_Falling);
+				FRotator Rotation = PawnOwner->GetActorRotation();
+				Rotation.Yaw *= -1;
+				PawnOwner->SetActorRotation(Rotation);
 				return true;
 			}
 

@@ -19,7 +19,8 @@
 				"SenseSystem",
 				"Water",
 				"CableComponent",
-				"EnhancedInput"
+				"EnhancedInput",
+				"UnrealEd"
 			]
 		},
 		{
@@ -113,6 +114,10 @@
 		},
 		{
 			"Name": "GenericGraph",
+			"Enabled": true
+		},
+		{
+			"Name": "MapMaker",
 			"Enabled": true
 		},
 		{

@@ -83,7 +83,6 @@ void UGASkillTreeComponent::AddSkillList(FString Category, TSubclassOf<UGASkillT
 		SkillTree->OnAquired.AddDynamic(this, &UGASkillTreeComponent::AquireSkill);
 		SkillTrees.Add(Category, SkillTree);
 		
-		
 		// Debugging
 		/*UE_LOG(LogTemp, Warning, TEXT("New Skill Tree Obtained!"));
 
