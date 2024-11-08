@@ -206,7 +206,7 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 							SAssignNew(ListViewWidget, SListView<TSharedPtr<FSlateBrush>>)
 							.ItemHeight(24)
 							.Orientation(EOrientation::Orient_Horizontal)
-							.ListItemsSource(&Cast<UEdNode_GenericGraphNode>(GraphNode)->GenericGraphNode->Items) //The Items array is the source of this listview
+							.ListItemsSource(&Cast<UEdNode_GenericGraphNode>(GraphNode)->GenericGraphNode->GetItems()) //The Items array is the source of this listview
 							.OnGenerateRow(this, &SEdNode_GenericGraphNode::OnGenerateRowForList)
 						]
 					]

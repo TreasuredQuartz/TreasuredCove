@@ -295,7 +295,7 @@ protected:
 	void EndUltimate();
 
 	//////////////////////////////////////////////////////
-
+public:
 	// 
 	void MenuUp(float Val);
 	// 
@@ -321,7 +321,7 @@ protected:
 	// 
 	UFUNCTION()
 	void StartHeldInputTimer(EHeldInputType InputType);
-
+private:
 	//////////////////////////////////////////////////////
 
 	// Called when player-controlled from WASD or controller right analog

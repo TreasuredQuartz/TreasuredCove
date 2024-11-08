@@ -14,23 +14,23 @@ class TREASUREDCOVE_API USpatialInventoryTileItem : public UObject
 	GENERATED_BODY()
 
 private:
-	FIntVector2 Location;
-	TArray<FIntVector2> Shape;
-	UObject* Object;
-
-protected:
-	TArray<USpatialInventoryTileItem*> Items;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	FIntPoint Location;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	TArray<FIntPoint> Shape;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UTexture2D* Icon;
 
 public:
 	// Returns Location in Inventory
-	FIntVector2 GetLocation() const { return Location; };
+	FIntPoint GetLocation() const { return Location; };
 
-	void SetLocation(FIntVector2& NewLocation) { Location = NewLocation; };
+	void SetLocation(FIntPoint& NewLocation) { Location = NewLocation; };
 
 	// Returns the space this item takes up in inventory
-	TArray<FIntVector2> GetShape() const { return Shape; };
+	TArray<FIntPoint> GetShape() const { return Shape; };
 
-	void SetShape(TArray<FIntVector2>& NewShape) { Shape = NewShape; };
+	void SetShape(TArray<FIntPoint>& NewShape) { Shape = NewShape; };
 
 	// Returns if other items can exist in the same space as this item
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
@@ -47,7 +47,7 @@ struct TREASUREDCOVE_API FSpatialInventoryTile
 	GENERATED_BODY()
 
 public:
-	FIntVector2 Location;
+	FIntPoint Location;
 	USpatialInventoryTileItem* Item;
 };
 
@@ -60,14 +60,17 @@ public:
 	// Sets default values for this component's properties
 	USpatialInventoryComponent();
 
+	UPROPERTY(BlueprintAssignable, Category = "Inventory")
+	FOnInventoryChanged OnInventorychanged;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
 private:
 	//
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
-	FIntVector2 GridDimensions;
+	UPROPERTY(EditAnywhere, Category = "Inventory")
+	FVector2D GridDimensions;
 
 	//
 	TArray<TArray<FSpatialInventoryTile>> Grid;
@@ -85,7 +88,25 @@ public:
 	bool CheckAvailableSpace(USpatialInventoryTileItem* Item) const;
 
 	// Checks that the Location is inside of the grid space
-	bool IsValidTile(const FIntVector2& TileLocation) const;
+	bool IsValidTile(const FIntPoint& TileLocation) const;
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Inventory")
+	void GetGridDimensions(int32& X, int32& Y) {
+		X = (int32)GridDimensions.X;
+		Y = (int32)GridDimensions.Y; 
+	};
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Inventory")
+	void IndexToTile(int32 index, int32& TileX, int32& TileY) { 
+		TileX = index % (int32)GridDimensions.X;
+		TileY = index / (int32)GridDimensions.X;
+	};
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Inventory")
+	TMap<USpatialInventoryTileItem*, FVector2D> GetAllItems() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void RemoveItem(USpatialInventoryTileItem* ItemToRemove);
 
 private:
 	// Adds Item without checks, called via TryAddItem()

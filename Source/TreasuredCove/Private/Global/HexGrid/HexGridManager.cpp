@@ -25,7 +25,7 @@ void AHexGridManager::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 
-	AddChunk();
+	// AddChunk();
 }
 
 // Called when the game starts or when spawned
@@ -117,7 +117,7 @@ void AHexGridManager::AddChunk()
 		FVector::ForwardVector,
 		FVector::BackwardVector
 	};
-
+	/*
 	TArray<FVector> Sides = {
 		Directions[0] +
 		Directions[2] +
@@ -151,18 +151,18 @@ void AHexGridManager::AddChunk()
 		Directions[3] +
 		Directions[5],
 	};
-
+	// */
 	// InitializeSphere(Sides, 0);
-	Chunks.Reserve(Sides.Num());
+	Chunks.Reserve(Directions.Num());
 
 	FIntVector VoxelIndex = ActiveChunkCoords;
-	for (const FVector& Side : Sides)
+	for (const FVector& Side : Directions)
 	{
 		AHexGrid* Grid = Cast<AHexGrid>(AddVoxelActor(GetActorLocation(), VoxelIndex, 0));
 		if (!Grid) continue;
 		Grid->NormalVector = Side.GetUnsafeNormal();
 		UGameplayStatics::FinishSpawningActor(Grid, FTransform(GetActorLocation()));
-		Grid->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+		Grid->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 
 		++VoxelIndex.X;
 	}

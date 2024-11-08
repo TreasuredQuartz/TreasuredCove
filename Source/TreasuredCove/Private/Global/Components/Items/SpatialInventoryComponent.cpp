@@ -35,7 +35,8 @@ void USpatialInventoryComponent::BeginPlay()
 // Called to AddItem, will return false if failed.
 bool USpatialInventoryComponent::TryAddItem(USpatialInventoryTileItem* Item)
 {
-	if (Item && !CheckAvailableSpace(Item)) return false;
+	if (!Item) return false;
+	if (!CheckAvailableSpace(Item)) return false;
 
 	AddItem(Item);
 
@@ -49,22 +50,36 @@ bool USpatialInventoryComponent::TryAddItem(USpatialInventoryTileItem* Item)
 */
 bool USpatialInventoryComponent::CheckAvailableSpace(USpatialInventoryTileItem* Item) const
 {
-	for (const FIntVector2& PartialLocation : Item->GetShape())
+	if (!Item) return false;
+
+	if (Item->GetShape().IsEmpty()) 
 	{
-		FIntVector2 FinalLocation = Item->GetLocation() + PartialLocation;
+		FIntPoint FinalLocation = Item->GetLocation();
 		if (!IsValidTile(FinalLocation)) return false; // Item is not within Grid
 
 		const FSpatialInventoryTile& OccupiedTile = Grid[FinalLocation.X][FinalLocation.Y];
 		if (OccupiedTile.Item && OccupiedTile.Item->CanCohabitat(Item))
 			return false; // Item already exists in this space, and cannot share space.
 	}
+	else 
+	{
+		for (const FIntPoint& PartialLocation : Item->GetShape())
+		{
+			FIntPoint FinalLocation = Item->GetLocation() + PartialLocation;
+			if (!IsValidTile(FinalLocation)) return false; // Item is not within Grid
 
+			const FSpatialInventoryTile& OccupiedTile = Grid[FinalLocation.X][FinalLocation.Y];
+			if (OccupiedTile.Item && OccupiedTile.Item->CanCohabitat(Item))
+				return false; // Item already exists in this space, and cannot share space.
+		}
+	}
+	
 	// Every location is inside the grid and does not overlap with invalid items.
 	return true;
 }
 
 // Returns if the Location is within the Grid
-bool USpatialInventoryComponent::IsValidTile(const FIntVector2& TileLocation) const
+bool USpatialInventoryComponent::IsValidTile(const FIntPoint& TileLocation) const
 {
 	return TileLocation.X >= 0
 		&& TileLocation.Y >= 0
@@ -72,12 +87,74 @@ bool USpatialInventoryComponent::IsValidTile(const FIntVector2& TileLocation) co
 		&& TileLocation.Y < GridDimensions.Y;
 }
 
+TMap<USpatialInventoryTileItem*, FVector2D> USpatialInventoryComponent::GetAllItems() const
+{
+	TMap<USpatialInventoryTileItem*, FVector2D> returnMap;
+
+	/* We have a grid here.
+	*	 _________
+	*	|_|_|_|_|_|
+	*	|_|_|_|_|_|
+	*	|_|_|_|_|_|
+	* 
+	* First, we loop through the columns.
+	*	 _________
+	*	|X|_|_|_|_|
+	*	|X|_|_|_|_|
+	*	|X|_|_|_|_|
+	*	/\
+	*	||
+	*	||
+	*	The First Column
+	*/
+	for (const TArray<FSpatialInventoryTile>& GridColumn : Grid)
+	{
+		/* Now in the current column:
+		*	 _
+		*	|_|
+		*	|_|
+		*	|_|
+		* 
+		* We loop through each row.
+		*	 _
+		*	|X| <-- The first row, of the first column, is the first item.
+		*	|_|
+		*	|_|
+		*/
+		for (const FSpatialInventoryTile& ColumnItem : GridColumn) 
+		{
+			if (!returnMap.Contains(ColumnItem.Item)) 
+			{
+				returnMap.Add(ColumnItem.Item, ColumnItem.Location);
+			}
+		}
+	}
+
+	return returnMap;
+}
+
+void USpatialInventoryComponent::RemoveItem(USpatialInventoryTileItem* ItemToRemove)
+{
+
+}
+
 // The actual addition of the item to the Grid
 void USpatialInventoryComponent::AddItem(USpatialInventoryTileItem* Item)
 {
-	for (const FIntVector2& PartialLocation : Item->GetShape())
+	{ // Scoped variables
+		FIntPoint FinalLocation = Item->GetLocation();
+		FSpatialInventoryTile& Tile = Grid[FinalLocation.X][FinalLocation.Y];
+		if (Tile.Item && Tile.Item->CanCohabitat(Item))
+		{
+			USpatialInventoryTileItem* PrevItem = Tile.Item;
+			Tile.Item = Item;
+			PrevItem->OnCohabitat(Item);
+		}
+	}
+
+	for (const FIntPoint& PartialLocation : Item->GetShape())
 	{
-		FIntVector2 FinalLocation = Item->GetLocation() + PartialLocation;
+		FIntPoint FinalLocation = Item->GetLocation() + PartialLocation.X;
 		FSpatialInventoryTile& Tile = Grid[FinalLocation.X][FinalLocation.Y];
 		if (Tile.Item && Tile.Item->CanCohabitat(Item))
 		{
@@ -92,10 +169,10 @@ void USpatialInventoryComponent::AddItem(USpatialInventoryTileItem* Item)
 
 bool USpatialInventoryTileItem::CanCohabitat_Implementation(USpatialInventoryTileItem* Other) const
 {
-	return false;
+	// We can have another item in our space, but not where we are by default
+	return Other->GetLocation() != GetLocation();
 }
 
 void USpatialInventoryTileItem::OnCohabitat_Implementation(USpatialInventoryTileItem* Other)
 {
-	Items.Add(Other);
 }

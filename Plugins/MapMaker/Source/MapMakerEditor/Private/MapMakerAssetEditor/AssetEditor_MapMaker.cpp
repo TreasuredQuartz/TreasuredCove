@@ -244,6 +244,7 @@ TSharedRef<SCompoundWidget> FAssetEditor_MapMaker::CreatePreviewWidget()
 TSharedRef<SCompoundWidget> FAssetEditor_MapMaker::CreateAssetSelectionWidget()
 {
 	return SNew(SAssetSelector_MapMaker)
+		.GraphToEdit(EditingGraph->EdGraph)
 		.AssetDatabase(EditingGraph->AssetDatabase);
 }
 

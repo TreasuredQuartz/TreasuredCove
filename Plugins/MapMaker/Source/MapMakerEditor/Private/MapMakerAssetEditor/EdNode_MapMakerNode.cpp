@@ -3,6 +3,7 @@
 
 #include "MapMakerAssetEditor/EdNode_MapMakerNode.h"
 #include "MapMakerEditorPCH.h"
+#include "EdGraph_MapMaker.h"
 
 #define LOCTEXT_NAMESPACE "EdNode_MapMaker"
 

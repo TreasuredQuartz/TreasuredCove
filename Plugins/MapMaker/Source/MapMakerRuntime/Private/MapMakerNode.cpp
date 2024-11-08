@@ -3,6 +3,7 @@
 
 #include "MapMakerNode.h"
 #include "MapMaker.h"
+#include "MapMakerAsset.h"
 
 #define LOCTEXT_NAMESPACE "MapMakerNode"
 
@@ -61,6 +62,35 @@ void UMapMakerNode::SetNodeSize(const FVector2D& NewSize)
 {
 	Size = NewSize;
 	UE_LOG(LogTemp, Warning, TEXT("UMapMakerNode: Size Updated '%s'"), *Size.ToString());
+}
+
+bool UMapMakerNode::CanAddAsset(UMapMakerAsset* NewAsset) const
+{
+	if (!NewAsset) return false;
+	const FVector Location = NewAsset->AssetTransform.GetLocation();
+
+	for (UMapMakerAsset* Asset : Assets) {
+		if (Asset && Asset->AssetTransform.GetLocation() == Location) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+TArray<UMapMakerAsset*> UMapMakerNode::GetAssets() const
+{
+	return Assets;
+}
+
+void UMapMakerNode::AddAsset(UMapMakerAsset* NewAsset)
+{
+	Assets.Add(NewAsset);
+}
+
+void UMapMakerNode::ClearAssets()
+{
+	Assets.Empty();
 }
 
 bool UMapMakerNode::CanCreateConnection(UMapMakerNode* Other, FText& ErrorMessage)

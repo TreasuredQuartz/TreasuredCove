@@ -23,10 +23,14 @@ public:
 	FOnTextureChangedDelegate OnTextureChanged;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
-	URepositoryComponent* OwningCharacter;
+	AActor* OwningCharacter;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
-	URepositoryComponent* OwningItem;
+	AActor* OwningItem;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items", Meta = (ExposeOnSpawn = true))
+	bool bIsHeldItem;
+public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnMenuOpened();
@@ -34,8 +38,5 @@ public:
 	// Should input whether this item was equipped or stowed
 	// resulting in a cast to the related item.
 	UFUNCTION(BlueprintCallable)
-	void OnAddedToCharacter(bool bIsHeldItem);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items")
-	bool bIsHeldItem;
+	void OnAddedToCharacter();
 };

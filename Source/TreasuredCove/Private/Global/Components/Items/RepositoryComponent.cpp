@@ -75,6 +75,7 @@ void URepositoryComponent::AddItem(const FString Category, const FItemKey Item)
 
 	// The array itself
 	Repository[Category].AddItem(Item);
+	OnRepositoryChanged.Broadcast();
 }
 
 void URepositoryComponent::SubtractItem(const FString Category, const FName Name, const uint8 Quantity)
@@ -92,6 +93,7 @@ void URepositoryComponent::SubtractItem(const FString Category, const FItemKey I
 
 	// The array itself
 	Repository[Category].SubtractItem(Item);
+	OnRepositoryChanged.Broadcast();
 }
 void URepositoryComponent::SubtractItemAtIndex(const FString Category, const uint8 Index, const uint8 Quantity)
 {
@@ -104,6 +106,7 @@ void URepositoryComponent::SubtractItemAtIndex(const FString Category, const uin
 
 	// The array itself
 	Repository[Category].SubtractItem(Index, Quantity);
+	OnRepositoryChanged.Broadcast();
 }
 
 void URepositoryComponent::RemoveItem(const FString Category, const uint8 Index)

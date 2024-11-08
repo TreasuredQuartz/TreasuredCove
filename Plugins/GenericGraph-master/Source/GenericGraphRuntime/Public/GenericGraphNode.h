@@ -45,6 +45,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "GenericGraphNode")
 	TMap<UGenericGraphNode*, UGenericGraphEdge*> Edges;
 
+	virtual TArray<TSharedPtr<FSlateBrush>>& GetItems() { return Items; };
+
 	UFUNCTION(BlueprintCallable, Category = "GenericGraphNode")
 	virtual UGenericGraphEdge* GetEdge(UGenericGraphNode* ChildNode);
 

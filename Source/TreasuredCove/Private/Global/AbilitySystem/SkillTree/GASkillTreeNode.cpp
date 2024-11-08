@@ -45,6 +45,13 @@ void UGASkillTreeNode::InitializeItems()
 	}
 }
 
+TArray<TSharedPtr<FSlateBrush>>& UGASkillTreeNode::GetItems()
+{
+	InitializeItems();
+
+	return Items;
+}
+
 #if WITH_EDITOR
 void UGASkillTreeNode::PostEditChangeChainProperty(struct FPropertyChangedChainEvent& e)
 {

@@ -9,6 +9,8 @@
 class UMapMakerAsset;
 class UMapMakerAssetDatabase;
 
+DECLARE_DELEGATE_OneParam(FOnAssetClicked, UMapMakerAsset*)
+
 /**
  * 
  */
@@ -18,7 +20,9 @@ public:
 	SLATE_BEGIN_ARGS(SAssetSelector_MapMaker) 
 		: _AssetDatabase()
 		{}
+		SLATE_ARGUMENT(UEdGraph*, GraphToEdit)
 		SLATE_ARGUMENT(UMapMakerAssetDatabase*, AssetDatabase)
+		SLATE_EVENT(FOnAssetClicked, OnAssetClicked)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
@@ -29,8 +33,12 @@ public:
 	/* The list of strings */
 	// TArray<TSharedPtr<FString>> Items;
 
-	void OnItemClicked(UMapMakerAsset* ClickedItem);
+	void OnItemClicked(UMapMakerAsset* ClickedAsset);
 
 	/* The actual UI list */
 	TSharedPtr<STileView<UMapMakerAsset*>> TileView;
+
+private:
+	class UEdGraph_MapMaker* EditingGraph;
+	FOnAssetClicked OnAssetClicked;
 };

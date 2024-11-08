@@ -51,6 +51,8 @@ public:
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
 
+	void UpdateAppearence();
+
 	//~ SWidget
 	FReply OnMouseButtonDown_NorthSouth(const FGeometry& SenderGeometry, const FPointerEvent& MouseEvent);
 	FReply OnMouseButtonDown_EastWest(const FGeometry& SenderGeometry, const FPointerEvent& MouseEvent);
@@ -74,11 +76,15 @@ private:
 	/** True if this button is currently in a pressed state */
 	uint8 bIsPressed : 1;
 private:
+	/** Content to be held inside the box */
+	TSharedPtr<SWidget> ResizeContent;
+
 	/** The location in screenspace the button was pressed */
 	FVector2D PressedScreenSpacePosition;
 
 	FVector2D Size;
 	FVector2D Position;
+	FVector2D PrevMouseLocation;
 
 	EMouseCursor::Type ResizeType;
 };

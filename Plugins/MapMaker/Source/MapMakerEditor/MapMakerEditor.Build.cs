@@ -32,7 +32,8 @@ public class MapMakerEditor : ModuleRules
                 "Engine",
                 "UnrealEd",
 				// ... add other public dependencies that you statically link with here ...
-			}
+					"Projects",
+            }
 			);
 			
 		

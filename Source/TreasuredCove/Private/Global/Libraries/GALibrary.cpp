@@ -173,6 +173,22 @@ void UGALibrary::GetEditorViewLocRot(FVector& OutLocation, FRotator& OutRotation
 	}
 }
 
+void UGALibrary::ApplyDynamicGameplayEffect(UAbilitySystemComponent* Source, TSubclassOf<UGameplayEffect> EffectClass, FName EffectName, FGameplayAttribute Attribute, EGameplayModOp::Type ModifierType, float ModifierValue)
+{
+	// Create a dynamic Gameplay Effect
+	UGameplayEffect* GE = NewObject<UGameplayEffect>(GetTransientPackage(), EffectClass, EffectName);
+
+	int32 Idx = GE->Modifiers.Num();
+	GE->Modifiers.SetNum(Idx + 1);
+
+	FGameplayModifierInfo& InfoXP = GE->Modifiers[Idx];
+	InfoXP.ModifierMagnitude = FScalableFloat(ModifierValue);
+	InfoXP.ModifierOp = ModifierType;
+	InfoXP.Attribute = Attribute;
+
+	Source->ApplyGameplayEffectToSelf(GE, 1.0f, Source->MakeEffectContext());
+}
+
 void UGALibrary::ApplyGESpecHandleToTargetDataSpecsHandle(const FGameplayEffectSpecHandle& GESpecHandle, const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
 	for(TSharedPtr<FGameplayAbilityTargetData> Data : TargetDataHandle.Data)
@@ -545,19 +561,22 @@ int32 UGALibrary::CreateFaceFromTransform(FProceduralMeshSection& MeshSection, c
 	MeshSection.UVs.Reserve(VertNum);
 	MeshSection.Normals.Reserve(VertNum);
 	MeshSection.VertexColors.Reserve(VertNum);
-	// MeshSection.Tangents.Reserve(VertNum);
+	MeshSection.Tangents.Reserve(VertNum);
 	for (auto& VertexData : Faces[InIndex].VerticesData)
 	{
 		// FQuat Angle = FQuat::ToAxisAndAngle(FVector::UpVector, InTransform.GetRotation().GetAngle());
 		FVector NewVert = (VertexData.Position * InVoxelSize * InTransform.GetScale3D()); 
 		FVector RotVert = InTransform.GetRotation().RotateVector(UKismetMathLibrary::InverseTransformLocation(FTransform(FRotator(90, 0, 0), FVector::ZeroVector), NewVert));
 		FVector NewNorm = InTransform.GetRotation().RotateVector(UKismetMathLibrary::InverseTransformLocation(FTransform(FRotator(90, 0, 0), FVector::ZeroVector), VertexData.Normal )).GetSafeNormal();
+		FVector NewNormAxisA;
+		FVector NewNormAxisB;
+		NewNorm.FindBestAxisVectors(NewNormAxisA, NewNormAxisB);
 
 		MeshSection.Vertices.Add(RotVert + (InTransform.GetLocation() * InVoxelSize));
 		MeshSection.UVs.Add(VertexData.UVPosition);
 		MeshSection.Normals.Add(NewNorm);
 		MeshSection.VertexColors.Add(VertexData.Color);
-		// Tangents.Add(VertexData.Tangent);
+		MeshSection.Tangents.Add(NewNormAxisA);
 	}
 
 	// Return Current Triangle Index count + The triangle indices we just added

@@ -32,6 +32,7 @@ public:
 
 	// virtual void Initialize(UGenericGraph* InGraph) override;
 	void InitializeItems();
+	virtual TArray<TSharedPtr<FSlateBrush>>& GetItems() override;
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Abilities")

@@ -8,6 +8,7 @@
 
 class UMapMaker;
 class UMapMakerEdge;
+class UMapMakerAsset;
 
 /**
  * 
@@ -24,8 +25,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "MapMakerNode")
 	FVector2D Size;
 
+	UPROPERTY(EditAnywhere, Category = "MapMakerNode")
+	float GridCellSize = 64;
+
 	UPROPERTY(VisibleDefaultsOnly, Category = "MapMakerNode")
 	UMapMaker* Graph;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "MapMakerNode")
+	TArray<UMapMakerAsset*> Assets;
 
 	UPROPERTY(BlueprintReadOnly, Category = "MapMakerNode")
 	TArray<UMapMakerNode*> ParentNodes;
@@ -77,6 +84,13 @@ public:
 	virtual void SetNodeTitle(const FText& NewTitle);
 
 	virtual void SetNodeSize(const FVector2D& Delta);
+
+	bool CanAddAsset(UMapMakerAsset* NewAsset) const;
+
+	TArray<UMapMakerAsset*> GetAssets() const;
+
+	virtual void AddAsset(UMapMakerAsset* NewAsset);
+	virtual void ClearAssets();
 
 	virtual bool CanCreateConnection(UMapMakerNode* Other, FText& ErrorMessage);
 

@@ -8,6 +8,7 @@
 #include "GALibrary.h"
 #include "GameplayTileData.h"
 
+#include "RealtimeMeshDataTypes.h"
 #include "RealtimeMeshComponent.h"
 #include "RealtimeMeshSimple.h"
 
@@ -45,12 +46,57 @@ AHexGrid::AHexGrid()
 
 	Scale3D = FVector(0.2, 0.2, 0.1);
 
+	Scene =
+		CreateDefaultSubobject<USceneComponent>(TEXT("Root Component"));
+	SetRootComponent(Scene);
+
 	MeshCollisionInstances = 
 		CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("Collision Meshes"));
 	MeshCollisionInstances->SetupAttachment(RootComponent);
+
+	Mesh =
+		CreateDefaultSubobject<URealtimeMeshComponent>(TEXT("RealtimeMeshComponent"));
+	Mesh->SetMobility(EComponentMobility::Movable);
+	Mesh->SetGenerateOverlapEvents(false);
+	Mesh->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
+	Mesh->SetupAttachment(RootComponent);
+}
+
+AHexGrid::~AHexGrid()
+{
+}
+
+void AHexGrid::PostLoad()
+{
+	Super::PostLoad();
+}
+
+void AHexGrid::PostActorCreated()
+{
+	Super::PostActorCreated();
+}
+
+void AHexGrid::Destroyed()
+{
+	Super::Destroyed();
+}
+
+void AHexGrid::PreRegisterAllComponents()
+{
+	Super::PreRegisterAllComponents();
+}
+
+void AHexGrid::PostUnregisterAllComponents()
+{
+	Super::PostUnregisterAllComponents();
 }
 
 #if WITH_EDITOR
+void AHexGrid::PostEditUndo()
+{
+	Super::PostEditUndo();
+}
+
 void AHexGrid::OnConstruction(const FTransform& Transform)
 {
 	Initialize(RandomSeed, VoxelSize, ChunkLineElements, ChunkIndex);
@@ -84,6 +130,34 @@ void AHexGrid::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 }
 #endif
 
+void AHexGrid::ExecuteRebuildGeneratedMeshIfPending()
+{
+	if (!bGeneratedMeshRebuildPending ||
+		!IsValid(Mesh))
+	{
+		return;
+	}
+
+	if (bResetOnRebuild)
+	{
+		Mesh->SetRealtimeMesh(nullptr);
+	}
+
+	FEditorScriptExecutionGuard Guard;
+
+	OnGenerateMesh();
+
+	bGeneratedMeshRebuildPending = false;
+}
+
+void AHexGrid::Tick(float DeltaTime)
+{
+	if (IsValid(this) && IsValid(GetLevel()))
+	{
+		ExecuteRebuildGeneratedMeshIfPending();
+	}
+}
+
 void AHexGrid::BeginPlay()
 {
 	Initialize(RandomSeed, VoxelSize, ChunkLineElements, ChunkIndex);
@@ -100,20 +174,13 @@ void AHexGrid::Initialize(int32 inRandomSeed, int32 inVoxelSize, int32 inChunkLi
 
 	ChunkLineElementsP3 = ChunkLineElementsP2 * ChunkLineElements;
 
-	if (!Mesh)
-	{
-		FString String = "NewVoxel_" + FString::FromInt(ChunkIndex.X) + "_" + FString::FromInt(ChunkIndex.Y);
-		FName Name = FName(*String);
-		Mesh = NewObject<URealtimeMeshComponent>(this, Name);
-		Mesh->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
-		Mesh->RegisterComponent();
-		// PMesh->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
-	}
-
 	// GenerateChunk();
 	GenerateHexGrid();
 	// GenerateHexSphere();
-	ConstructMesh();
+	OnGenerateMesh();
+	// ConstructMesh();
+
+	// bGeneratedMeshRebuildPending = true;
 }
 
 void AHexGrid::InitializeNoise()
@@ -251,13 +318,20 @@ void AHexGrid::GenerateHexSphere()
 	AfterChunkGenerated();
 }
 
+const double GetInnerRadius(const double outerRadius) {
+	return outerRadius * 0.866025404;
+}
+
 void AHexGrid::GenerateHexGrid()
 {
 	// We need three vectors that are perpendicular to the normal Vector.
 
 	BeforeChunkGenerated();
 
-	int32 x, y, z, i, Total;
+	// Mesh->SetRelativeRotation(NormalVector.ToOrientationQuat());
+
+	int32 x, y, z, i;
+	// double Total;
 	const FVector Position = NormalVector;
 	FVector axisA;
 	FVector axisB;
@@ -267,38 +341,38 @@ void AHexGrid::GenerateHexGrid()
 	NormalVector.FindBestAxisVectors(axisA, axisB);
 
 	// axisA and axisB are 90 degrees apart when each vector should be 30 degrees apart.
-	axisA = axisA.RotateAngleAxis(30.0f, NormalVector);
-	axisC = axisB.RotateAngleAxis(60.0f, NormalVector);
+	axisA = axisA.RotateAngleAxis(60.0f, NormalVector);
+	axisC = axisA.RotateAngleAxis(60.0f, NormalVector);
+	axisB = axisB.ProjectOnToNormal(NormalVector);
 
 	axisA.Normalize();
 	axisB.Normalize();
 	axisC.Normalize();
 
-	i = 0;
-	Total = ChunkLineElements - 1 > 0 ? ChunkLineElements - 1 : 1; // Don't Divide by Zero
-	int32 Half = ChunkLineElements * 0.5;
-	z = 0;
+	/* i = 0;
+	int32 Total = ChunkLineElements - 1 > 0 ? ChunkLineElements - 1 : 1; // Don't Divide by Zero
+	int32 Half = ChunkLineElements;
 	for (z = -Half; z <= Half; ++z)
 	{
+		double LocZ = ((z * 1.0) / (Half * 1.0));
 		for (y = -Half; y <= Half; ++y)
 		{
+			double LocY = ((y * 1.0) / (Half * 1.0));
 			for (x = -Half; x <= Half; ++x)
 			{
 				// z = (-x - y);
-				// if (x + y + z != 0)
-				//	continue;
+				if (x + y + z != 0) continue;
 
-				FVector Percent = FVector(x, y, z) / Total;
-				double LocX = ((Percent.X - 0.5f) * 2);
-				double LocY = ((Percent.Y - 0.5f) * 2);
-				double LocZ = ((Percent.Z - 0.5f) * 2);
+				double LocX = ((x * 1.0) / (Half * 1.0));
+				FVector Offset = 
+					(LocX * axisA) +
+					(LocY * axisB) +
+					(LocZ * axisC) * 10 * VoxelSize;
 
-				FVector pointOnUnitCube = (Position * 2.1 +
-					((x * axisA) +
-					(y * axisB) +
-					(z * axisC)) * 0.2);
+				FVector pointOnUnitCube =
+					(Position * 2 + Offset);
 
-				FVector Pos = pointOnUnitCube;
+				FVector Pos = pointOnUnitCube.GetSafeNormal() * 2;
 
 				if (!TileLocations.Contains(Pos))
 				{
@@ -312,7 +386,83 @@ void AHexGrid::GenerateHexGrid()
 				}
 			}
 		}
-	}
+	} // */
+
+	i = 0;
+	int32 N = ChunkLineElements;
+	for (x = -N; x <= N; x++) {
+		int32 y1 = FMath::Max(-N, -x - N);
+		int32 y2 = FMath::Min(N, -x + N);
+		for (y = y1; y <= y2; y++) {
+			z = -x - y;
+
+			auto CorrectSpacing = [](int32 value, int32 max) {
+				double mod = 1.7;
+				return FMath::Lerp(value * 1.0, value > 0 ? (value * mod - FMath::Log2(value + 1.0)) : (value * mod + FMath::Log2(-value + 1.0)), FMath::Abs(value / (max * 1.0)));
+			};
+
+			double LocX = CorrectSpacing(x, N);
+			double LocY = CorrectSpacing(y, N);
+			double LocZ = CorrectSpacing(z, N);
+			FVector Offset =
+				// FVector(col * axis * 0.1 + axis * row * 0.1);
+				// FVector(x * 0.05, y * 0.05, z * 0.05);
+				// FVector(x, y, z).ProjectOnToNormal(NormalVector.GetSafeNormal());
+				// FVector::PointPlaneProject(FVector(x, y, z), FPlane(axisA, axisB, axisC));
+				// FVector::PointPlaneProject(FVector(x * 1.0, y * 1.0, z * 1.0), FPlane(NormalVector));
+				(LocX * axisA) +
+				(LocY * axisB) +
+				(LocZ * axisC); // */
+
+			FVector pointCube =
+				(Position * N * 1.4 + Offset);
+
+			FVector pointSphere =
+				pointCube.GetSafeNormal() * N * 2;
+
+			FVector Pos = pointSphere;
+
+			if (!TileLocations.Contains(Pos))
+			{
+				Tiles.Add(AddTile(Pos, i));
+				TileLocations.Add(Pos);
+				++i;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Tried to add: %s \n But it was already added."), *Pos.ToString());
+			}
+		}
+	} // */
+
+	/* i = 0;
+	z = 0;
+	for (x = 0; x < ChunkLineElements; x++)
+	{
+		for (y = 0; y < ChunkLineElements; y++)
+		{
+			FVector position;
+
+			double size = VoxelSize;
+			position.X = x * 10.0; // ((double)x + ((double)y * 0.5) - ((double)y / 2)) * (GetInnerRadius(size) * 2.0);
+			position.Y = y * 10.0; // (double)y * (size * 1.5);
+			position.Z = 0.0;
+
+			FVector Pos = position;
+
+			if (!TileLocations.Contains(Pos))
+			{
+				Tiles.Add(AddTile(Pos, i));
+				TileLocations.Add(Pos);
+				++i;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Tried to add: %s \n But it was already added."), *Pos.ToString());
+			}
+		}
+	} // */
+	
 
 	AfterChunkGenerated();
 }
@@ -337,7 +487,7 @@ void AHexGrid::ChunkGenerating(const FIntVector& CurrentLocation, int32 Index)
 	/*FVector pointOnUnitCube = (Position +
 		((LocX * Scale3D.X * axisA) +
 			(LocY * Scale3D.Y * axisB)) * VoxelSize);
-			*/
+			
 	FVector axisA = FVector(ChunkIndex.Y, ChunkIndex.Z, ChunkIndex.X);
 	FVector axisB = FVector::CrossProduct(FVector(ChunkIndex), axisA);
 	FVector axisC = FVector();
@@ -355,8 +505,20 @@ void AHexGrid::AfterChunkGenerated()
 
 }
 
+void AHexGrid::OnGenerateMesh()
+{
+	if (bResetOnRebuild)
+	{
+		Mesh->SetRealtimeMesh(nullptr);
+	}
+
+	ConstructMesh();
+}
+
 void AHexGrid::ConstructMesh()
 {
+	RTMesh = Mesh->InitializeRealtimeMesh<URealtimeMeshSimple>();
+
 	TArray<FProceduralMeshSection> MeshSections;
 	MeshSections.SetNum(6);
 
@@ -371,8 +533,8 @@ void AHexGrid::ConstructMesh()
 		uint8 TileType = uint8(Tile->GetTileType());
 
 		// Out of bounds check...
-		if (TileType < 1 || TileType > 6 || Tile->IsTileHiddenInGame())
-			continue;
+		// if (TileType < 1 || TileType > 6 || Tile->IsTileHiddenInGame())
+		//	continue;
 			
 		{
 			--TileType;
@@ -383,41 +545,13 @@ void AHexGrid::ConstructMesh()
 			int Triangle_Num = 0;
 			for (int i = 0; i < 6; ++i)
 			{
-				bool Flag = false;
+				bool bDrawFace = true;
 
-				if (i > 1)
+				// Draws the current side's face
+				if (bDrawFace)
 				{
-					Flag = true;
-					/*for (int d = 0; d < 6; ++d)
-					{
-						int y = Tile->GetTileLocation().Y;
-						const int parity = (y & 1);
-						const int NewIndex = Index + HexMask[parity][d].X +
-							(HexMask[parity][d].Y * ChunkLineElementsExt);
-
-						if (NewIndex >= 0 && NewIndex < Types.Num())
-						{
-							if (Types[NewIndex] == 0)
-							{
-								Flag = true;
-								break;
-							}
-						}
-					}*/
-				}
-				else if (i == 1) Flag = true;
-				/*{
-					const int UpIndex = Index + (CubeVoxelMask[i].Z * ChunkLineElementsP2Ext);
-					if (UpIndex >= 0 && UpIndex < Types.Num())
-					{
-						if (Types[UpIndex] == 0) true;
-					}
-				}*/
-
-				// Draw face
-				if (Flag)
-				{
-					FQuat Quatarian = (FVector::ZeroVector - Tile->GetTileLocation()).ToOrientationQuat();
+					FQuat Quatarian = (-Tile->GetTileLocation().GetSafeNormal()).ToOrientationQuat();
+					// FQuat Quatarian = FVector::DownVector.ToOrientationQuat();
 					Triangle_Num = UGALibrary::CreateFaceFromTransform(TileSection, MeshSectionData, FTransform(Quatarian, Tile->GetTileLocation(), Scale3D), i, Triangle_Num, VoxelSize);
 				}
 			}
@@ -428,6 +562,8 @@ void AHexGrid::ConstructMesh()
 
 			// Tile->SetTileMeshSection(TileSection);
 			MeshSections[TileType].Append(TileSection); // TileIndex renamed to TileType
+
+			UE_LOG(LogTemp, Warning, TEXT("--[%d] Section has [%d] vertices..."), TileType, MeshSections[TileType].Vertices.Num());
 		}
 	}
 
@@ -439,14 +575,26 @@ void AHexGrid::ConstructMesh()
 		}
 	}*/
 
-	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
+	// URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
 
 	{ // Clear Section
-		FRealtimeMeshSectionKey SectionKey;
+		const FRealtimeMeshSectionGroupKey SectionGroupKey = FRealtimeMeshSectionGroupKey::Create(0, FName("HexGrid"));
 		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
-		RTMesh->RemoveSection(SectionKey, CompletionCallback);
+		RTMesh->RemoveSectionGroup(SectionGroupKey, CompletionCallback);
 	}
 	// Mesh->ClearSection(0, 0);
+	// Setup the two material slots
+	if (!Materials.IsEmpty()) 
+	{
+		for (int i = 0; i < Materials.Num(); ++i)
+		{
+			FName MaterialName = "Material_" + i;
+			RTMesh->SetupMaterialSlot(i, MaterialName, Materials[i]);
+			Mesh->SetMaterial(i, Materials[i]);
+		}
+		// Mesh->SetMaterial(i, Materials[i]);
+		// RTMesh->SetupMaterialSlot(0, FName(), Materials[0]);
+	}
 
 	// For each MeshSection, Create a new mesh section
 	for (int i = 0; i < MeshSections.Num(); ++i)
@@ -454,17 +602,61 @@ void AHexGrid::ConstructMesh()
 		if (MeshSections[i].Vertices.Num() > 0)
 		{
 			{ // Create Section
-				FRealtimeMeshSectionKey SectionKey;
-				FRealtimeMeshSectionConfig Config;
-				FRealtimeMeshStreamRange StreamRange;
-				bool bShouldCreateCollision = false;
-				FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+				FRealtimeMeshStreamSet StreamSet;
+				
+				// FRealtimeMeshStream PositionStream  = FRealtimeMeshStream::Create<FVector>(FRealtimeMeshStreams::Position);
+				// FRealtimeMeshStream TangentsStream  = FRealtimeMeshStream::Create<FRealtimeMeshTangentsNormalPrecision>(FRealtimeMeshStreams::Tangents);
+				// FRealtimeMeshStream TexCoordsStream = FRealtimeMeshStream::Create<FVector2D>(FRealtimeMeshStreams::TexCoords);
+				// FRealtimeMeshStream ColorsStream    = FRealtimeMeshStream::Create<FLinearColor>(FRealtimeMeshStreams::Color);
+				// FRealtimeMeshStream TrianglesStream = FRealtimeMeshStream::Create<int32>(FRealtimeMeshStreams::Triangles);
+
+				TRealtimeMeshBuilderLocal<uint16, FPackedNormal, FVector2DHalf, 1> Builder(StreamSet);
+
+				// We can decide what vertex elements are enabled.
+				Builder.EnableTangents();
+				Builder.EnableTexCoords();
+				Builder.EnableColors();
+				Builder.EnablePolyGroups();
+
+				Builder.ReserveNumVertices(MeshSections[i].Vertices.Num());
+				for (int32 j = 0; j < MeshSections[i].Vertices.Num(); j++) 
+				{
+					// We can add a vertex, and optionally set things like the tangents, color, texcoords.
+					// We can then get the new index from it to use later.
+					auto V = Builder.AddVertex(FVector3f(MeshSections[i].Vertices[j]));
+					V.SetNormalAndTangent(FVector3f(MeshSections[i].Normals[j]), FVector3f(MeshSections[i].Tangents[j]));
+					V.SetColor(MeshSections[i].VertexColors[j]);
+					V.SetTexCoord(FVector2f(MeshSections[i].UVs[j]));
+				}
+
+				for (int32 j = 0; j < MeshSections[i].Triangles.Num(); j+=3)
+				{
+					// Now we can add a triangle giving it the indices of the vertices for the 3 corners, as well as optionally supplying the polygroup
+					Builder.AddTriangle(MeshSections[i].Triangles[j], MeshSections[i].Triangles[j+1], MeshSections[i].Triangles[j+2], i);
+				}
+
+				// Now create the group key. This is a unique identifier for the section group
+				// A section group contains one or more sections that all share the underlying buffers
+				// these sections can overlap the used vertex/index ranges depending on use case.
+				const FRealtimeMeshSectionGroupKey SectionGroupKey = FRealtimeMeshSectionGroupKey::Create(0, "HexGrid_" + i);
+
+				// Now create the section key, this is a unique identifier for a section within a group
+				// The section contains the configuration for the section, like the material slot,
+				// and the draw type, as well as the range of the index/vertex buffers to use to render.
+				// Here we're using the version to create the key based on the PolyGroup index
+				const FRealtimeMeshSectionKey PolyGroup0SectionKey = FRealtimeMeshSectionKey::CreateForPolyGroup(SectionGroupKey, i);
+
+				// This will create a new section group named "TestBox" at LOD 0, with the created stream data above. This will create the sections associated with the polygroup
+				RTMesh->CreateSectionGroup(SectionGroupKey, StreamSet, FRealtimeMeshSectionGroupConfig(ERealtimeMeshSectionDrawType::Static));
+
+				// Update the configuration of both the polygroup sections.
+				RTMesh->UpdateSectionConfig(PolyGroup0SectionKey, FRealtimeMeshSectionConfig(i));
 
 				// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
-				RTMesh->CreateSection(SectionKey, Config, StreamRange, bShouldCreateCollision, CompletionCallback);
 			}
+
 			// Mesh->CreateSectionFromComponents(0, i, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Infrequent, false);
-			if (Materials.IsValidIndex(i)) Mesh->SetMaterial(i, Materials[i]);
+			
 		}
 		else
 		{
@@ -493,24 +685,15 @@ void AHexGrid::UpdateMeshSection(int32 MeshSectionIndex)
 		MeshSections[MeshSectionIndex].Append(TileSection);
 	}
 
-	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
+	// URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
 
 	{ // Clear Section
-		FRealtimeMeshSectionKey SectionKey;
-		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
-		RTMesh->RemoveSection(SectionKey, CompletionCallback);
+
 	}
 	// Mesh->ClearSection(0, MeshSectionIndex);
 	
-	{ // Create Section
-		FRealtimeMeshSectionKey SectionKey;
-		FRealtimeMeshSectionConfig Config;
-		FRealtimeMeshStreamRange StreamRange;
-		bool bShouldCreateCollision = false;
-		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
-
+	{// Create Section
 		// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
-		RTMesh->CreateSection(SectionKey, Config, StreamRange, bShouldCreateCollision, CompletionCallback);
 	}
 	// Mesh->CreateSectionFromComponents(0, MeshSectionIndex, MeshSectionIndex, MeshSections[MeshSectionIndex].Vertices, MeshSections[MeshSectionIndex].Triangles, MeshSections[MeshSectionIndex].Normals, MeshSections[MeshSectionIndex].UVs, MeshSections[MeshSectionIndex].VertexColors, MeshSections[MeshSectionIndex].Tangents); 
 	
@@ -522,7 +705,7 @@ void AHexGrid::UpdateMesh()
 	if (Tiles.IsEmpty())
 		UE_LOG(LogTemp, Warning, TEXT("No Tiles"));
 
-	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
+	// URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
 	TArray<FProceduralMeshSection> MeshSections;
 	MeshSections.SetNum(6);
 
@@ -543,11 +726,7 @@ void AHexGrid::UpdateMesh()
 	{
 		if (MeshSections[i].Vertices.Num() > 0)
 		{
-			FRealtimeMeshSectionGroupKey SectionGroupKey;
-			URealtimeMeshStreamSet* MeshData = nullptr;
-			FRealtimeMeshSimpleCompletionCallback CompletionCallback;
 			// Mesh->UpdateSectionFromComponents(0, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents);
-			RTMesh->UpdateSectionGroup(SectionGroupKey, MeshData, CompletionCallback);
 		}
 	}
 }
@@ -558,14 +737,14 @@ UHexTile* AHexGrid::AddTile_Implementation(const FVector& TileLocation, int32 Cu
 	FRotator Quatarian = FRotator(-90, 0, 0) + Direction;
 	// FVector Loc = Quatarian.RotateVector(UKismetMathLibrary::InverseTransformLocation(FTransform(FRotator(90, 0, 0), FVector::ZeroVector), TileLocation * VoxelSize));
 	if (MeshCollisionInstances)
-		MeshCollisionInstances->AddInstance(FTransform(Quatarian,(TileLocation * VoxelSize), Scale3D * FVector(0.3, 0.3, 0.5)));
+		MeshCollisionInstances->AddInstance(FTransform(Quatarian,(TileLocation * VoxelSize), Scale3D * 0.05));
 
 	UHexTile* NewTile = NewObject<UHexTile>();
 	if (NewTile)
 	{
 		NewTile->SetTileType(Types[CurrentTileNum]);
 		NewTile->SetTileLocation(TileLocation);
-		NewTile->SetTileIndex(CurrentTileNum + (ChunkIndex.X * ChunkLineElementsP3));
+		NewTile->SetTileIndex(CurrentTileNum + (ChunkIndex.X * ChunkLineElementsP2));
 		NewTile->SetTileHiddenInGame(false);
 		NewTile->SetTileColor(FLinearColor::White);
 	}
@@ -578,26 +757,27 @@ TArray<uint8> AHexGrid::CalcTypes_Implementation() const
 	float LocX, LocY, LocZ;
 	TArray<uint8> Value;
 	z = 0;
-	Value.Reserve(ChunkTotalElements);
+	Value.Reserve(ChunkLineElementsP3);
 	for (z = 0; z < ChunkLineElementsExt; ++z)
 	{
-		LocZ = (z + (ChunkIndex.Z * ChunkLineElementsP2));
+		LocZ = (z + (ChunkIndex.Z * ChunkLineElements));
 		for (y = 0; y < ChunkLineElementsExt; ++y)
 		{
 			LocY = (y + (ChunkIndex.Y * ChunkLineElements)); // Chunks are offset by ChunkLineElements. ChunkLineElementsExt contains neighbor chunks.
 			for (x = 0; x < ChunkLineElementsExt; ++x)
 			{
 				LocX = (x + (ChunkIndex.X * ChunkLineElements));
-				float Noise = ((((USimplexNoiseBPLibrary::SimplexNoise3D(LocX, LocY, LocZ) // -1 - 1
-					+ 1)	// 0 - 2
-					* 0.5)	// 0 - 1
-					* 6)	// 0 - 6
-					+ 1);	// 1 - 7
+				// float Noise = 0;
+				float Noise = ((((USimplexNoiseBPLibrary::SimplexNoise3D(LocX, LocY, LocZ, 0.5f) // -1 -> 1
+					+ 1.f)	// 0 - 2
+					* 0.5f)	// 0 - 1
+					* 6.f)	// 0 - 6
+					+ 1.f);	// 1 - 7 */
 
-				Value.Add((uint8)FMath::Clamp(Noise, 1, 7));
+				Value.Add(Noise > 6 ? 6 : (int32)Noise);
 			}
 		}
-	}
+	} // */
 
 	return Value;
 }

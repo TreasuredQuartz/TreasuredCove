@@ -289,6 +289,8 @@ void AGAHUD::EnterPauseStudio()
 
 	if (PauseArea)
 	{
+		// FInputModeGameOnly InputMode;
+		// PC->SetInputMode(InputMode);
 		PauseArea->EnterPauseArea_Client();
 	}
 	else
@@ -302,6 +304,8 @@ void AGAHUD::ExitPauseStudio()
 {
 	if (PauseArea)
 	{
+		// FInputModeUIOnly InputMode;
+		// PC->SetInputMode(InputMode);
 		PauseArea->ExitPauseArea();
 	}
 }

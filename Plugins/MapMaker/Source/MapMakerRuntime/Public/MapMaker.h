@@ -35,6 +35,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "MapMaker")
 	UMapMakerAssetDatabase* AssetDatabase;
 
+	UPROPERTY(EditDefaultsOnly, Category = "MapMaker")
+	UMapMakerAsset* CurrentAsset;
+
 	UPROPERTY(BlueprintReadOnly, Category = "MapMaker")
 	TArray<UMapMakerNode*> RootNodes;
 

@@ -6,6 +6,8 @@
 #include "SGraphNode.h"
 
 class UEdNode_MapMakerNode;
+class UMapMakerAsset;
+class SMapMakerAsset;
 
 /**
  * 
@@ -20,11 +22,17 @@ public:
 
 	virtual void UpdateGraphNode() override;
 	virtual void CreatePinWidgets() override;
+	void CreateAssetWidgets();
 	virtual void AddPin(const TSharedRef<SGraphPin>& PinToAdd) override;
+	void AddAsset(const TSharedRef<SMapMakerAsset>& AssetToAdd);
 	virtual bool IsNameReadOnly() const override;
 
 	void OnNameTextCommited(const FText& InText, ETextCommit::Type CommitInfo);
 	void OnResized(const FVector2D& Delta);
+	FReply OnClearButtonClicked();
+	FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent);
+	FReply OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
 	virtual FSlateColor GetBorderBackgroundColor() const;
 	virtual FSlateColor GetBackgroundColor() const;
@@ -32,11 +40,19 @@ public:
 	virtual EVisibility GetDragOverMarkerVisibility() const;
 
 	virtual const FSlateBrush* GetNameIcon() const;
+	virtual const FButtonStyle* GetClearButtonStyle() const;
 	virtual FVector2D GetSize() const;
 	virtual const FSlateBrush* GetRoomBrush() const;
+	UMapMakerAsset* GetCurrentAsset() const;
 
 
 protected:
 	/** Image for center of node to represent a room. */
 	TSharedPtr<SImage> Image;
+
+	/** Collection of images that represent internal assets. */
+	TSharedPtr<class SCanvas> AssetCanvas;
+
+	/**  */
+	bool bBrushActivated = false;
 };

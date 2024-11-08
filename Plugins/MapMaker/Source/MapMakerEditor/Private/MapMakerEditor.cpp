@@ -3,6 +3,7 @@
 #include "MapMakerEditor.h"
 #include "AssetTypeActions_MapMaker.h"
 #include "MapMakerNodeFactory.h"
+#include "MapMakerStyle.h"
 
 DEFINE_LOG_CATEGORY(MapMakerEditor)
 
@@ -11,6 +12,7 @@ DEFINE_LOG_CATEGORY(MapMakerEditor)
 void FMapMakerEditorModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+	FMapMakerStyle::Initialize();
 
 	GraphPanelNodeFactory_MapMaker = MakeShareable(new FGraphPanelNodeFactory_MapMaker());
 	FEdGraphUtilities::RegisterVisualNodeFactory(GraphPanelNodeFactory_MapMaker);
@@ -26,6 +28,7 @@ void FMapMakerEditorModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
+	FMapMakerStyle::Shutdown();
 	
 	// Unregister all the asset types that we registered
 	if (FModuleManager::Get().IsModuleLoaded("AssetTools"))

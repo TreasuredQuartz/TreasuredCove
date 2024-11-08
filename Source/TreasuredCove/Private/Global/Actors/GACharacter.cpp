@@ -370,6 +370,9 @@ void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 		PEI->BindAction(InputActions->InputSwitch, ETriggerEvent::Triggered, this, &AGACharacter::Switch_Input);
 	}
 
+	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AGACharacter::BeginPause);
+	// PlayerInputComponent->BindAction("Pause", IE_Released, this, &AGACharacter::EndPause);
+
 	/*PlayerInputComponent->BindAction("QuickSelect", IE_Pressed, this, &AGACharacter::BeginQuickSelect);
 	PlayerInputComponent->BindAction("QuickSelect", IE_Released, this, &AGACharacter::EndQuickSelect);
 
@@ -2855,17 +2858,17 @@ void AGACharacter::EquipItem(AGAActor* Item)
 				FGAItemInfo Info = Weapon->GetItemInfo();
 				PC->OnEquipItem_Client(Item, Info);
 			}
-
 		}
 
 		FAttachmentTransformRules ItemAttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false);
 		Item->AttachToComponent(GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(DominantHand) ? DominantHand : FName());
 
+		Item->OnEquipped();
+		Item->SetOwner(this);
+
 		FString SlotName = FString("HeldItem");
 		Equipment->AddItem(Item, SlotName);
 
-		Item->SetOwner(this);
-		Item->OnEquipped();
 		if (Item->InputAbilityActions && PC)
 		{
 			// Get the EnhancedInputComponent

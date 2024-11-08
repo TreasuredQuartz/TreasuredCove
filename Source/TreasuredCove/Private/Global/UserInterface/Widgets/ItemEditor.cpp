@@ -12,9 +12,8 @@ void UItemEditor::OnMenuOpened_Implementation()
 
 }
 
-void UItemEditor::OnAddedToCharacter(bool bInIsHeldItem)
+void UItemEditor::OnAddedToCharacter()
 {
-	this->bIsHeldItem = bInIsHeldItem;
 	APawn* Pawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
 	if (Pawn) 
@@ -23,7 +22,7 @@ void UItemEditor::OnAddedToCharacter(bool bInIsHeldItem)
 		if (Pawn->GetClass()->ImplementsInterface(URepositoryInterface::StaticClass()))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Player pawn implements interface!!!"));
-			OwningCharacter = IRepositoryInterface::Execute_GetRepositoryComponent(Pawn);
+			OwningCharacter = Pawn;
 		} else UE_LOG(LogTemp, Warning, TEXT("Player Pawn does not implement interface..."));
 	} else UE_LOG(LogTemp, Warning, TEXT("Player Pawn is nullptr..."));
 
@@ -31,37 +30,10 @@ void UItemEditor::OnAddedToCharacter(bool bInIsHeldItem)
 	if (Character)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AGACharacter is valid!!!"));
-		AGAActor* Item = bInIsHeldItem ? Character->GetHeldItem() : Character->GetStowedItem();
+		OwningItem = bIsHeldItem ? Character->GetStowedItem() : Character->GetHeldItem();
+		if (Character->GetStowedItem()) UE_LOG(LogTemp, Warning, TEXT("StowedItem is valid!"));
+		if (Character->GetHeldItem()) UE_LOG(LogTemp, Warning, TEXT("HeldItem is valid!"));
+		if (!OwningItem) UE_LOG(LogTemp, Warning, TEXT("Owning Item is nullptr..."));
 
-		if (Item)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Item is valid!!!"));
-			if (Item->GetClass()->ImplementsInterface(URepositoryInterface::StaticClass())) 
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Item implements interface!!!"));
-				OwningItem = IRepositoryInterface::Execute_GetRepositoryComponent(Item);
-				if (OwningItem)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Owning Item successfully set to the repository!!!"));
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Owning item is still nullptr..."));
-
-					IRepositoryInterface* ItemInterface = Cast<IRepositoryInterface>(Item);
-					if (ItemInterface)
-					{
-						UE_LOG(LogTemp, Warning, TEXT("Owning Item successfully cast to interface!"));
-
-						OwningItem = ItemInterface->GetRepositoryComponent();
-
-						if (OwningItem)
-						{
-							UE_LOG(LogTemp, Warning, TEXT("Owning Item is finally valid!!!"));
-						} else UE_LOG(LogTemp, Warning, TEXT("Item is STILL nullptr..."))
-					} else UE_LOG(LogTemp, Warning, TEXT("Item failed cast to interface..."))
-				}
-			} else UE_LOG(LogTemp, Warning, TEXT("Item does not implement interface.."));
-		} else UE_LOG(LogTemp, Warning, TEXT("Item is nullptr..."));
 	} else UE_LOG(LogTemp, Warning, TEXT("AGACharacter is nullptr..."));
 }

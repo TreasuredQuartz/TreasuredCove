@@ -57,6 +57,9 @@ public:
 	static void GetEditorViewLocRot(FVector& OutLocation, FRotator& OutRotation);
 
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	static void ApplyDynamicGameplayEffect(UAbilitySystemComponent* Source, TSubclassOf<UGameplayEffect> EffectClass, FName EffectName, FGameplayAttribute Attribute, EGameplayModOp::Type ModifierType, float ModifierValue);
+
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	static void ApplyGESpecHandleToTargetDataSpecsHandle(const FGameplayEffectSpecHandle& GESpecHandle, const FGameplayAbilityTargetDataHandle& TargetDataHandle);
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes")

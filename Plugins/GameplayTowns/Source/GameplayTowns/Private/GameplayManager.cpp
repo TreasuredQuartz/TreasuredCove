@@ -53,7 +53,6 @@ void AGameplayManager::OnConstruction_DoOnce()
 
 		if (bIsActive)
 		{
-			RemoveChunk();
 			AddChunk();
 		}
 	}
@@ -87,13 +86,14 @@ void AGameplayManager::PostEditChangeProperty(FPropertyChangedEvent& PropertyCha
 		{
 			ClearChunks();
 		}
+
+		if (bIsActive)
+		{
+			AddChunk();
+		}
 	}
 
-	if (bIsActive)
-	{
-		RemoveChunk();
-		AddChunk();
-	}
+	
 
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
@@ -205,7 +205,8 @@ void AGameplayManager::AddChunk()
 				}
 				else {
 					GEngine->AddOnScreenDebugMessage(3, 10.f, FColor::Red, "Chunk updated!");
-					Chunks[ChunkCoords.IndexOfByKey(LocVector)]->UpdateChunk(LocVector, 1);
+					int32 index = ChunkCoords.IndexOfByKey(LocVector);
+					if (Chunks.IsValidIndex(index) && Chunks[index]) Chunks[index]->UpdateChunk(LocVector, 1);
 				}
 			}
 		}
@@ -225,7 +226,8 @@ void AGameplayManager::RemoveChunk()
 
 		if (!bLocBool)
 		{
-			Chunks[i]->Destroy();
+			if (Chunks.IsValidIndex(i) && Chunks[i])
+				Chunks[i]->Destroy();
 			ChunkCoords.RemoveAtSwap(i);
 			Chunks.RemoveAtSwap(i);
 		}
@@ -234,10 +236,11 @@ void AGameplayManager::RemoveChunk()
 
 void AGameplayManager::ClearChunks()
 {
-	for (int32 i = 0; i < ChunkCoords.Num(); ++i)
+	for (int32 i = 0; i < Chunks.Num(); ++i)
 	{
 		Chunks[i]->Destroy();
-	}
+	} // */
+
 	Chunks.Empty();
 	ChunkCoords.Empty();
 }

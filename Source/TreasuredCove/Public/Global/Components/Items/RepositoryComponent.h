@@ -8,6 +8,8 @@
 #include "Structs/ItemKeyStruct.h"
 #include "RepositoryComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRepositoryChanged);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TREASUREDCOVE_API URepositoryComponent : public UActorComponent
 {
@@ -31,6 +33,9 @@ protected:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items|Repository")
 	TMap<FString, FRepository> Repository;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnRepositoryChanged OnRepositoryChanged;
 
 	// Called to add to item in Repository
 	// - Only pass positive numbers. 

@@ -9,8 +9,6 @@ void SResizeableBox::Construct(const FArguments& InArgs)
 	Size = InArgs._Size.Get();
 	Position = InArgs._Position.Get();
 	OnResizedCallback = InArgs._OnResized;
-	FVector2D EdgeSize = FVector2D(20, 20);
-	FSlateColor EdgeColor = FSlateColor(FLinearColor(0.02, 0.02, 0.02, 0.02));
 
 	// Text overrides button content. If nothing is specified, put an null widget in the button.
 	// Null content makes the button enter a special mode where it will ask to be as big as the image used for its border.
@@ -30,127 +28,137 @@ void SResizeableBox::Construct(const FArguments& InArgs)
 			}
 		}
 	} DetermineContent;
+	ResizeContent = DetermineContent(InArgs);
 
+	UpdateAppearence();
+}
+
+void SResizeableBox::UpdateAppearence()
+{
+	FVector2D EdgeSize = FVector2D(10, 10);
+	FSlateColor EdgeColor = FSlateColor(FLinearColor(1, 1, 1, 0.1));
 	ChildSlot
-	[
-		SNew(SGridPanel)
-
-		+ SGridPanel::Slot(0, 0)
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
 		[
-			SNew(SImage)
-				.Image(new FSlateBrush())
-				.ColorAndOpacity(EdgeColor)
-				.DesiredSizeOverride(EdgeSize)
-				.Cursor(EMouseCursor::ResizeSouthEast)
-				.Visibility(EVisibility::Visible)
-				.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_SouthWest)
-		]
-
-		+ SGridPanel::Slot(1, 0)
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SImage)
-				.Image(new FSlateBrush())
-				.ColorAndOpacity(EdgeColor)
-				.DesiredSizeOverride(EdgeSize)
-				.Cursor(EMouseCursor::ResizeUpDown)
-				.Visibility(EVisibility::Visible)
-				.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_NorthSouth)
-		]
-
-		+ SGridPanel::Slot(2, 0)
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SImage)
-				.Image(new FSlateBrush())
-				.ColorAndOpacity(EdgeColor)
-				.DesiredSizeOverride(EdgeSize)
-				.Cursor(EMouseCursor::ResizeSouthWest)
-				.Visibility(EVisibility::Visible)
-				.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_SouthWest)
-		]
-
-		+ SGridPanel::Slot(0, 1)
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SImage)
-				.Image(new FSlateBrush())
-				.ColorAndOpacity(EdgeColor)
-				.DesiredSizeOverride(EdgeSize)
-				.Cursor(EMouseCursor::ResizeLeftRight)
-				.Visibility(EVisibility::Visible)
-				.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_EastWest)
-		]
-
-		+ SGridPanel::Slot(1, 1)
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
-		[
-			SAssignNew(ContentBox, SBox)
-				.WidthOverride(Size.X)
-				.HeightOverride(Size.Y)
+			SNew(SGridPanel)
+				.FillColumn(1, 0)
+				+ SGridPanel::Slot(0, 0)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
 				[
-					DetermineContent(InArgs)
+					SNew(SImage)
+						.Image(new FSlateBrush())
+						.ColorAndOpacity(EdgeColor)
+						.DesiredSizeOverride(EdgeSize)
+						.Cursor(EMouseCursor::ResizeSouthEast)
+						.Visibility(EVisibility::Visible)
+						.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_SouthWest)
 				]
-		]
 
-		+ SGridPanel::Slot(2, 1)
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SImage)
-				.Image(new FSlateBrush())
-				.ColorAndOpacity(EdgeColor)
-				.DesiredSizeOverride(EdgeSize)
-				.Cursor(EMouseCursor::ResizeLeftRight)
-				.Visibility(EVisibility::Visible)
-				.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_EastWest)
-		]
+				+ SGridPanel::Slot(1, 0)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SImage)
+						.Image(new FSlateBrush())
+						.ColorAndOpacity(EdgeColor)
+						.DesiredSizeOverride(EdgeSize)
+						.Cursor(EMouseCursor::ResizeUpDown)
+						.Visibility(EVisibility::Visible)
+						.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_NorthSouth)
+				]
 
-		+ SGridPanel::Slot(0, 2)
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SImage)
-				.Image(new FSlateBrush())
-				.ColorAndOpacity(EdgeColor)
-				.DesiredSizeOverride(EdgeSize)
-				.Cursor(EMouseCursor::ResizeSouthWest)
-				.Visibility(EVisibility::Visible)
-				.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_SouthWest)
-		]
+				+ SGridPanel::Slot(2, 0)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SImage)
+						.Image(new FSlateBrush())
+						.ColorAndOpacity(EdgeColor)
+						.DesiredSizeOverride(EdgeSize)
+						.Cursor(EMouseCursor::ResizeSouthWest)
+						.Visibility(EVisibility::Visible)
+						.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_SouthWest)
+				]
 
-		+ SGridPanel::Slot(1, 2)
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SImage)
-				.Image(new FSlateBrush())
-				.ColorAndOpacity(EdgeColor)
-				.DesiredSizeOverride(EdgeSize)
-				.Cursor(EMouseCursor::ResizeUpDown)
-				.Visibility(EVisibility::Visible)
-				.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_NorthSouth)
-		]
+				+ SGridPanel::Slot(0, 1)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SImage)
+						.Image(new FSlateBrush())
+						.ColorAndOpacity(EdgeColor)
+						.DesiredSizeOverride(EdgeSize)
+						.Cursor(EMouseCursor::ResizeLeftRight)
+						.Visibility(EVisibility::Visible)
+						.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_EastWest)
+				]
 
-		+ SGridPanel::Slot(2, 2)
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			SNew(SImage)
-				.Image(new FSlateBrush())
-				.ColorAndOpacity(EdgeColor)
-				.DesiredSizeOverride(EdgeSize)
-				.Cursor(EMouseCursor::ResizeSouthEast)
-				.Visibility(EVisibility::Visible)
-				.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_SouthWest)
-		]
-	];
+				+ SGridPanel::Slot(1, 1)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					SAssignNew(ContentBox, SBox)
+						.HAlign(HAlign_Fill)
+						.VAlign(VAlign_Fill)
+						.WidthOverride(Size.X)
+						.HeightOverride(Size.Y)
+						[
+							ResizeContent.ToSharedRef()
+						]
+				]
+
+				+ SGridPanel::Slot(2, 1)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SImage)
+						.Image(new FSlateBrush())
+						.ColorAndOpacity(EdgeColor)
+						.DesiredSizeOverride(EdgeSize)
+						.Cursor(EMouseCursor::ResizeLeftRight)
+						.Visibility(EVisibility::Visible)
+						.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_EastWest)
+				]
+
+				+ SGridPanel::Slot(0, 2)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SImage)
+						.Image(new FSlateBrush())
+						.ColorAndOpacity(EdgeColor)
+						.DesiredSizeOverride(EdgeSize)
+						.Cursor(EMouseCursor::ResizeSouthWest)
+						.Visibility(EVisibility::Visible)
+						.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_SouthWest)
+				]
+
+				+ SGridPanel::Slot(1, 2)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SImage)
+						.Image(new FSlateBrush())
+						.ColorAndOpacity(EdgeColor)
+						.DesiredSizeOverride(EdgeSize)
+						.Cursor(EMouseCursor::ResizeUpDown)
+						.Visibility(EVisibility::Visible)
+						.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_NorthSouth)
+				]
+
+				+ SGridPanel::Slot(2, 2)
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SImage)
+						.Image(new FSlateBrush())
+						.ColorAndOpacity(EdgeColor)
+						.DesiredSizeOverride(EdgeSize)
+						.Cursor(EMouseCursor::ResizeSouthEast)
+						.Visibility(EVisibility::Visible)
+						.OnMouseButtonDown(this, &SResizeableBox::OnMouseButtonDown_SouthWest)
+				]
+		];
 }
 
 FReply SResizeableBox::OnMouseButtonDown_NorthSouth(const FGeometry & SenderGeometry, const FPointerEvent & MouseEvent)
@@ -287,6 +295,7 @@ FReply SResizeableBox::OnMouseMove(const FGeometry& MyGeometry, const FPointerEv
 
 		const FVector2D Delta = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
 		Resize(Delta);
+		Reply = FReply::Handled();
 	}
 
 	return Reply;
@@ -313,6 +322,9 @@ void SResizeableBox::Resize(const FVector2D& Delta)
 	if (!OnResizedCallback.IsBound())
 		return;
 
+	// OnResizedCallback.Execute(Delta);
+	// UpdateAppearence();
+
 	switch (ResizeType)
 	{
 	case EMouseCursor::ResizeLeftRight:
@@ -325,6 +337,6 @@ void SResizeableBox::Resize(const FVector2D& Delta)
 	}
 
 	ContentBox.Get()->SetWidthOverride(Delta.X);
-	ContentBox.Get()->SetHeightOverride(Delta.Y);
+	ContentBox.Get()->SetHeightOverride(Delta.Y); // */
 }
 

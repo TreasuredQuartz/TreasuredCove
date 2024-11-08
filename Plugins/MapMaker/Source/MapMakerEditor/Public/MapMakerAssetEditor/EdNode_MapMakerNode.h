@@ -6,7 +6,9 @@
 #include "EdGraph/EdGraphNode.h"
 #include "EdNode_MapMakerNode.generated.h"
 
+class SCanvas;
 class UMapMakerNode;
+class UMapMakerAsset;
 class UEdGraph_MapMaker;
 class SEdNode_MapMakerNode;
 
