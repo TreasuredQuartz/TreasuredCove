@@ -58,3 +58,14 @@ struct TREASUREDCOVE_API FItemKey
 		return *this;
 	}
 };
+
+// Hash function for TMap Compatibility
+#if UE_BUILD_DEBUG
+uint32 GetTypeHash(const FItemKey& Key);
+#else // optimize by inlining in shipping and development builds
+FORCEINLINE uint32 GetTypeHash(const FItemKey& Key)
+{
+	uint32 Hash = FCrc::MemCrc32(&Key, sizeof(FItemKey));
+	return Hash;
+}
+#endif
