@@ -86,7 +86,7 @@ public:
 public:
 	//
 	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "FloatingText")
-	void AddPopup_Client(const UItemPopupData* ItemPopupData, const FVector& WorldLocation);
+	void AddPopup_Client(const AActor* ItemActor, const FVector& WorldLocation);
 
 	// 
 	UFUNCTION()

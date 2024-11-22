@@ -6,7 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "SpatialInventoryComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSpatialInventoryChanged); // Delegate declared in parent
 
 UCLASS(Blueprintable)
 class TREASUREDCOVE_API USpatialInventoryTileItem : public UObject
@@ -60,9 +60,8 @@ public:
 	// Sets default values for this component's properties
 	USpatialInventoryComponent();
 
-	UPROPERTY(BlueprintAssignable, Category = "Inventory")
-	FOnInventoryChanged OnInventorychanged;
-
+	UPROPERTY(BlueprintAssignable, Category = "Items|Inventory")
+	FOnSpatialInventoryChanged OnInventoryChanged;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

@@ -2,6 +2,8 @@
 
 #include "GAWeapon.h"
 #include "GASkillTreeComponent.h"
+#include "RarityComponent.h"
+#include "UIInfoComponent.h"
 #include "GAProjectileMovementComponent.h"
 #include "Global/Components/Characters/FloatingItemInfoComponent.h"
 #include "Global/Actors/Items/ItemData.h"
@@ -24,8 +26,12 @@ AGAWeapon::AGAWeapon()
 
 	ProficiencyTreeComponent =
 		CreateDefaultSubobject<UGASkillTreeComponent>(TEXT("Proficiency Tree"));
+	RarityComponent =
+		CreateDefaultSubobject<URarityComponent>(TEXT("Rarity"));
+	UIInfoComponent =
+		CreateDefaultSubobject<UUIInfoComponent>(TEXT("User Interface Info"));
 
-	//ItemData =
+	// ItemData =
 	//	CreateDefaultSubobject<UItemData>(TEXT("Item Data"));
 
 	RootComponent = Box;

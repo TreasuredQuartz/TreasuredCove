@@ -91,10 +91,7 @@ void UFloatingItemInfoComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 						WeaponPickup = HitWeapon;
 
-						FGAItemInfo PickupInfo = WeaponPickup->GetItemInfo();
-						UItemPopupData* PopupInfo = WeaponPickup->GetItemData();
-
-						AddPopup_Client(PopupInfo, PopupLocation);
+						AddPopup_Client(WeaponPickup, PopupLocation);
 					}
 				}
 			}
@@ -121,7 +118,7 @@ void UFloatingItemInfoComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	}
 }
 
-void UFloatingItemInfoComponent::AddPopup_Client_Implementation(const UItemPopupData* ItemPopupData, const FVector& WorldLocation)
+void UFloatingItemInfoComponent::AddPopup_Client_Implementation(const AActor* ItemActor, const FVector& WorldLocation)
 {
 	// We need the class specified before we can spawn text actors!
 	if (!PopupClass)
@@ -138,7 +135,7 @@ void UFloatingItemInfoComponent::AddPopup_Client_Implementation(const UItemPopup
 	newPopupActor->AttachToActor(GetOwner(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true), FName());
 	UGameplayStatics::FinishSpawningActor(newPopupActor, spawnTransform);
 
-	newPopupActor->Initialize(ItemPopupData);
+	newPopupActor->Initialize(ItemActor);
 	Popup = newPopupActor;
 }
 

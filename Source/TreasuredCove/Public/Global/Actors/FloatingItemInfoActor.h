@@ -32,7 +32,7 @@ public:
 public:
 	//
 	UFUNCTION(BlueprintImplementableEvent, Category = "Floating Bar")
-	void Initialize(const UItemPopupData* ItemPopupData);
+	void Initialize(const AActor* ItemActor);
 
 	//
 	FORCEINLINE bool HasBegunPlay() const { return bHasBegunPlay; };

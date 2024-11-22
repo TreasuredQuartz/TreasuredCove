@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "InventoryComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryChanged);
+
 class AGAActor;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -26,7 +28,7 @@ private:
 	bool bHasInventorySpace;
 	uint8 InventorySize;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items | Inventory", meta=(AllowPrivateAccess="true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items|Inventory", meta=(AllowPrivateAccess="true"))
 	TArray<AGAActor*> Inventory;
 
 	bool InventoryCheck();
@@ -46,4 +48,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	AGAActor* GetItem(uint8 Slot);
 		
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Items|Inventory")
+	FOnInventoryChanged OnInventoryChanged;
 };

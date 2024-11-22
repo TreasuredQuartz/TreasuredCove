@@ -74,12 +74,14 @@ bool UInventoryComponent::AddItem(AGAActor* Item, int32 Slot)
 	if (Slot > INDEX_NONE && Inventory.IsValidIndex(Slot) && Inventory[Slot] == nullptr)
 	{
 		Inventory[Slot] = Item;
+		OnInventoryChanged.Broadcast();
 		return true;
 	}
 
 	if (!InventoryCheck()) return false;
 
 	Inventory[FindEmptySlot()] = Item;
+	OnInventoryChanged.Broadcast();
 	return true;
 }
 
@@ -106,6 +108,8 @@ void UInventoryComponent::MoveItem(uint8 From, uint8 To)
 		Inventory[To] = Inventory[From];
 		Inventory[From] = nullptr;
 	}
+
+	OnInventoryChanged.Broadcast();
 }
 
 // Called to remove the item from the inventory
@@ -113,6 +117,8 @@ void UInventoryComponent::RemoveItem(uint8 Slot)
 {
 	if (Inventory.IsValidIndex(Slot))
 		Inventory[Slot] = nullptr;
+
+	OnInventoryChanged.Broadcast();
 }
 
 // Called to return the item at the entered Slot's location

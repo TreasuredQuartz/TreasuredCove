@@ -141,8 +141,7 @@ void UASHealth::PreAttributeChange(const FGameplayAttribute& Attribute, float& N
 
 bool UASHealth::PreGameplayEffectExecute(FGameplayEffectModCallbackData &Data)
 {
-	if (!Super::PreGameplayEffectExecute(Data))
-		return false;
+	if (!Super::PreGameplayEffectExecute(Data)) return false;
 
 	HealthBeforeAttributeChange = GetHealth();
 

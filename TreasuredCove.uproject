@@ -123,6 +123,10 @@
 		{
 			"Name": "WaveformEditor",
 			"Enabled": true
+		},
+		{
+			"Name": "UTC_LiquidShader",
+			"Enabled": true
 		}
 	]
 }

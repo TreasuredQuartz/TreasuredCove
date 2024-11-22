@@ -23,6 +23,8 @@ class UItemPopupData;
 class UCommandMenu;
 class UGameplayAbilitySet;
 class UGASkillTreeComponent;
+class URarityComponent;
+class UUIInfoComponent;
 
 /** The base class for weapons.
  * 
@@ -42,6 +44,8 @@ protected:
 	FName Name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	UTexture2D* Texture;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
+	FText ItemType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	TSubclassOf<UItemEditor> EditMenuClass;
@@ -62,6 +66,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UGASkillTreeComponent* ProficiencyTreeComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	URarityComponent* RarityComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UUIInfoComponent* UIInfoComponent;
 
 public:
 	// Used by owning character to throw held item
