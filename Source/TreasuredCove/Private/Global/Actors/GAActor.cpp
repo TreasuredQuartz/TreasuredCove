@@ -61,6 +61,8 @@ FTransform AGAActor::GetSupportingHandOffset() const
 void AGAActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	IntializeAbilitySystem();
 }
 
 void AGAActor::PostInitializeComponents()
@@ -205,7 +207,6 @@ void AGAActor::OnDropped_Implementation()
 void AGAActor::OnEquipped_Implementation()
 {
 	bEquipped = true;
-	IntializeAbilitySystem();
 }
 
 void AGAActor::OnUnEquipped_Implementation()

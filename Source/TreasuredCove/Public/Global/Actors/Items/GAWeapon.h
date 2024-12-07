@@ -25,6 +25,7 @@ class UGameplayAbilitySet;
 class UGASkillTreeComponent;
 class URarityComponent;
 class UUIInfoComponent;
+class UEquippableComponent;
 
 /** The base class for weapons.
  * 
@@ -72,6 +73,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UUIInfoComponent* UIInfoComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UEquippableComponent* EquippableComponent;
 
 public:
 	// Used by owning character to throw held item

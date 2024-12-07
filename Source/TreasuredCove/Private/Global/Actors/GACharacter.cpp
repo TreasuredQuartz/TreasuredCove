@@ -33,6 +33,7 @@
 #include "InventoryComponent.h"
 #include "RepositoryComponent.h"
 #include "EquipmentComponent.h"
+#include "EquippableComponent.h"
 #include "PickupMagnetComponent.h"
 #include "CraftingComponent.h"
 #include "FloatingTextComponent.h"
@@ -261,7 +262,7 @@ void AGACharacter::BeginPlay()
 	if (HealthComponent != nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Health Component OnHealthZeroed Regsitered..."));
-		HealthComponent->OnHealthZeroed.AddUniqueDynamic(this, &AGACharacter::Death);
+		HealthComponent->OnAttributeZeroed.AddUniqueDynamic(this, &AGACharacter::Death);
 	}
 	if (WallRunTimelineCurve)
 	{
@@ -1049,7 +1050,7 @@ void AGACharacter::InitializeAttributeSet(UAttributeSet* Set)
 	UASAmmo* AmmoSet = Cast<UASAmmo>(Set);
 	if (AmmoSet)
 	{
-		AmmoSet->OnAmmoModified.AddUniqueDynamic(this, &AGACharacter::OnAmmoModified);
+		// AmmoSet->OnAmmoModified.AddUniqueDynamic(this, &AGACharacter::OnAmmoModified);
 		return;
 	}
 
@@ -2866,8 +2867,13 @@ void AGACharacter::EquipItem(AGAActor* Item)
 		Item->OnEquipped();
 		Item->SetOwner(this);
 
-		FString SlotName = FString("HeldItem");
-		Equipment->AddItem(Item, SlotName);
+		UEquippableComponent* Equippable = Item->GetComponentByClass<UEquippableComponent>();
+		if (Equippable)
+		{
+			FString SlotName = Equippable->GetEquipSlot();
+			Equipment->AddItem(Item, SlotName);
+			Equippable->Equipped();
+		}
 
 		if (Item->InputAbilityActions && PC)
 		{

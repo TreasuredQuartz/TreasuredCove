@@ -3,18 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
-#include "GameplayTagContainer.h"
-#include "OnAttributeModifiedEvent.h"
+#include "Global/Components/AttributeComponent.h"
 #include "HealthComponent.generated.h"
 
-class UAbilitySystemComponent;
 class UASHealth;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthZeroed, const AActor*, Victim, const AActor*, ResponsibleActor);
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TREASUREDCOVE_API UHealthComponent : public UActorComponent
+class TREASUREDCOVE_API UHealthComponent : public UAttributeComponent
 {
 	GENERATED_BODY()
 
@@ -23,61 +18,22 @@ public:
 	UHealthComponent();
 
 protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
 	//
-	virtual void OnUnregister() override;
+	virtual void OnInitialized() override;
 	//
-	void InitializeWithAbilitySystem(UAbilitySystemComponent* InASC);
+	virtual void OnUninitialized() override;
 	//
-	void UninitializeFromAbilitySystem();
+	virtual void OnModified(const FOnAttributeModifiedPayload& Payload) const override;
+	// Abstract function: Returns a UI friendly display name of this component. Not intended as the full list of attributes.
+	virtual FText GetComponentDisplayName() const override;
+	// Abstract function: Returns a UI friendly description of this component.
+	virtual FText GetComponentDescription() const override;
+	// Abstract function: Returns a UI friendly value that represents a summary of the attributes on this component.
+	virtual float GetComponentSummaryValue() const override;
 
-public:	
-	// Called every frame /* Disabled. */
-	// virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-private:
-	// Owner AbilitySystemComponent
-	UAbilitySystemComponent* ASC;
-
-	// Returns if the character has any health
-	bool bIsHealthZeroed = false;
 public:
 	// The health attibutes
 	UPROPERTY(VisibleAnywhere, Category = "Character|Attributes")
 	TObjectPtr<const UASHealth> HealthSet;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character|Attributes|Health|Tags")
-	FGameplayTag FullHealthTag;
-
-public:
-	// Heal Modified Delegate
-	UPROPERTY(BlueprintAssignable)
-	FOnAttributeModifiedEvent_BP OnHealthModified;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnAttributeModifiedEvent_BP OnMaxHealthModified;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnHealthZeroed OnHealthZeroed;
-
-public:
-	//
-	UFUNCTION()
-	void AddFullHealthTag() const;
-
-	UFUNCTION()
-	void RemoveFullHealthTag() const;
-
-	UFUNCTION()
-	void HandleHealthModified(const FOnAttributeModifiedPayload& Payload) const;
-
-	UFUNCTION()
-	void HandleMaxHealthModified(const FOnAttributeModifiedPayload& Payload) const;
-
-	UFUNCTION()
-	void HandleHealthZeroed(const FOnAttributeModifiedPayload& Payload);
-
-	UFUNCTION()
-	bool GetIsHealthZeroed() const { return bIsHealthZeroed; };
 };

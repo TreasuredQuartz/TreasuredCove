@@ -50,8 +50,8 @@ APawn* AZombie_Spawner::SpawnZombie() const
 			Zombie->SpawnDefaultController();
 			if (UHealthComponent* HealthComp = Zombie->GetComponentByClass<UHealthComponent>())
 			{
-				HealthComp->OnHealthModified.AddDynamic(this, &AZombie_Spawner::OnZombieDamaged);
-				HealthComp->OnHealthZeroed.AddDynamic(this, &AZombie_Spawner::OnZombieDied);
+				HealthComp->OnAttributeModified.AddDynamic(this, &AZombie_Spawner::OnZombieDamaged);
+				HealthComp->OnAttributeZeroed.AddDynamic(this, &AZombie_Spawner::OnZombieDied);
 			}
 		}
 	}
@@ -85,8 +85,8 @@ void AZombie_Spawner::OnZombieDied(const AActor* Victim, const AActor* Responsib
 	Manager->SpawnedEnemyRemoved(Victim, ResponsibleActor);
 	if (UHealthComponent* HealthComp = Victim->GetComponentByClass<UHealthComponent>())
 	{
-		HealthComp->OnHealthModified.RemoveAll(this);
-		HealthComp->OnHealthZeroed.RemoveAll(this);
+		HealthComp->OnAttributeModified.RemoveAll(this);
+		HealthComp->OnAttributeZeroed.RemoveAll(this);
 	}
 }
 

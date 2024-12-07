@@ -1,0 +1,29 @@
+{
+	"format_version": "1.20.30",
+	"minecraft:block": {
+		"description": {
+			"identifier": "bloodnbones:ignatius_block",
+			"menu_category": {
+				"category": "construction",
+				"group": "itemGroup.name.ore"
+			}
+		},
+		"components": {
+			"tag:minecraft:metal": {},
+			"minecraft:material_instances": {
+				"*": {
+					"texture": "ignatius_block"
+				}
+			},
+			"minecraft:destructible_by_mining": {
+				"seconds_to_destroy": 3.0
+			},
+			"minecraft:destructible_by_explosion": {
+				"explosion_resistance": 1
+			},
+			"minecraft:geometry": {
+				"identifier": "minecraft:geometry.full_block"
+			}
+		}
+	}
+}

@@ -66,10 +66,6 @@ UASHealth::UASHealth()
 	: bHealthZeroed(false)
 	, MaxHealth(10.f)
 	, Health(10.f)
-	, MaxStamina(10.f)
-	, Stamina(10.f)
-	, MaxMana(10.f)
-	, Mana(10.f)
 	, Defense(0.f)
 	, DefenseMultiplier(1.f)
 {
@@ -85,29 +81,10 @@ void UASHealth::PreAttributeChange(const FGameplayAttribute& Attribute, float& N
 	FProperty* HealthRegenRateProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, HealthRegenRate));
 	FProperty* HealthRegenDelayProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, HealthRegenDelay));
 
-	FProperty* StaminaProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, Stamina));
-	FProperty* ManaProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, Mana));
-	FProperty* MaxStaminaProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, MaxStamina));
-	FProperty* MaxManaProperty = FindFieldChecked<FProperty>(UASHealth::StaticClass(), GET_MEMBER_NAME_CHECKED(UASHealth, MaxMana));
-
 	// Now we need to increment through all property members that could be modified
 	if (Attribute == HealthProperty)
 	{
 		NewValue = FMath::Clamp(NewValue, 0.0f, MaxHealth.GetCurrentValue());
-		// UE_LOG(LogTemp, Warning, TEXT("Health Value:%f"), NewValue);
-
-		UHealthComponent* HealthComp = GetOwningActor()->GetComponentByClass<UHealthComponent>();
-		if (HealthComp)
-		{
-			if (Health.GetCurrentValue() == MaxHealth.GetCurrentValue())
-			{
-				HealthComp->AddFullHealthTag();
-			}
-			else
-			{
-				HealthComp->RemoveFullHealthTag();
-			}
-		}
 	}
 	else if (Attribute == MaxHealthProperty)
 	{
@@ -120,22 +97,6 @@ void UASHealth::PreAttributeChange(const FGameplayAttribute& Attribute, float& N
 	else if (Attribute == HealthRegenDelayProperty)
 	{
 		NewValue = FMath::Clamp(NewValue, 0, NewValue);
-	}
-	else if (Attribute == StaminaProperty)
-	{
-		NewValue = FMath::Clamp(NewValue, 0.f, MaxStamina.GetCurrentValue());
-	}
-	else if (Attribute == ManaProperty)
-	{
-		NewValue = FMath::Clamp(NewValue, 0.f, MaxMana.GetCurrentValue());
-	}
-	else if (Attribute == MaxStaminaProperty)
-	{
-		NewValue = FMath::Clamp(NewValue, Stamina.GetCurrentValue(), NewValue);
-	} 
-	else if (Attribute == MaxManaProperty)
-	{
-		NewValue = FMath::Clamp(NewValue, Mana.GetCurrentValue(), NewValue);
 	}
 }
 

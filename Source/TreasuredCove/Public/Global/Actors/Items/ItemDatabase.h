@@ -25,7 +25,7 @@ public:
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
-	FName ItemName;
+	FName ItemIdentifier;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<AGAWeapon> Class;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
@@ -60,10 +60,17 @@ class TREASUREDCOVE_API UItemDatabase : public UDataAsset
 	GENERATED_BODY()
 
 public:
+	UItemDatabase();
+
+	void Initialize();
+
+public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Database", meta = (TitleProperty="ItemName"))
 	TArray<FItemDatabaseRow> ItemDatabase;
 	UPROPERTY()
 	TArray<FString> Categories;
+	UPROPERTY()
+	TMap<FString, TSubclassOf<UActorComponent>> ItemComponentClasses;
 
 public:
 	int32 GetTotalItemCount() const { return ItemDatabase.Num(); };

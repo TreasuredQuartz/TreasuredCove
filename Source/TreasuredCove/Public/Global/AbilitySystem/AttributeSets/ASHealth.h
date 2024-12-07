@@ -56,18 +56,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_HealthRegenDelay, Category = "Attributes|Health")
 	FGameplayAttributeData HealthRegenDelay;
 
-	// All stamina properties
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Body")
-	FGameplayAttributeData MaxStamina;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Body")
-	FGameplayAttributeData Stamina;
-
-	// All mana properties
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Mind")
-	FGameplayAttributeData MaxMana;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Mind")
-	FGameplayAttributeData Mana;
-
 	// Defense
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Health")
 	FGameplayAttributeData Defense;

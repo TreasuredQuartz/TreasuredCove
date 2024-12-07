@@ -30,9 +30,6 @@ public:
 	/* Adds a new textbox with the string to the list */
 	TSharedRef<ITableRow> OnGenerateRowForList(UMapMakerAsset* Item, const TSharedRef<STableViewBase>& OwnerTable);
 
-	/* The list of strings */
-	// TArray<TSharedPtr<FString>> Items;
-
 	void OnItemClicked(UMapMakerAsset* ClickedAsset);
 
 	/* The actual UI list */

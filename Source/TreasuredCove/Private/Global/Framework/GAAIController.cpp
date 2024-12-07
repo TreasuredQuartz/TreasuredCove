@@ -83,7 +83,7 @@ void AGAAIController::OnPossess(APawn* PossessedPawn)
 
 	if (UHealthComponent* HealthComp = PossessedPawn->GetComponentByClass<UHealthComponent>())
 	{
-		HealthComp->OnHealthZeroed.AddDynamic(this, &AGAAIController::OnDeath);
+		HealthComp->OnAttributeZeroed.AddDynamic(this, &AGAAIController::OnDeath);
 	}
 
 	CharacterRef = Cast<AGACharacter>(PossessedPawn);
@@ -284,14 +284,14 @@ void AGAAIController::OnNewSense(const USensorBase* Sensor, int32 Channel, const
 			{
 				if (UHealthComponent* HealthComp = SeenCharacter->GetComponentByClass<UHealthComponent>())
 				{
-					if (HealthComp->GetIsHealthZeroed())
+					if (HealthComp->GetIsAttributeZeroed())
 						continue;
 
 					UE_LOG(LogTemp, Warning, TEXT("GAAIController: Saw Pawn!"));
 					if (CurrentEnemy == nullptr && IsPotentialEnemy(SeenCharacter))
 					{
 						UE_LOG(LogTemp, Warning, TEXT("GAAIController: Saw Enemy!"));
-						HealthComp->OnHealthZeroed.AddUniqueDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
+						HealthComp->OnAttributeZeroed.AddUniqueDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
 						UpdateCurrentEnemy(SeenCharacter);
 						OnEnemyDiscovered();
 					}
@@ -309,7 +309,7 @@ void AGAAIController::OnNewSense(const USensorBase* Sensor, int32 Channel, const
 				{
 					if (UHealthComponent* HealthComp = HeardActor->GetComponentByClass<UHealthComponent>())
 					{
-						if (HealthComp->GetIsHealthZeroed())
+						if (HealthComp->GetIsAttributeZeroed())
 							continue;
 					}
 
@@ -339,7 +339,7 @@ void AGAAIController::OnLostSense(const USensorBase* Sensor, int32 Channel, cons
 				if (CurrentEnemy == SeenCharacter)
 				{
 					if (UHealthComponent* HealthComp = SeenCharacter->GetComponentByClass<UHealthComponent>())
-						HealthComp->OnHealthZeroed.RemoveDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
+						HealthComp->OnAttributeZeroed.RemoveDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
 					UpdateCurrentEnemy(nullptr);
 					OnEnemyLost();
 				}
@@ -376,7 +376,7 @@ void AGAAIController::OnForgetSense(const USensorBase* Sensor, int32 Channel, co
 				if (CurrentEnemy == SeenCharacter)
 				{
 					if (UHealthComponent* HealthComp = SeenCharacter->GetComponentByClass<UHealthComponent>())
-						HealthComp->OnHealthZeroed.RemoveDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
+						HealthComp->OnAttributeZeroed.RemoveDynamic(this, &AGAAIController::OnEnemyHealthZeroed);
 
 					UpdateCurrentEnemy(nullptr);
 					OnEnemyLost();

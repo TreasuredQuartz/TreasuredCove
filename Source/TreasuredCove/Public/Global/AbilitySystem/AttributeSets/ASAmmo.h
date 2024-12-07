@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
+#include "AttributeMacros.h"
+#include "OnAttributeModifiedEvent.h"
 #include "ASAmmo.generated.h"
 
 class UAbilitySystemComponent;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoModifiedDelegate, float, Ammo, float, MaxAmmo);
 
 /**
  * 
@@ -18,12 +18,27 @@ class TREASUREDCOVE_API UASAmmo : public UAttributeSet
 {
 	GENERATED_BODY()
 
-	UASAmmo();
+private:
+	bool bAmmoZeroed;
+	float AmmoBeforeAttributeChange;
+
+private:
+	UFUNCTION()
+	void OnRep_Ammo(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	void OnRep_MaxAmmo(const FGameplayAttributeData& OldValue);
+
 public:
+	UASAmmo();
+
+	ATTRIBUTE_ACCESSORS(UASAmmo, Ammo);
+	ATTRIBUTE_ACCESSORS(UASAmmo, MaxAmmo);
+
 	// Ammunition
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Ammo")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxAmmo, Category = "Attributes|Ammo")
 	FGameplayAttributeData MaxAmmo;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Ammo")
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Ammo, Category = "Attributes|Ammo")
 	FGameplayAttributeData Ammo;
 
 	//
@@ -33,5 +48,10 @@ public:
 	//
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data) override;
 
-	FOnAmmoModifiedDelegate OnAmmoModified;
+	// Declared as mutable because pointer to set will be const
+	mutable FOnAttributeModifiedEvent OnAmmoModified;
+	// Declared as mutable because pointer to set will be const
+	mutable FOnAttributeModifiedEvent OnMaxAmmoModified;
+	// Declared as mutable because pointer to set will be const
+	mutable FOnAttributeModifiedEvent OnAmmoZeroed;
 };

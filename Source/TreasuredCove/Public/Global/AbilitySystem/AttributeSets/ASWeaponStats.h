@@ -27,36 +27,6 @@ public:
 public:
 	// Core stats that define how a gun acts when held, fired, etc
 
-	// The unwieldiness of the weapon
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
-	FGameplayAttributeData SpreadAngle;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
-	FGameplayAttributeData SpreadMin;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
-	FGameplayAttributeData SpreadMax;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
-	FGameplayAttributeData SpreadDecreaseSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
-	FGameplayAttributeData SpreadIncreaseSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
-	FGameplayAttributeData SpreadDeltaMultiplier;
-
-	/* Accuracy Dependent Stats */
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
-	FGameplayAttributeData Sway;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
-	FGameplayAttributeData HorizontalRecoil;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
-	FGameplayAttributeData VerticalRecoil;
-
 	/* Handling Dpendent Stats */
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
 	// FGameplayAttributeData Handling;

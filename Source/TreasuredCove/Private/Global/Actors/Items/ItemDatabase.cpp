@@ -2,7 +2,10 @@
 
 
 #include "Global/Actors/Items/ItemDatabase.h"
+#include "GAWeapon.h"
+// #include "AssetManager.h"
 #include "ItemData.h"
+#include "Json.h"
 
 FItemDatabaseRow::FItemDatabaseRow()
 {
@@ -11,19 +14,20 @@ FItemDatabaseRow::FItemDatabaseRow()
 	//{
 	//	// Monster Id taken from a DataTable
 	//	FPrimaryAssetId MonsterId = SelectedMonsterRow->MonsterId;
-
+	//
 	//	// Optional "bundles" like "UI"
 	//	TArray<FName> Bundles;
-
+	//
 	//	// Locations array from omitted part of code (see github)
 	//	FVector SpawnLocation = Locations[0];
-
-	//	// Delegate with parameters we need once the asset had been loaded such as the Id we loaded and the location to spawn at. Will call function 'OnMonsterLoaded' once it's complete.
+	//
+	//	// Delegate with parameters we need once the asset has been loaded such as the Id we loaded and the location to spawn at. Will call function 'OnMonsterLoaded' once it's complete.
 	//	FStreamableDelegate Delegate = FStreamableDelegate::CreateUObject(this, &ASGameModeBase::OnMonsterLoaded, MonsterId, SpawnLocation);
-
+	//
 	//	// The actual async load request
 	//	Manager->LoadPrimaryAsset(MonsterId, Bundles, Delegate);
 	//}
+
 }
 
 UItemData* FItemDatabaseRow::FindItemDataByClass(TSubclassOf<UItemData> ItemDataClass) const
@@ -44,3 +48,13 @@ UItemData* FItemDatabaseRow::FindItemDataByClass(TSubclassOf<UItemData> ItemData
 
 	return FoundData;
 };
+
+UItemDatabase::UItemDatabase()
+{
+	Initialize();
+}
+
+void UItemDatabase::Initialize()
+{
+    
+}
