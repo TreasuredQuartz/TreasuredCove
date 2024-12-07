@@ -92,7 +92,6 @@ Intended parent class for all "creatures" in-game. Anything that can more, inter
 Typically, players would activate abilities on their character unless they are holding an item.    
 In which case the item's abilities would take precedence over the characters'.    
 - Has an AbilitySystemComponent.
-- 
 - Has a default "PlayerCharacter" Blueprint child.
 
 ##### GAActor:
@@ -115,5 +114,4 @@ MovementTrailComponent
 FloatingItemInfoComponent    
 ProjectilePathComponent    
 FootprintComponent    
-
 
