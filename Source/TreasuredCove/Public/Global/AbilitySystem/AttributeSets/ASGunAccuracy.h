@@ -6,6 +6,8 @@
 #include "AttributeSet.h"
 #include "ASGunAccuracy.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpreadAngleModified, float, SpreadAngle);
+
 /**
  * 
  */
@@ -14,8 +16,15 @@ class TREASUREDCOVE_API UASGunAccuracy : public UAttributeSet
 {
 	GENERATED_BODY()
 	
-	/* Accuracy Dependent Stats */
+public:
+	UASGunAccuracy();
 
+	/* Accuracy Dependent Stats */
+	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+
+	void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
+
+public:
 	// The unwieldiness of the weapon
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
 	FGameplayAttributeData SpreadAngle;
@@ -43,4 +52,7 @@ class TREASUREDCOVE_API UASGunAccuracy : public UAttributeSet
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Combat")
 	FGameplayAttributeData VerticalRecoil;
+
+public:
+	FOnSpreadAngleModified OnSpreadAngleModified;
 };

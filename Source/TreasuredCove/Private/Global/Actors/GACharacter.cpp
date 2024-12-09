@@ -212,7 +212,6 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 	/* Default Character values */
 
 	// Camera tilt timeline
-	// Camera tilt timeline
 	CameraTiltTimeline = 
 		CreateDefaultSubobject<UTimelineComponent>(TEXT("Camera Tilt Timeline"));
 
@@ -1057,7 +1056,7 @@ void AGACharacter::InitializeAttributeSet(UAttributeSet* Set)
 	UASWeaponStats* WeaponSet = Cast<UASWeaponStats>(Set);
 	if (WeaponSet)
 	{
-		WeaponSet->OnSpreadAngleModified.AddUniqueDynamic(this, &AGACharacter::OnSpreadAngleModified);
+		// WeaponSet->OnSpreadAngleModified.AddUniqueDynamic(this, &AGACharacter::OnSpreadAngleModified);
 		WeaponSet->OnHipAccuracyModified.AddUniqueDynamic(this, &AGACharacter::OnHipAccuracyModified);
 		WeaponSet->OnADSAccuracyModified.AddUniqueDynamic(this, &AGACharacter::OnADSAccuracyModified);
 		WeaponSet->OnHandlingModified.AddUniqueDynamic(this, &AGACharacter::OnHandlingModified);

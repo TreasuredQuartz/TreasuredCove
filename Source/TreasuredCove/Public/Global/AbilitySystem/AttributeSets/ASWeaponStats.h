@@ -8,7 +8,6 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnHipAccuracyModified, float, SpreadMin, float, SpreadMax, float, SpreadIncreaseSpeed, float, SpreadDecreaseSpeed, float, SpreadDeltaMultiplier);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnADSAccuracyModified, float, Sway, float, HorizontalAccuracy, float, VerticalAccuracy);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpreadAngleModified, float, SpreadAngle);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnHandlingModified, float, ReloadSpeed, float, DrawSpeed, float, ADSSpeed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRangeModified, float, MinRange, float, MaxRange);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageModified, float, MinDamage, float, MaxDamage);
@@ -86,7 +85,6 @@ public:
 	void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData &Data);
 
-	FOnSpreadAngleModified OnSpreadAngleModified;
 	FOnHipAccuracyModified OnHipAccuracyModified;
 	FOnADSAccuracyModified OnADSAccuracyModified;
 	FOnHandlingModified OnHandlingModified;
