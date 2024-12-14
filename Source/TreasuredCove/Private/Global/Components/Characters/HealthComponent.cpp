@@ -62,7 +62,7 @@ void UHealthComponent::OnModified(const FOnAttributeModifiedPayload& Payload) co
 		RemoveFullAttributeTag();
 	}
 
-	UAttributeComponent::HandleAttributeModified(Payload);
+	UAttributeComponent::OnModified(Payload);
 }
 
 FText UHealthComponent::GetComponentDisplayName() const

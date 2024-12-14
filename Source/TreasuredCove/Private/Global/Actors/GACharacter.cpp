@@ -289,6 +289,10 @@ void AGACharacter::BeginPlay()
 			UE_LOG(LogTemp, Warning, TEXT("SenseStimulus is registered..."));
 		} else UE_LOG(LogTemp, Warning, TEXT("SenseStimulus is NOT registered..."));
 	}
+	if (Equipment != nullptr)
+	{
+		// Equipment->OnItemEquipped.AddUniqueDynamic(this, &AGACharacter::OnEquipped);
+	}
 
 	check(RenamedAbilitySystem);
 }
@@ -2849,37 +2853,12 @@ void AGACharacter::EquipItem(AGAActor* Item)
 {
 	if (Item)
 	{
-		if (PC)
-		{
-			PC->SetItemPriority_Client(bWeaponPriority);
-			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
-			if (Weapon)
-			{
-				FGAItemInfo Info = Weapon->GetItemInfo();
-				PC->OnEquipItem_Client(Item, Info);
-			}
-		}
-
-		FAttachmentTransformRules ItemAttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false);
-		Item->AttachToComponent(GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(DominantHand) ? DominantHand : FName());
-
-		Item->OnEquipped();
-		Item->SetOwner(this);
-
 		UEquippableComponent* Equippable = Item->GetComponentByClass<UEquippableComponent>();
 		if (Equippable)
 		{
-			FString SlotName = Equippable->GetEquipSlot();
-			Equipment->AddItem(Item, SlotName);
+			FString SlotName = "HeldItem";
+			Equipment->EquipItem(Item, SlotName);
 			Equippable->Equipped();
-		}
-
-		if (Item->InputAbilityActions && PC)
-		{
-			// Get the EnhancedInputComponent
-			UGAEnhancedInputComponent* PEI = Cast<UGAEnhancedInputComponent>(InputComponent);
-			
-			Item->SetupPlayerAbilityInput(PEI, PC);
 		}
 	}
 }
@@ -2904,7 +2883,7 @@ void AGACharacter::StowItem(AGAActor* Item)
 		}
 
 		FString SlotName = FString("StowedItem");
-		Equipment->AddItem(Item, SlotName);
+		Equipment->EquipItem(Item, SlotName);
 		// Item->OnStowed();
 	}
 }

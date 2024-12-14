@@ -59,7 +59,7 @@ void AGAHUD::PlayerInputChecks()
 		{
 			ClosePauseMenu();
 			bIsInMenu = false;
-			PC->ShouldDisableInput(false);
+			PC->EndPause_Client();
 			return;
 		}
 
@@ -204,6 +204,7 @@ void AGAHUD::DrawHUD_Reset()
 void AGAHUD::DrawHUD()
 {
 	/*
+
 	if (!PlayerOwner)
 	{
 		PlayerOwner = GetOwningPlayerController();
@@ -233,9 +234,9 @@ void AGAHUD::DrawHUD()
 		return;
 	}
 
-	DrawHUD_Reset();
+	// DrawHUD_Reset();
 
-	PC->GetMousePosition(MouseLocation.X, MouseLocation.Y);
+	//	PC->GetMousePosition(MouseLocation.X, MouseLocation.Y);
 
 	// Draw Menu */
 }

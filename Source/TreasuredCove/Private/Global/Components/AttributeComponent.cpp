@@ -73,18 +73,18 @@ void UAttributeComponent::HandleAttributeModified(const FOnAttributeModifiedPayl
 {
 	OnModified(Payload);
 
-	OnAttributeModified.Broadcast(Payload);
+	if (OnAttributeModified.IsBound()) OnAttributeModified.Broadcast(Payload);
 }
 
 void UAttributeComponent::HandleMaxAttributeModified(const FOnAttributeModifiedPayload& Payload) const
 {
-	OnMaxAttributeModified.Broadcast(Payload);
+	if (OnMaxAttributeModified.IsBound()) OnMaxAttributeModified.Broadcast(Payload);
 }
 
 void UAttributeComponent::HandleAttributeZeroed(const FOnAttributeModifiedPayload& Payload)
 {
 	bIsZeroed = true;
-	OnAttributeZeroed.Broadcast(Payload.Victim, Payload.Instigator);
+	if (OnAttributeZeroed.IsBound()) OnAttributeZeroed.Broadcast(Payload.Victim, Payload.Instigator);
 }
 
 

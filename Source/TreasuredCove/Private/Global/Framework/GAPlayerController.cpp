@@ -15,7 +15,7 @@ void AGAPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	InputComponent->BindAction("Pause", IE_Pressed, this, &AGAPlayerController::BeginPause);
-	InputComponent->BindAction("Pause", IE_Pressed, Player, &AGACharacter::BeginPause);
+	// InputComponent->BindAction("Pause", IE_Pressed, Player, &AGACharacter::BeginPause);
 	// InputComponent->BindAction("Pause", IE_Released, this, &AGAPlayerController::EndPause_Client);
 
 	Player = Cast<AGACharacter>(this->GetCharacter());
@@ -207,6 +207,7 @@ void AGAPlayerController::BeginPause()
 	if (!bIsPaused) {
 		bIsPaused = true;
 		bShowMouseCursor = true;
+		ShouldDisableInput(true);
 
 		// FInputModeUIOnly InputMode;
 		// SetInputMode(InputMode);
@@ -223,6 +224,7 @@ void AGAPlayerController::EndPause_Client_Implementation()
 
 	bIsPaused = false;
 	bShowMouseCursor = false;
+	ShouldDisableInput(false);
 
 	// FInputModeGameOnly InputMode;
 	// SetInputMode(InputMode);

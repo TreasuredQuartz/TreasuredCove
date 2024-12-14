@@ -23,7 +23,7 @@ void UEquipmentComponent::InitializeEquipmentSlotTransforms(const TArray<FTransf
 	}
 }
 
-int32 UEquipmentComponent::FindSlotWithName(FString& SlotName) const
+int32 UEquipmentComponent::FindSlotWithName(const FString& SlotName) const
 {
 	return EquipmentSlotNames.Find(SlotName);
 }
@@ -33,15 +33,22 @@ void UEquipmentComponent::InitializeComponent()
 	Super::InitializeComponent();
 }
 
-AGAActor* UEquipmentComponent::GetItemInNameSlot(FString SlotName)
+AGAActor* UEquipmentComponent::GetItemInNameSlot(const FString& SlotName)
 {
 	return UInventoryComponent::GetItem(FindSlotWithName(SlotName));
 }
 
-bool UEquipmentComponent::AddItem(AGAActor* Item, FString& SlotName)
+bool UEquipmentComponent::EquipItem(AGAActor* Item, const FString& SlotName)
 {
+	if (!Item) return false;
 	if (UEquipmentComponent::AddItem(Item, FindSlotWithName(SlotName)))
 	{
+		if (USkeletalMeshComponent* Mesh = GetOwner()->GetComponentByClass<USkeletalMeshComponent>())
+		{
+			FAttachmentTransformRules ItemAttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false);
+			Item->AttachToComponent(Mesh, ItemAttachmentRules, Mesh->DoesSocketExist(FName(SlotName)) ? FName(SlotName) : FName());
+		}
+		Item->SetOwner(GetOwner());
 		OnItemEquipped.Broadcast(SlotName, Item);
 		return true;
 	}
@@ -49,7 +56,38 @@ bool UEquipmentComponent::AddItem(AGAActor* Item, FString& SlotName)
 	return false;
 }
 
-void UEquipmentComponent::RemoveItem(FString& SlotName)
+bool UEquipmentComponent::EquipItemFromInventory(const FString& EquipmentSlotName, UInventoryComponent* InInventory, uint8 InventorySlot)
+{
+	// Item is being removed from inventory
+	AGAActor* TempItem = InInventory->GetItem(InventorySlot);
+	if (!TempItem) {
+		// UE_LOG(LogTemp, Warning, TEXT("Tried to equip item that does not exist!"));
+		return false;
+	}
+
+	// Only remove after we know we can equip
+	InInventory->RemoveItem(InventorySlot);
+
+	// Remove our current equipment and store in inventory
+	AddEquippedItemToInventory(EquipmentSlotName, InInventory);
+
+	// Finally, Equip the item
+	return EquipItem(TempItem, EquipmentSlotName);
+}
+
+void UEquipmentComponent::AddEquippedItemToInventory(const FString& EquipmentSlotName, UInventoryComponent* InInventory)
+{
+	AGAActor* HeldItem = GetItemInNameSlot(EquipmentSlotName);
+	if (HeldItem)
+	{
+		HeldItem->OnUnEquipped();
+		HeldItem->SetActorHiddenInGame(true);
+		InInventory->AddItem(HeldItem);
+		RemoveItem(EquipmentSlotName);
+	}
+}
+
+void UEquipmentComponent::RemoveItem(const FString& SlotName)
 {
 	UEquipmentComponent::RemoveItem(FindSlotWithName(SlotName));
 }

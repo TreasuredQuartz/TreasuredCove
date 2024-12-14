@@ -207,6 +207,14 @@ void AGAActor::OnDropped_Implementation()
 void AGAActor::OnEquipped_Implementation()
 {
 	bEquipped = true;
+
+	AGAPlayerController* PC = Cast<APawn>(GetOwner())->GetController<AGAPlayerController>();
+	if (InputAbilityActions && PC)
+	{
+		// Get the EnhancedInputComponent
+		UGAEnhancedInputComponent* PEI = Cast<UGAEnhancedInputComponent>(GetOwner()->InputComponent);
+		SetupPlayerAbilityInput(PEI, PC);
+	}
 }
 
 void AGAActor::OnUnEquipped_Implementation()

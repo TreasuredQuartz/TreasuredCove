@@ -30,13 +30,19 @@ public:
 	void InitializeEquipmentSlotTransforms(const TArray<FTransform>& Transforms);
 
 private:
-	int32 FindSlotWithName(FString& SlotName) const;
+	int32 FindSlotWithName(const FString& SlotName) const;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	AGAActor* GetItemInNameSlot(FString SlotName);
-	virtual bool AddItem(AGAActor* Item, FString& SlotName);
-	virtual void RemoveItem(FString& SlotName);
+	AGAActor* GetItemInNameSlot(const FString& SlotName);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	TArray<FString> GetAllEquipmentSlots() { return EquipmentSlotNames; };
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	virtual bool EquipItem(AGAActor* Item, const FString& SlotName);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	virtual bool EquipItemFromInventory(const FString& EquipmentSlotName, UInventoryComponent* InInventory, uint8 InventorySlot);
+	void AddEquippedItemToInventory(const FString& EquipmentSlotName, UInventoryComponent* InInventory);
+	virtual void RemoveItem(const FString& SlotName);
 	virtual bool AddItem(AGAActor* Item, int32 Slot = -1) override;
 	virtual void MoveItem(uint8 From, uint8 To) override;
 	virtual void RemoveItem(uint8 Slot) override;

@@ -3,6 +3,7 @@
 
 #include "Global/Components/ManaComponent.h"
 #include "AbilitySystemComponent.h"
+#include "AttributeSetInfo.h"
 #include "ASMana.h"
 
 #define LOCTEXT_NAMESPACE "UManaComponent"
@@ -59,7 +60,7 @@ void UManaComponent::OnModified(const FOnAttributeModifiedPayload& Payload) cons
 		RemoveFullAttributeTag();
 	}
 
-	UAttributeComponent::HandleAttributeModified(Payload);
+	UAttributeComponent::OnModified(Payload);
 }
 
 FText UManaComponent::GetComponentDisplayName() const

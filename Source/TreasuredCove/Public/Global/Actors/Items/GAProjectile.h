@@ -22,10 +22,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	FGameplayEffectSpecHandle EffectSpecHandleFromAbility;
-protected:
 
 	//////////////////////////////////////////////////////
 
+protected:
 	// Projectile Movement Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UGAProjectileMovementComponent* ProjectileMovementComp;
@@ -41,6 +41,7 @@ protected:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Projectile")
 	void OnStop(const FHitResult& ImpactResult);
+
 public:
 	// Gets the projectile component
 	UFUNCTION(BlueprintCallable, Category = "Projectile")

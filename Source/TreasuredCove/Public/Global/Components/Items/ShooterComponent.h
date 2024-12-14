@@ -8,6 +8,10 @@
 
 class UShooterAttatchment;
 class UMagazineAttatchment;
+class UBarrelAttatchment;
+class UBulletCartridgeData;
+class UBulletData;
+class ABulletProjectile;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReload);
 
@@ -39,42 +43,41 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Shooter")
 	void PullTrigger();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite, Category = "Shooter")
 	TArray<UShooterAttatchment*> Attatchments;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
+	UPROPERTY(BlueprintReadWrite, Category = "Shooter")
 	UMagazineAttatchment* Magazine;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Shooter")
+	UBarrelAttatchment* Barrel;
+
 private:
+	FTransform GetProjectileSpawnTransform() { return FTransform(); };
 	float GetCurrentVarience() const;
 	FVector2D GetRandomVarience(float Varience) const;
 	FVector GetVectorWithVarience(const FVector& Normal, const FVector2D& Varience) const;
 	FVector2D GetBulletVarience();
 	FVector GetFinalLocation(const FVector& TargetLocation);
 
-private:
-	FTransform GetProjectileSpawnTransform() { return FTransform(); };
-	bool CanFireBullet();
-	UObject* CommitBullet();
-	AActor* SpawnProjectile();
-	void FireProjectile();
-
 public:
 	bool CanReloadMagazine();
 	void CommitReload();
 	void StartReload();
-
-public:
 	float GetStability();
 	FVector2D RandPointInCircle(float InRadius);
-	float CalculateMuzzleVelocity();
+	float CalculateMuzzleVelocity(float InMass, float InForceApplied);
 	float GetTwistRate();
-	void BurstFire();
 
 private:
 	void PreFireBullet();
-	void FireBullet();
+	bool CanFireBullet();
+	UBulletCartridgeData* CommitBullet();
+	ABulletProjectile* SpawnProjectile();
+	void FireProjectile(UBulletData* InBullet, float ForceApplied);
 	void PostFireBullet();
+	void FireBullet();
+	void BurstFire();
 	void ApplyRecoil();
 
 public:

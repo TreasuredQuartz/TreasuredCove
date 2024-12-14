@@ -25,15 +25,16 @@ class TREASUREDCOVE_API UBulletData : public UObject
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
-	float GrainWeight;
+	// Mass in Grains
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter", meta = (ForceUnits = "Grains"))
+	float Mass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
 	float DragCoefficient;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter", meta = (Units = "Millimeters"))
 	float Diameter;
 
-	// Grains coverted to kilograms
-	float GetMass() { return GrainWeight / 15430.f; }
+	// Mass in Grains
+	float GetMass() { return Mass; }
 };
 
 UCLASS()
@@ -43,12 +44,18 @@ class TREASUREDCOVE_API UBulletCartridgeData : public UObject
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
+	float PowderForce;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter", meta = (Units = "Millimeters"))
+	float CasingLength;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter", meta = (Units = "Millimeters"))
 	float Diameter;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
+	// Mass in Grains
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter", meta = (ForceUnits = "Grains"))
 	float Mass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
 	TArray<UBulletData*> Projectiles;
 
+	// Mass in Grains
 	float GetMass() const
 	{
 		float TotalMass = Mass;
@@ -64,15 +71,19 @@ class TREASUREDCOVE_API UMagazineAttatchment : public UShooterAttatchment
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
+	int32 Size;
+	UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite, Category = "Shooter")
 	TArray<UBulletCartridgeData*> Bullets;
 
+	// Mass in Kilograms
 	float Mass;
 
+	// Mass in Kilograms
 	float GetMass() const
 	{
-		float TotalMass = Mass;
+		float TotalMass = 0.f;
 		for (UBulletCartridgeData* Cartridge : Bullets) TotalMass += Cartridge->GetMass();
-		return TotalMass;
+		return (TotalMass / 15430.f) + Mass;
 	};
 	void Push(UBulletCartridgeData* Cartridge) { Bullets.Push(Cartridge); };
 	UBulletCartridgeData* Pop() { return Bullets.Pop(); };
@@ -85,6 +96,12 @@ class TREASUREDCOVE_API UBarrelAttatchment : public UShooterAttatchment
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter", meta = (Units = "Millimeters"))
+	float Length;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter", meta = (Units = "Millimeters"))
+	float Diameter;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
+	int32 RiflingRatio;
 };
 
 UCLASS()

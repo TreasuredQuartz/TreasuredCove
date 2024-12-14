@@ -2,12 +2,16 @@
 
 
 #include "Global/Components/Items/ShooterComponent.h"
+#include "MagazineHolder.h"
 #include "ShooterAttatchment.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Kismet/GameplayStatics.h"
 #include "EquipmentComponent.h"
 #include "InventoryComponent.h"
+#include "GAProjectileMovementComponent.h"
 #include "GAActor.h"
+
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "BulletProjectile.h"
 
 // class AContainer;
 
@@ -19,6 +23,13 @@ UShooterComponent::UShooterComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
+	Magazine =
+		CreateDefaultSubobject<UMagazineAttatchment>(TEXT("Magazine"));
+	Barrel =
+		CreateDefaultSubobject<UBarrelAttatchment>(TEXT("Barrel"));
+
+	Attatchments.Add(Magazine);
+	Attatchments.Add(Barrel);
 }
 
 void UShooterComponent::FireAtTarget(AActor* TargetActor, float Accuracy)
@@ -88,37 +99,6 @@ FVector UShooterComponent::GetFinalLocation(const FVector& TargetLocation)
 		CurrentVarience;
 }
 
-bool UShooterComponent::CanFireBullet()
-{
-	// return Magazine ? Magazine->GetCurrentAmount > 0 : false;
-	return true;
-}
-
-UObject* UShooterComponent::CommitBullet()
-{
-	if (CanFireBullet()) return Magazine->Pop();
-	return nullptr;
-}
-
-AActor* UShooterComponent::SpawnProjectile()
-{
-	AActor* Projectile = UGameplayStatics::BeginDeferredActorSpawnFromClass(
-		GetOwner(),											// World Context Object
-		TSubclassOf<AActor>(),								// Actor subclass to spawn
-		GetOwner()->GetTransform(),							// Spawn Transform
-		ESpawnActorCollisionHandlingMethod::AlwaysSpawn,	// Should always spawn regardless of collision
-		GetOwner());										// The owner of this newly spawned actor
-
-
-	return Projectile;
-}
-
-void UShooterComponent::FireProjectile()
-{
-	AActor* Projectile = SpawnProjectile();
-	CalculateMuzzleVelocity();
-}
-
 //////////////////////////////////////////////////////
 
 bool UShooterComponent::CanReloadMagazine()
@@ -139,7 +119,14 @@ bool UShooterComponent::CanReloadMagazine()
 		uint8 j = 0;
 		for (j; j < EquippedItemInventory->GetInventorySize(); ++j) 
 		{
-			EquippedItemInventory->GetItem(j);
+			if (AMagazineHolder* OwnerMagazine = Cast<AMagazineHolder>(EquippedItemInventory->GetItem(j)))
+			{
+				if (!OwnerMagazine->Magazines.IsEmpty())
+				{
+					OwnerAmmoHolder = OwnerMagazine->Magazines;
+					return true;
+				}
+			}
 		}
 	}
 
@@ -181,41 +168,113 @@ FVector2D UShooterComponent::RandPointInCircle(float InRadius)
 	return FMath::RandPointInCircle(InRadius);
 }
 
-float UShooterComponent::CalculateMuzzleVelocity()
+float UShooterComponent::CalculateMuzzleVelocity(float InMass, float InForceApplied)
 {
-	float BarrelDiameter = 0.0f;
-	float BarrelLength = 0.0f;
-	float BulletMass = 0.0f;
-	float ForceApplied = 0.0f;
-
-	float MuzzleVelocity = 0.0f;
+	float BarrelDiameter = Barrel->Diameter;
+	float BarrelLength = Barrel->Length;
+	float BulletMass = InMass;
+	float ForceApplied = InForceApplied;
 
 	// Convert MM to CM
-	MuzzleVelocity = BarrelDiameter * 0.1f;
+	float Diameter = BarrelDiameter * 0.1f;
+	float Length = BarrelLength * 0.1f;
 
-	// Calculate Bullet Pressure
-	MuzzleVelocity *= 0.5f;
-	MuzzleVelocity = FMath::Pow(MuzzleVelocity, 2.f);
-	MuzzleVelocity *= PI;
-	MuzzleVelocity *= ForceApplied;
+	// Convert Grains to Kilograms
+	float Mass = BulletMass / 15430.f;
 
-	// IDK
-	MuzzleVelocity /= BulletMass;
-	MuzzleVelocity *= BarrelLength;
-	MuzzleVelocity *= 2.f;
+	// Convert Diameter to Radius
+	float Radius = Diameter * 0.5f;
 
+	/* acceleration = ( Pressure * (pi) * (r^2) ) / mass */
+
+	// Pressure
+	float Acceleration = ForceApplied;
+	// PI
+	Acceleration *= PI;
+	// Radius^2
+	Acceleration = FMath::Pow(Radius, 2.f);
+	// Remove Mass
+	Acceleration /= Mass;
+
+	/* velocity = (initial_velocity = 0) + 2 * (acceleration) * (distance_traveled) */
+
+	// Initial Velocity (0) + first coefficient
+	float MuzzleVelocity = 2.0f;
+	// Acceleration
+	MuzzleVelocity *= Acceleration;
+	// Barrel Length
+	MuzzleVelocity *= Length;
+
+	// Final Velocity
 	return MuzzleVelocity;
 }
 
 float UShooterComponent::GetTwistRate()
 {
-	float BarrelLength = 0.0f;
-	int32 RiflingRatio = 0;
+	float BarrelLength = Barrel->Length;
+	int32 RiflingRatio = Barrel->RiflingRatio;
 
 	return RiflingRatio <= 0 ? 0.0f : BarrelLength / RiflingRatio;
 }
 
 //////////////////////////////////////////////////////
+
+void UShooterComponent::PreFireBullet()
+{
+}
+
+bool UShooterComponent::CanFireBullet()
+{
+	return Magazine ? Magazine->GetCurrentAmount() > 0 : false;
+}
+
+UBulletCartridgeData* UShooterComponent::CommitBullet()
+{
+	if (CanFireBullet()) return Magazine->Pop();
+	return nullptr;
+}
+
+ABulletProjectile* UShooterComponent::SpawnProjectile()
+{
+	ABulletProjectile* Projectile = Cast<ABulletProjectile>(UGameplayStatics::BeginDeferredActorSpawnFromClass(
+		GetOwner(),											// World Context Object
+		ABulletProjectile::StaticClass(),					// Actor subclass to spawn
+		GetOwner()->GetTransform(),							// Spawn Transform
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn,	// Should always spawn regardless of collision
+		GetOwner()));										// The owner of this newly spawned actor
+
+
+	return Projectile;
+}
+
+void UShooterComponent::FireProjectile(UBulletData* InBullet, float ForceApplied)
+{
+	ABulletProjectile* Projectile = SpawnProjectile();
+
+	UGAProjectileMovementComponent* MoveComp = Projectile->GetProjectileMovementComponent();
+	MoveComp->InitialSpeed = CalculateMuzzleVelocity(InBullet->GetMass(), ForceApplied);
+
+	UGameplayStatics::FinishSpawningActor(Projectile, GetOwner()->GetTransform());
+}
+
+void UShooterComponent::PostFireBullet()
+{
+}
+
+void UShooterComponent::FireBullet()
+{
+	PreFireBullet();
+
+	if (UBulletCartridgeData* Cartridge = CommitBullet())
+	{
+		for (UBulletData* Bullet : Cartridge->Projectiles)
+		{
+			FireProjectile(Bullet, Cartridge->PowderForce);
+		}
+	}
+
+	PostFireBullet();
+}
 
 void UShooterComponent::BurstFire()
 {
@@ -228,26 +287,6 @@ void UShooterComponent::BurstFire()
 	}
 }
 
-void UShooterComponent::FireBullet()
-{
-	PreFireBullet();
-	CommitBullet();
-
-	{
-		FireProjectile();
-	}
-
-	PostFireBullet();
-}
-
-void UShooterComponent::PostFireBullet()
-{
-}
-
-void UShooterComponent::ApplyRecoil()
-{
-}
-
 void UShooterComponent::PullTrigger()
 {
 	bTriggerPulled = true;
@@ -258,7 +297,10 @@ void UShooterComponent::PullTrigger()
 	}
 }
 
-void UShooterComponent::PreFireBullet()
+void UShooterComponent::ApplyRecoil()
 {
 }
+
+
+
 

@@ -60,7 +60,7 @@ void UStaminaComponent::OnModified(const FOnAttributeModifiedPayload& Payload) c
 		RemoveFullAttributeTag();
 	}
 
-	UAttributeComponent::HandleAttributeModified(Payload);
+	UAttributeComponent::OnModified(Payload);
 }
 
 FText UStaminaComponent::GetComponentDisplayName() const
