@@ -65,7 +65,7 @@ public:
 	void Initialize();
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Database", meta = (TitleProperty="ItemName"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Database", meta = (TitleProperty="ItemIdentifier"))
 	TArray<FItemDatabaseRow> ItemDatabase;
 	UPROPERTY()
 	TArray<FString> Categories;

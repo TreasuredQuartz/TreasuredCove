@@ -3,8 +3,9 @@ Binaries
 DerivedDataCache
 Intermediate
 Saved
-Content/Megascans_2K
-Content/Megascans_4K
+/Content/Megascans_2K
+/Content/Megascans_4K
+/Content/Medieval_Environment
 .vscode
 .vs
 .zip

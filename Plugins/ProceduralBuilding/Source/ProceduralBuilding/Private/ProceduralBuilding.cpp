@@ -2,15 +2,13 @@
 
 
 #include "ProceduralBuilding.h"
-#include "ProceduralMeshComponent.h"
 
 // Sets default values
-AProceduralBuilding::AProceduralBuilding()
+UProceduralBuilding::UProceduralBuilding()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-	Mesh =
-		CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Real Mesh"));
+	// PrimaryActorTick.bCanEverTick = false;
+	// Mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Real Mesh"));
 
 	NumFloors = 1;
 	NumWidth = 1;
@@ -25,30 +23,10 @@ AProceduralBuilding::AProceduralBuilding()
 	WallSizeQuarter = 4;
 }
 
-// Called in editor and on begin play
-void AProceduralBuilding::OnConstruction(const FTransform& Transform)
-{
-
-}
-
-// Called when the game starts or when spawned
-void AProceduralBuilding::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void AProceduralBuilding::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
-void AProceduralBuilding::UpdateMesh(const FTransform& Transform)
+void UProceduralBuilding::UpdateMesh(const FTransform& Transform)
 {
 	UStaticMesh* wallMesh = nullptr;
-	TArray<FProceduralMeshSection> MeshSections;
+	// TArray<FProceduralMeshSection> MeshSections;
 
 	// Front Side
 	for (int32 ZIndex = 0; NumFloors - 1 > ZIndex; ZIndex++)
@@ -80,7 +58,7 @@ void AProceduralBuilding::UpdateMesh(const FTransform& Transform)
 		}
 
 		if (!wallMesh) return;
-		GetVerticesFromStaticMesh(MeshSections[0].Vertices, FTransform(FRotator(), FVector(XTile * XIndex, 0, ZTile * ZIndex), FVector()), wallMesh);
+		// GetVerticesFromStaticMesh(MeshSections[0].Vertices, FTransform(FRotator(), FVector(XTile * XIndex, 0, ZTile * ZIndex), FVector()), wallMesh);
 	}
 
 	// Right Side
@@ -105,8 +83,8 @@ void AProceduralBuilding::UpdateMesh(const FTransform& Transform)
 
 		if (!wallMesh) return;
 
-		GetVerticesFromStaticMesh(MeshSections[0].Vertices, FTransform(FRotator(0, 0, 90), FVector(XTile * (NumWidth - 1), YTile * YIndex, ZTile * ZIndex), FVector()), wallMesh);
-}
+		// GetVerticesFromStaticMesh(MeshSections[0].Vertices, FTransform(FRotator(0, 0, 90), FVector(XTile * (NumWidth - 1), YTile * YIndex, ZTile * ZIndex), FVector()), wallMesh);
+	}
 
 	// Left Side
 	for (int32 ZIndex = 0; NumFloors - 1 > ZIndex; ZIndex++)
@@ -130,7 +108,7 @@ void AProceduralBuilding::UpdateMesh(const FTransform& Transform)
 
 		if (!wallMesh) return;
 
-		GetVerticesFromStaticMesh(MeshSections[0].Vertices, FTransform(FRotator(0, 0, -90), FVector(0, YTile * YIndex, ZTile * ZIndex), FVector()), wallMesh);
+		// GetVerticesFromStaticMesh(MeshSections[0].Vertices, FTransform(FRotator(0, 0, -90), FVector(0, YTile * YIndex, ZTile * ZIndex), FVector()), wallMesh);
 	}
 
 	// Back Side
@@ -163,9 +141,10 @@ void AProceduralBuilding::UpdateMesh(const FTransform& Transform)
 		}
 
 		if (!wallMesh) return;
-		GetVerticesFromStaticMesh(MeshSections[0].Vertices, FTransform(FRotator(), FVector(XTile * XIndex, YTile * (NumDepth - 1), ZTile * ZIndex), FVector()), wallMesh);
+		// GetVerticesFromStaticMesh(MeshSections[0].Vertices, FTransform(FRotator(), FVector(XTile * XIndex, YTile * (NumDepth - 1), ZTile * ZIndex), FVector()), wallMesh);
 	}
 
+	/*
 	for (int32 z = 0; NumFloors - 1 > z; z++)
 	for (int32 y = 0; NumDepth - 1 > y; y++)
 	for (int32 x = 0; NumWidth - 1 > x; x++)
@@ -203,9 +182,10 @@ void AProceduralBuilding::UpdateMesh(const FTransform& Transform)
 			Mesh->SetMaterial(i, MeshSections[i].Material);
 		}
 	}
+	// */
 }
 
-void AProceduralBuilding::GetVerticesFromStaticMesh(TArray<FVector> &OutVertices, FTransform Transform, UStaticMesh* InMesh)
+void UProceduralBuilding::GetVerticesFromStaticMesh(TArray<FVector> &OutVertices, FTransform Transform, UStaticMesh* InMesh)
 {
 	if (!InMesh) return;
 	if (!(InMesh->GetRenderData()->LODResources.Num() > 0)) return;
@@ -217,7 +197,7 @@ void AProceduralBuilding::GetVerticesFromStaticMesh(TArray<FVector> &OutVertices
 	const int32 VertexCount = VertexBuffer->GetNumVertices();
 	for (int32 Index = 0; Index < VertexCount; Index++)
 	{
-		const FVector VertexLocation = Transform.GetLocation() + GetTransform().TransformVector(FVector3d(VertexBuffer->VertexPosition(Index)));
+		const FVector VertexLocation = Transform.GetLocation(); // + GetTransform().TransformVector(FVector3d(VertexBuffer->VertexPosition(Index)));
 		OutVertices.Add(VertexLocation);
 	}
 

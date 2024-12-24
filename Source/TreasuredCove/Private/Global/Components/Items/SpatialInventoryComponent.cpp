@@ -22,6 +22,14 @@ void USpatialInventoryComponent::BeginPlay()
 	TArray<FSpatialInventoryTile> Column;
 	Column.Init(FSpatialInventoryTile(), GridDimensions.Y);
 	Grid.Init(Column, GridDimensions.X);
+
+	for (int32 x = 0; x < GridDimensions.X; ++x)
+	{
+		for (int32 y = 0; y < GridDimensions.Y; ++y)
+		{
+			Grid[x][y].Location = FIntPoint(x, y);
+		}
+	}
 }
 
 // Called every frame
@@ -33,12 +41,12 @@ void USpatialInventoryComponent::BeginPlay()
 //}
 
 // Called to AddItem, will return false if failed.
-bool USpatialInventoryComponent::TryAddItem(USpatialInventoryTileItem* Item)
+bool USpatialInventoryComponent::TryAddItem(USpatialInventoryTileItem* Item, const FIntPoint& InLocation)
 {
 	if (!Item) return false;
-	if (!CheckAvailableSpace(Item)) return false;
+	if (!CheckAvailableSpace(Item, InLocation)) return false;
 
-	AddItem(Item);
+	AddItem(Item, InLocation);
 
 	return true;
 }
@@ -48,29 +56,21 @@ bool USpatialInventoryComponent::TryAddItem(USpatialInventoryTileItem* Item)
 * if the Item fits in the Grid and does not overlap
 * Invalid Items.
 */
-bool USpatialInventoryComponent::CheckAvailableSpace(USpatialInventoryTileItem* Item) const
+bool USpatialInventoryComponent::CheckAvailableSpace(USpatialInventoryTileItem* Item, const FIntPoint& InLocation) const
 {
 	if (!Item) return false;
 
 	if (Item->GetShape().IsEmpty()) 
 	{
-		FIntPoint FinalLocation = Item->GetLocation();
-		if (!IsValidTile(FinalLocation)) return false; // Item is not within Grid
-
-		const FSpatialInventoryTile& OccupiedTile = Grid[FinalLocation.X][FinalLocation.Y];
-		if (OccupiedTile.Item && OccupiedTile.Item->CanCohabitat(Item))
-			return false; // Item already exists in this space, and cannot share space.
+		FIntPoint FinalLocation = InLocation;
+		if (!IsValidTile(Item, FinalLocation)) return false;
 	}
 	else 
 	{
 		for (const FIntPoint& PartialLocation : Item->GetShape())
 		{
-			FIntPoint FinalLocation = Item->GetLocation() + PartialLocation;
-			if (!IsValidTile(FinalLocation)) return false; // Item is not within Grid
-
-			const FSpatialInventoryTile& OccupiedTile = Grid[FinalLocation.X][FinalLocation.Y];
-			if (OccupiedTile.Item && OccupiedTile.Item->CanCohabitat(Item))
-				return false; // Item already exists in this space, and cannot share space.
+			FIntPoint FinalLocation = InLocation + PartialLocation;
+			if (!IsValidTile(Item, FinalLocation)) return false;
 		}
 	}
 	
@@ -79,7 +79,7 @@ bool USpatialInventoryComponent::CheckAvailableSpace(USpatialInventoryTileItem* 
 }
 
 // Returns if the Location is within the Grid
-bool USpatialInventoryComponent::IsValidTile(const FIntPoint& TileLocation) const
+bool USpatialInventoryComponent::IsValidLocation(const FIntPoint& TileLocation) const
 {
 	return TileLocation.X >= 0
 		&& TileLocation.Y >= 0
@@ -87,9 +87,66 @@ bool USpatialInventoryComponent::IsValidTile(const FIntPoint& TileLocation) cons
 		&& TileLocation.Y < GridDimensions.Y;
 }
 
-TMap<USpatialInventoryTileItem*, FVector2D> USpatialInventoryComponent::GetAllItems() const
+bool USpatialInventoryComponent::IsValidTile(const USpatialInventoryTileItem* Item, const FIntPoint& TileLocation) const
 {
-	TMap<USpatialInventoryTileItem*, FVector2D> returnMap;
+	// Guard against invalid locations
+	if (!IsValidLocation(TileLocation)) return false;
+
+	// Guard against already filled tiles
+	const FSpatialInventoryTile& OccupiedTile = Grid[TileLocation.X][TileLocation.Y];
+	if (OccupiedTile.Item) return false;
+
+	// Search all items if they overlap at the location
+	TArray<USpatialInventoryTileItem*> OverlappedItems = GetAllItemsAtLocation(TileLocation);
+
+	// Check each overlapping item if they can co-exist
+	for (USpatialInventoryTileItem* InvItem : OverlappedItems)
+	{
+		// If any item doesn't allow co-existing
+		if (InvItem->CanCohabitat(Item, TileLocation) == false)
+		{
+			return false; // Then we cannot add this item here.
+		}
+	}
+
+	// Nothing prevents this item from being added here!!!
+	return true;
+}
+
+TArray<USpatialInventoryTileItem*> USpatialInventoryComponent::GetAllItemsAtLocation(const FIntPoint& TileLocation) const
+{
+	TArray<USpatialInventoryTileItem*> OverlappingTileItems;
+
+	TMap<FIntPoint, USpatialInventoryTileItem*> Items = GetAllItems();
+	TArray<FIntPoint> Keys;
+	Items.GetKeys(Keys);
+	for (FIntPoint Key : Keys)
+	{
+		bool bOverlaps = false;
+		USpatialInventoryTileItem* InvItem = Items[Key];
+		for (FIntPoint LocLocation : InvItem->GetShape())
+		{
+			if (LocLocation + Key == TileLocation)
+			{
+				bOverlaps = true;
+				break;
+			}
+		}
+
+		if (bOverlaps)
+		{
+			OverlappingTileItems.Add(InvItem);
+			continue;
+		}
+	}
+
+	return OverlappingTileItems;
+}
+
+TMap<FIntPoint, USpatialInventoryTileItem*> USpatialInventoryComponent::GetAllItems() const
+{
+	TMap<FIntPoint, USpatialInventoryTileItem*> returnMap;
+	returnMap.Empty(GridDimensions.X * GridDimensions.Y);
 
 	/* We have a grid here.
 	*	 _________
@@ -107,7 +164,7 @@ TMap<USpatialInventoryTileItem*, FVector2D> USpatialInventoryComponent::GetAllIt
 	*	||
 	*	The First Column
 	*/
-	for (const TArray<FSpatialInventoryTile>& GridColumn : Grid)
+	for (int32 x = 0; x < GridDimensions.X; ++x)
 	{
 		/* Now in the current column:
 		*	 _
@@ -121,11 +178,14 @@ TMap<USpatialInventoryTileItem*, FVector2D> USpatialInventoryComponent::GetAllIt
 		*	|_|
 		*	|_|
 		*/
-		for (const FSpatialInventoryTile& ColumnItem : GridColumn) 
+		for (int32 y = 0; y < GridDimensions.Y; ++y) 
 		{
-			if (!returnMap.Contains(ColumnItem.Item)) 
+			const FSpatialInventoryTile Tile = Grid[x][y];
+			USpatialInventoryTileItem* Item = Tile.Item;
+
+			if (Item != nullptr)
 			{
-				returnMap.Add(ColumnItem.Item, ColumnItem.Location);
+				returnMap.Add(FIntPoint(x, y), Item);
 			}
 		}
 	}
@@ -133,46 +193,53 @@ TMap<USpatialInventoryTileItem*, FVector2D> USpatialInventoryComponent::GetAllIt
 	return returnMap;
 }
 
+USpatialInventoryTileItem* USpatialInventoryComponent::CreateItem(TSubclassOf<USpatialInventoryTileItem> ItemClass) const
+{
+	return NewObject<USpatialInventoryTileItem>(GetOwner(), ItemClass);
+}
+
 void USpatialInventoryComponent::RemoveItem(USpatialInventoryTileItem* ItemToRemove)
 {
+	// Guard against null parameters...
+	if (!ItemToRemove) return;
 
+	FIntPoint ItemLocation = ItemToRemove->GetLocation();
+	FSpatialInventoryTile& Tile = Grid[ItemLocation.X][ItemLocation.Y];
+	Tile.Item = nullptr;
+
+	OnInventoryChanged.Broadcast();
 }
 
 // The actual addition of the item to the Grid
-void USpatialInventoryComponent::AddItem(USpatialInventoryTileItem* Item)
+void USpatialInventoryComponent::AddItem(USpatialInventoryTileItem* Item, const FIntPoint& InLocation)
 {
 	{ // Scoped variables
-		FIntPoint FinalLocation = Item->GetLocation();
+		FIntPoint FinalLocation = InLocation;
 		FSpatialInventoryTile& Tile = Grid[FinalLocation.X][FinalLocation.Y];
-		if (Tile.Item && Tile.Item->CanCohabitat(Item))
+		if (Tile.Item)
 		{
 			USpatialInventoryTileItem* PrevItem = Tile.Item;
 			Tile.Item = Item;
-			PrevItem->OnCohabitat(Item);
+			Item->SetLocation(FinalLocation);
+		}
+		else if (!Tile.Item)
+		{
+			Tile.Item = Item;
+			Item->SetLocation(FinalLocation);
 		}
 	}
 
-	for (const FIntPoint& PartialLocation : Item->GetShape())
-	{
-		FIntPoint FinalLocation = Item->GetLocation() + PartialLocation.X;
-		FSpatialInventoryTile& Tile = Grid[FinalLocation.X][FinalLocation.Y];
-		if (Tile.Item && Tile.Item->CanCohabitat(Item))
-		{
-			USpatialInventoryTileItem* PrevItem = Tile.Item;
-			Tile.Item = Item;
-			PrevItem->OnCohabitat(Item);
-		}
-	}
+	OnInventoryChanged.Broadcast();
 }
 
 
 
-bool USpatialInventoryTileItem::CanCohabitat_Implementation(USpatialInventoryTileItem* Other) const
+bool USpatialInventoryTileItem::CanCohabitat_Implementation(const USpatialInventoryTileItem* Other, const FIntPoint& InLocation) const
 {
 	// We can have another item in our space, but not where we are by default
-	return Other->GetLocation() != GetLocation();
+	return InLocation != GetLocation();
 }
 
-void USpatialInventoryTileItem::OnCohabitat_Implementation(USpatialInventoryTileItem* Other)
+void USpatialInventoryTileItem::OnCohabitat_Implementation(USpatialInventoryTileItem* Other, const FIntPoint& InLocation)
 {
 }

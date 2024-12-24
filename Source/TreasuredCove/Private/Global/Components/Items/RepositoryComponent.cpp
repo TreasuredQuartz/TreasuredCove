@@ -183,10 +183,67 @@ int32 URepositoryComponent::GetItemIndex(const FString Category, const FName Nam
 
 bool URepositoryComponent::GetAllItems(const FString Category, TArray<FItemKey>& Items)
 {
-	if (!Repository.Contains(Category)) return false;
+	TArray<FString> Keys;
+	Repository.GetKeys(Keys);
+	for (const FString& Key : Keys)
+	{
+		FString CurKey = Key;
+		FString CurSearchCategory = Category;
 
-	Items = Repository.Find(Category)->Repository;
+		while (true)
+		{
+			// If we cannot split anymore...
+			if (!CurSearchCategory.Contains("|"))
+			{
+				// If the Key can be split further...
+				if (CurKey.Contains("|"))
+				{
+					FString LKey;
+					FString RKey;
+					FString Splitter = "|";
+					CurKey.Split(Splitter, &LKey, &RKey);
 
-	return true;
+					// Set the current key to the non-split part
+					CurKey = LKey;
+				}
+
+				// If the last category matches the current key...
+				if (CurSearchCategory.Compare(CurKey) == 0)
+				{
+					if (FRepository* CurRepo = Repository.Find(Key))
+					{
+						// Append the repository to our return value.
+						Items.Append(CurRepo->Repository);
+					}
+				}
+
+				// The search category cannot be split any further, so the loop ends here regardless.
+				break;
+			}
+
+			FString LKey;
+			FString RKey;
+			FString Splitter = "|";
+			CurKey.Split(Splitter, &LKey, &RKey);
+
+			FString LSearch;
+			FString RSearch;
+			CurSearchCategory.Split(Splitter, &LSearch, &RSearch);
+
+			// If the left strings are the same...
+			if (LKey.Compare(LSearch) == 0)
+			{
+				CurKey = RKey;
+				CurSearchCategory = RSearch;
+			}
+			else
+			{
+				// If the categories don't match, then move on.
+				break;
+			}
+		}
+	}
+
+	return Items.IsEmpty() == false;
 }
 

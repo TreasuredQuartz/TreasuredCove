@@ -1,3 +1,6 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
 #include "MapMakerAssetEditor/AssetEditor_MapMaker.h"
 #include "MapMakerAssetEditor/SAssetSelector_MapMaker.h"
 #include "MapMakerAssetEditor/SMapMakerPreviewTabBody.h"
