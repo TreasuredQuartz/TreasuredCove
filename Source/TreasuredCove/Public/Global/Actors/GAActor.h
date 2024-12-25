@@ -16,6 +16,8 @@ class UGASystemComponent;
 class UAbilityInputConfigData;
 class UGameplayAbilityBase;
 class UItemMovementComponent;
+class UPickupComponent;
+class UEquippableComponent;
 class UGAEnhancedInputComponent;
 class AGAPlayerController;
 
@@ -114,16 +116,16 @@ public:
 
 	/** Begin Item Interface */
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Item")
+	UFUNCTION(meta = (DeprecatedFunction), BlueprintNativeEvent, Category = "Item")
 	void OnPickedUp();
 	virtual void OnPickedUp_Implementation();
-	UFUNCTION(BlueprintNativeEvent, Category = "Item")
+	UFUNCTION(meta = (DeprecatedFunction), BlueprintNativeEvent, Category = "Item")
 	void OnDropped();
 	virtual void OnDropped_Implementation();
-	UFUNCTION(BlueprintNativeEvent, Category = "Item")
+	UFUNCTION(meta = (DeprecatedFunction), BlueprintNativeEvent, Category = "Item")
 	void OnEquipped();
 	void OnEquipped_Implementation();
-	UFUNCTION(BlueprintNativeEvent, Category = "Item")
+	UFUNCTION(meta=(DeprecatedFunction), BlueprintNativeEvent, Category = "Item")
 	void OnUnEquipped();
 	void OnUnEquipped_Implementation();
 
@@ -156,6 +158,14 @@ public:
 	// Item Movement Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UItemMovementComponent* ItemMovement;
+
+	// Pickup Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UPickupComponent* Pickupable;
+
+	// Item Movement Component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UEquippableComponent* Equippable;
 
 public:
 	void LaunchItem(FVector LaunchVelocity, bool XYOveride, bool ZOveride);

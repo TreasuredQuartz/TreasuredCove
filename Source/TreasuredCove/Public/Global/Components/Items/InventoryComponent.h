@@ -26,11 +26,15 @@ protected:
 
 private:
 	bool bHasInventorySpace;
+
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items|Inventory", meta = (AllowPrivateAccess = "true"))
 	uint8 InventorySize;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Items|Inventory", meta=(AllowPrivateAccess="true"))
-	TArray<AGAActor*> Inventory;
+	TArray<AActor*> Inventory;
 
+private:
 	bool InventoryCheck();
 	uint8 FindEmptySlot();
 
@@ -40,13 +44,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Inventory")
 	void SetInventorySize(uint8 Size);
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	virtual bool AddItem(AGAActor* Item, int32 Slot = -1);
+	virtual bool AddItem(AActor* Item, int32 Slot = -1);
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	virtual void MoveItem(uint8 From, uint8 To);
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	virtual void RemoveItem(uint8 Slot);
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	AGAActor* GetItem(uint8 Slot);
+	AActor* GetItem(uint8 Slot);
 		
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Items|Inventory")

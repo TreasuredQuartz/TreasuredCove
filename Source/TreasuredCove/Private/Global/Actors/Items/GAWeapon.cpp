@@ -31,8 +31,6 @@ AGAWeapon::AGAWeapon()
 		CreateDefaultSubobject<URarityComponent>(TEXT("Rarity"));
 	UIInfoComponent =
 		CreateDefaultSubobject<UUIInfoComponent>(TEXT("User Interface Info"));
-	EquippableComponent =
-		CreateDefaultSubobject<UEquippableComponent>(TEXT("Equippable"));
 
 	// ItemData =
 	//	CreateDefaultSubobject<UItemData>(TEXT("Item Data"));
@@ -91,20 +89,6 @@ void AGAWeapon::OnPhysicsSleep(UPrimitiveComponent* SleepingComponent, FName Bon
 {
 	Box->SetSimulatePhysics(false);
 	Box->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-}
-
-void AGAWeapon::OnPickedUp_Implementation()
-{
-	Super::OnPickedUp_Implementation();
-
-	// Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-}
-
-void AGAWeapon::OnDropped_Implementation()
-{
-	Super::OnDropped_Implementation();
-
-	// Box->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 //

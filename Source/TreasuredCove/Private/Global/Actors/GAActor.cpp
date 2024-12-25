@@ -8,7 +8,10 @@
 #include "GameplayAbilityBase.h"
 #include "GAInputConfigData.h"
 #include "AbilitySet.h"
+
 #include "ItemMovementComponent.h"
+#include "PickupComponent.h"
+#include "EquippableComponent.h"
 
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
@@ -28,6 +31,12 @@ AGAActor::AGAActor()
 	// Item Movement Component
 	ItemMovement =
 		CreateDefaultSubobject<UItemMovementComponent>(TEXT("Item Movement"));
+	// Pickup Component
+	Pickupable =
+		CreateDefaultSubobject<UPickupComponent>(TEXT("Pickupable"));
+	// Equippable Component
+	Equippable =
+		CreateDefaultSubobject<UEquippableComponent>(TEXT("Equippable"));
 
 	// Root
 	Root =

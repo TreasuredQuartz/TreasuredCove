@@ -1,10 +1,10 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "Global/Components/Items/EquippableComponent.h"
+#include "Global/Components/Items/PickupComponent.h"
 
 // Sets default values for this component's properties
-UEquippableComponent::UEquippableComponent()
+UPickupComponent::UPickupComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -13,19 +13,16 @@ UEquippableComponent::UEquippableComponent()
 	// ...
 }
 
-void UEquippableComponent::Equipped(FString NewEquipSlot)
+void UPickupComponent::Pickup()
 {
-	bEquipped = true;
-	EquipSlot = NewEquipSlot;
+	bPickedUp = true;
 
-	OnEquipped.Broadcast();
+	OnPickup.Broadcast();
 }
 
-void UEquippableComponent::UnEquipped()
+void UPickupComponent::Drop()
 {
-	bEquipped = false;
-	EquipSlot = "";
+	bPickedUp = false;
 
-	OnUnEquipped.Broadcast();
+	OnDrop.Broadcast();
 }
-

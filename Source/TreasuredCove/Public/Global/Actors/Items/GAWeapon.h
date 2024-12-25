@@ -74,9 +74,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UUIInfoComponent* UIInfoComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UEquippableComponent* EquippableComponent;
-
 public:
 	// Used by owning character to throw held item
 	void LaunchItem(const FVector& LaunchVelocity) const;
@@ -97,12 +94,6 @@ public:
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	UFUNCTION()
 	void OnPhysicsSleep(UPrimitiveComponent* SleepingComponent, FName BoneName);
-
-public:
-	//
-	virtual void OnPickedUp_Implementation() override;
-	//
-	virtual void OnDropped_Implementation() override;
 
 public:
 	FItemKey GetPickup_Implementation()

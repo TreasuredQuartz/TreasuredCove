@@ -801,11 +801,11 @@ public:
 	void AddPickupPrompt();
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void PickupItem(AGAActor* Item);
+	void PickupItem(AActor* Item);
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void EquipItem(AGAActor* Item);
+	void EquipItem(AActor* Item);
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void StowItem(AGAActor* Item);
+	void StowItem(AActor* Item);
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void SwitchEquippedItems();
 	UFUNCTION(BlueprintCallable, Category = "Inventory")

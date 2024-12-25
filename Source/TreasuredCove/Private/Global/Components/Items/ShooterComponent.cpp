@@ -7,7 +7,6 @@
 #include "EquipmentComponent.h"
 #include "InventoryComponent.h"
 #include "GAProjectileMovementComponent.h"
-#include "GAActor.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -110,7 +109,7 @@ bool UShooterComponent::CanReloadMagazine()
 	uint8 i = 0;
 	for (i; i < OwnerEquipment->GetInventorySize(); ++i)
 	{
-		AGAActor* Item = OwnerEquipment->GetItem(i);
+		AActor* Item = OwnerEquipment->GetItem(i);
 		if (!Item) continue;
 
 		UInventoryComponent* EquippedItemInventory = Item->GetComponentByClass<UInventoryComponent>();

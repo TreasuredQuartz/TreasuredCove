@@ -69,7 +69,7 @@ uint8 UInventoryComponent::FindEmptySlot()
 }
 
 // Called to add item to inventory
-bool UInventoryComponent::AddItem(AGAActor* Item, int32 Slot)
+bool UInventoryComponent::AddItem(AActor* Item, int32 Slot)
 {
 	if (Slot > INDEX_NONE && Inventory.IsValidIndex(Slot) && Inventory[Slot] == nullptr)
 	{
@@ -88,7 +88,7 @@ bool UInventoryComponent::AddItem(AGAActor* Item, int32 Slot)
 // Called to move an item within the inventory
 void UInventoryComponent::MoveItem(uint8 From, uint8 To)
 {
-	AGAActor* LocalItem;
+	AActor* LocalItem;
 
 	// Are we passed valid inputs?
 	if (!Inventory.IsValidIndex(From) || !Inventory.IsValidIndex(To))
@@ -122,7 +122,7 @@ void UInventoryComponent::RemoveItem(uint8 Slot)
 }
 
 // Called to return the item at the entered Slot's location
-AGAActor* UInventoryComponent::GetItem(uint8 Slot)
+AActor* UInventoryComponent::GetItem(uint8 Slot)
 {
 	if (!Inventory.IsValidIndex(Slot))
 		return nullptr;

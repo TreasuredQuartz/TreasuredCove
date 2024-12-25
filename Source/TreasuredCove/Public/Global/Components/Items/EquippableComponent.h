@@ -15,10 +15,10 @@ class TREASUREDCOVE_API UEquippableComponent : public UActorComponent
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	FString EquipSlot;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	bool bEquipped;
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	uint8 bEquipped : 1;
 
 public:	
 	// Sets default values for this component's properties
@@ -28,8 +28,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	FString GetEquipSlot() const { return EquipSlot; };
 
+	// For State Checking
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	bool IsEquipped() const { return bEquipped; };
+
 public:
-	void Equipped();
+	void Equipped(FString NewEquipSlot);
 	void UnEquipped();
 
 public:

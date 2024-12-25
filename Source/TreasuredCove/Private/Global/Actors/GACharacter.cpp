@@ -24,34 +24,38 @@
 
 // Custom Components
 #include "GACharacterMovementComponent.h"
+// #include "GameFramework/CharacterMovementComponent.h"
 #include "GAEnhancedInputComponent.h"
+
+// Abilities
 #include "GASystemComponent.h"
 #include "GASkillTreeComponent.h"
+#include "GAInputConfigData.h"
+
+// Attributes
+#include "HealthComponent.h"
 #include "ComboComponent.h"
+
+// AI or UI
 #include "TownSystemComponent.h"
+#include "FloatingTextComponent.h"
+#include "FloatingBarComponent.h"
+#include "FloatingItemInfoComponent.h"
+#include "FootprintComponent.h"
+#include "MovementTrailComponent.h"
+
+// Item interaction
 #include "PickupInterface.h"
 #include "InventoryComponent.h"
 #include "RepositoryComponent.h"
 #include "EquipmentComponent.h"
 #include "EquippableComponent.h"
 #include "PickupMagnetComponent.h"
+#include "PickupComponent.h"
 #include "CraftingComponent.h"
-#include "FloatingTextComponent.h"
-#include "FloatingBarComponent.h"
-#include "FloatingItemInfoComponent.h"
-#include "FootprintComponent.h"
 #include "LaunchingComponent.h"
-#include "MovementTrailComponent.h"
-#include "GAInputConfigData.h"
-#include "HealthComponent.h"
 
 // Misc
-#include "GameplayBuilding.h"
-
-#include "GravityWidget.h"
-#include "GAWidget.h"
-#include "FloatingItemInfoActor.h"
-
 #include "Animation/AnimInstance.h"
 #include "GameFramework/DamageType.h"
 
@@ -64,17 +68,15 @@
 #include "EnhancedInputComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Components/SphereComponent.h"
-#include "Components/WidgetComponent.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "PhysicsEngine/PhysicsConstraintActor.h"
-#include "GameFramework/CharacterMovementComponent.h"
 
 // Procedural Mesh Plugin
-#include "ProceduralMeshComponent.h"
-#include "KismetProceduralMeshLibrary.h"
-#include "Rendering/SkeletalMeshRenderData.h"
-#include "Rendering/SkeletalMeshLODRenderData.h"
+// #include "ProceduralMeshComponent.h"
+// #include "KismetProceduralMeshLibrary.h"
+// #include "Rendering/SkeletalMeshRenderData.h"
+// #include "Rendering/SkeletalMeshLODRenderData.h"
 
 // Sense System Plugin
 #include "SenseReceiverComponent.h"
@@ -91,8 +93,7 @@
 #include "TimerManager.h"
 #include "Engine/Engine.h"
 #include "UnrealNetwork.h"
-#include "Engine/DirectionalLight.h"
-#include "UObject/ConstructorHelpers.h"
+// #include "Engine/DirectionalLight.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogCharacter, Log, All);
 
@@ -2806,16 +2807,16 @@ FName AGACharacter::GetNameValue_Implementation(const FName ValueName) const
 AGAActor* AGACharacter::GetHeldItem() const
 {
 	FString HeldItemSlotName = FString("HeldItem");
-	return Equipment->GetItemInNameSlot(HeldItemSlotName);
+	return Cast<AGAActor>(Equipment->GetItemInNameSlot(HeldItemSlotName));
 }
 
 AGAActor* AGACharacter::GetStowedItem() const
 {
 	FString StowedItemSlotName = FString("StowedItem");
-	return Equipment->GetItemInNameSlot(StowedItemSlotName);
+	return Cast<AGAActor>(Equipment->GetItemInNameSlot(StowedItemSlotName));
 }
 
-void AGACharacter::PickupItem(AGAActor* Item)
+void AGACharacter::PickupItem(AActor* Item)
 {
 	if (Item)
 	{
@@ -2824,19 +2825,21 @@ void AGACharacter::PickupItem(AGAActor* Item)
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString("We want to pick " + Item->GetName() + " up!"));
 		}
 
+		if (UPickupComponent* Pickup = Item->GetComponentByClass<UPickupComponent>())
+		{
+			Pickup->Pickup();
+		}
+
 		if (!GetHeldItem())
 		{
-			Item->OnPickedUp();
 			EquipItem(Item);
 		}
 		else if (!GetStowedItem())
 		{
-			Item->OnPickedUp();
 			StowItem(Item);
 		}
 		else if (Inventory->AddItem(Item))
 		{
-			Item->OnPickedUp();
 			Item->SetActorHiddenInGame(true);
 
 			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
@@ -2849,7 +2852,7 @@ void AGACharacter::PickupItem(AGAActor* Item)
 	}
 }
 
-void AGACharacter::EquipItem(AGAActor* Item)
+void AGACharacter::EquipItem(AActor* Item)
 {
 	if (Item)
 	{
@@ -2858,12 +2861,12 @@ void AGACharacter::EquipItem(AGAActor* Item)
 		{
 			FString SlotName = "HeldItem";
 			Equipment->EquipItem(Item, SlotName);
-			Equippable->Equipped();
+			Equippable->Equipped(SlotName);
 		}
 	}
 }
 
-void AGACharacter::StowItem(AGAActor* Item)
+void AGACharacter::StowItem(AActor* Item)
 {
 	if (Item)
 	{
@@ -2899,7 +2902,7 @@ void AGACharacter::SwitchEquippedItems()
 
 void AGACharacter::EquipItemFromInventory(uint8 Slot)
 {
-	AGAActor* TempItem = Inventory->GetItem(Slot);
+	AActor* TempItem = Inventory->GetItem(Slot);
 	Inventory->RemoveItem(Slot);
 	AddEquippedItemToInventory();
 	EquipItem(TempItem);
@@ -2907,7 +2910,7 @@ void AGACharacter::EquipItemFromInventory(uint8 Slot)
 
 void AGACharacter::StowItemFromInventory(uint8 Slot)
 {
-	AGAActor* TempItem = Inventory->GetItem(Slot);
+	AActor* TempItem = Inventory->GetItem(Slot);
 	Inventory->RemoveItem(Slot);
 	AddStowedItemToInventory();
 	StowItem(TempItem);
@@ -2970,21 +2973,29 @@ void AGACharacter::DropEquippedItem(const FVector& DropVelocity)
 		GetActorEyesViewPoint(EyesLocation, EyesRotation);
 		FVector ItemLocation = EyesLocation + GetActorForwardVector() * 25;
 
+		FString SlotName = FString("HeldItem");
+		Equipment->RemoveItem(SlotName);
+
+		if (UEquippableComponent* Equippable = HeldItem->GetComponentByClass<UEquippableComponent>())
+		{
+			Equippable->UnEquipped();
+		}
+
+		if (UPickupComponent* Pickup = HeldItem->GetComponentByClass<UPickupComponent>())
+		{
+			Pickup->Drop();
+		}
+
 		HeldItem->SetActorLocation(ItemLocation);
-		HeldItem->OnUnEquipped();
-		HeldItem->OnDropped();
 		HeldItem->LaunchItem(DropVelocity, true, true);
 
 		if (PC) PC->OnDropItem_Client();
-
-		FString SlotName = FString("HeldItem");
-		Equipment->RemoveItem(SlotName);
 	}
 }
 
 void AGACharacter::DropItemFromInventory(uint8 Slot)
 {
-	AGAActor* Item = Inventory->GetItem(Slot);
+	AActor* Item = Inventory->GetItem(Slot);
 
 	float RandomX = FMath::RandRange(-100, 100);
 	float RandomY = FMath::RandRange(-100, 100);
@@ -2992,8 +3003,11 @@ void AGACharacter::DropItemFromInventory(uint8 Slot)
 
 	FVector ItemLocation = GetActorLocation() + FVector(NewLocation, 0);
 
-	Item->SetActorLocation(ItemLocation);
-	Item->OnDropped();
+	Item->SetActorLocation(ItemLocation); 
+	if (UPickupComponent* Pickup = Item->GetComponentByClass<UPickupComponent>())
+	{
+		Pickup->Drop();
+	}
 
 	Inventory->RemoveItem(Slot);
 }
@@ -3352,7 +3366,7 @@ void AGACharacter::UpdateCurrentBuilding(AGameplayBuilding* CurrentBuilding)
 
 	if (PC)
 	{
-		PC->OnUpdateCurrentBuilding_Client(CurrentBuilding->BuildingName);
+		// PC->OnUpdateCurrentBuilding_Client(CurrentBuilding->BuildingName);
 	}
 	else if (AC)
 	{
@@ -3364,7 +3378,7 @@ void AGACharacter::UpdateDesiredLocation(FVector DesiredLocation)
 {
 	if (PC)
 	{
-		PC->OnDesiredLocationSet_Client(DesiredLocation);
+		// PC->OnDesiredLocationSet_Client(DesiredLocation);
 	}
 	else if (AC)
 	{
@@ -3376,7 +3390,7 @@ void AGACharacter::UpdateTargetBuilding(AGameplayBuilding* TargetBuilding)
 {
 	if (PC)
 	{
-		PC->OnUpdateTargetBuilding_Client(TargetBuilding->BuildingName);
+		// PC->OnUpdateTargetBuilding_Client(TargetBuilding->BuildingName);
 	}
 	else if (AC)
 	{
