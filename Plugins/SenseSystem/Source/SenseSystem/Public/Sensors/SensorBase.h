@@ -269,7 +269,7 @@ public:
 	//virtual bool CanEditChange(const UProperty* InProperty) const override;
 	//	UFUNCTION()void OnPreCompile(class UBlueprint* BlueprintToCompile);
 
-	virtual EDataValidationResult IsDataValid(FDataValidationContext& ValidationErrors) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& ValidationErrors) const override;
 
 	static uint8 GetUniqueChannel(const TArray<uint8>& Tmp, uint8 Start = 0);
 
@@ -1025,7 +1025,7 @@ FORCEINLINE const TArray<FSensedStimulus>& FChannelSetup::GetSensedStimulusBySen
 	}
 	checkNoEntry();
 	UE_ASSUME(0);
-	return CurrentSensed;
+	//return CurrentSensed;
 }
 FORCEINLINE TArray<FSensedStimulus>& FChannelSetup::GetSensedStimulusBySenseEvent(const ESensorArrayByType SenseEvent)
 {
@@ -1039,7 +1039,7 @@ FORCEINLINE TArray<FSensedStimulus>& FChannelSetup::GetSensedStimulusBySenseEven
 	}
 	checkNoEntry();
 	UE_ASSUME(0);
-	return CurrentSensed;
+	//return CurrentSensed;
 }
 
 FORCEINLINE const TArray<FSensedStimulus>& FChannelSetup::GetSensedStimulusBySenseEvent(const EOnSenseEvent SenseEvent) const
@@ -1053,7 +1053,7 @@ FORCEINLINE const TArray<FSensedStimulus>& FChannelSetup::GetSensedStimulusBySen
 	}
 	checkNoEntry();
 	UE_ASSUME(0);
-	return CurrentSensed;
+	//return CurrentSensed;
 }
 
 FORCEINLINE const FSensedStimulus* FChannelSetup::GetBestSenseStimulus() const
@@ -1076,7 +1076,7 @@ FORCEINLINE bool USensorBase::IsCallOnSense(const EOnSenseEvent SenseEvent) cons
 	}
 	checkNoEntry();
 	UE_ASSUME(0);
-	return false;
+	//return false;
 }
 
 //FORCEINLINE bool USensorBase::CheckResponseChannel(const FSensedStimulus& Stimulus) const

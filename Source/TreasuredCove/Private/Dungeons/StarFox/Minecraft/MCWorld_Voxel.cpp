@@ -22,59 +22,59 @@
 #pragma region Constants
 const FVector VoxelMask[] = { FVector(0.00000, 0.00000, 1.00000), FVector(0.00000, 0.00000, -1.00000), FVector(0.00000, 1.00000, 0.00000), FVector(0.00000, -1.00000, 0.00000), FVector(1.00000, 0.00000, 0.00000), FVector(-1.00000, 0.00000, 0.00000) };
 
-CONSTEXPR int GRASSTALL{ -2 };
-CONSTEXPR int GRASSSHORT{ -1 };
-CONSTEXPR int AIR{ 0 };
-CONSTEXPR int WATER{ 38 };
-CONSTEXPR int BEDROCK{ 39 };
+constexpr int GRASSTALL{ -2 };
+constexpr int GRASSSHORT{ -1 };
+constexpr int AIR{ 0 };
+constexpr int WATER{ 38 };
+constexpr int BEDROCK{ 39 };
 
-CONSTEXPR int GRASS{ 1 };
-CONSTEXPR int DIRT{ 2 };
+constexpr int GRASS{ 1 };
+constexpr int DIRT{ 2 };
 
-CONSTEXPR int STONE{ 3 };
-CONSTEXPR int STONESLAB{ 4 };
-CONSTEXPR int STONESTAIRS{ 5 };
+constexpr int STONE{ 3 };
+constexpr int STONESLAB{ 4 };
+constexpr int STONESTAIRS{ 5 };
 
-CONSTEXPR int STONEBRICK{ 6 };
-CONSTEXPR int STONEBRICKSLAB{ 7 };
-CONSTEXPR int STONEBRICKSTAIRS{ 8 };
+constexpr int STONEBRICK{ 6 };
+constexpr int STONEBRICKSLAB{ 7 };
+constexpr int STONEBRICKSTAIRS{ 8 };
 
-CONSTEXPR int COBBLE{ 9 };
-CONSTEXPR int COBBLESLAB{ 10 };
-CONSTEXPR int COBBLESTAIRS{ 11 };
+constexpr int COBBLE{ 9 };
+constexpr int COBBLESLAB{ 10 };
+constexpr int COBBLESTAIRS{ 11 };
 
-CONSTEXPR int COALORE{ 12 };
-CONSTEXPR int IRONORE{ 13 };
-CONSTEXPR int GOLDORE{ 14 };
-CONSTEXPR int REDSTONEORE{ 15 };
-CONSTEXPR int LAPISLAZULIORE{ 16 };
-CONSTEXPR int DIAMONDORE{ 17 };
-CONSTEXPR int EMERALDORE{ 18 };
+constexpr int COALORE{ 12 };
+constexpr int IRONORE{ 13 };
+constexpr int GOLDORE{ 14 };
+constexpr int REDSTONEORE{ 15 };
+constexpr int LAPISLAZULIORE{ 16 };
+constexpr int DIAMONDORE{ 17 };
+constexpr int EMERALDORE{ 18 };
 
-CONSTEXPR int SAND{ 19 };
-CONSTEXPR int SANDSTONE{ 20 };
-CONSTEXPR int SANDSTONESLAB{ 21 };
-CONSTEXPR int SANDSTONESTAIRS{ 22 };
+constexpr int SAND{ 19 };
+constexpr int SANDSTONE{ 20 };
+constexpr int SANDSTONESLAB{ 21 };
+constexpr int SANDSTONESTAIRS{ 22 };
 
-CONSTEXPR int OAKLEAVES{ 23 };
-CONSTEXPR int OAKLOG{ 24 };
-CONSTEXPR int OAKPLANKS{ 25 };
-CONSTEXPR int OAKSTAIRS{ 26 };
-CONSTEXPR int OAKDOOR{ 27 };
-CONSTEXPR int OAKFENCE{ 28 };
-// CONSTEXPR int OAKPRESSUREPLATE{ 29 };
+constexpr int OAKLEAVES{ 23 };
+constexpr int OAKLOG{ 24 };
+constexpr int OAKPLANKS{ 25 };
+constexpr int OAKSTAIRS{ 26 };
+constexpr int OAKDOOR{ 27 };
+constexpr int OAKFENCE{ 28 };
+// constexpr int OAKPRESSUREPLATE{ 29 };
 
-CONSTEXPR int BIRCHLEAVES{ 29 };
-CONSTEXPR int BIRCHLOG{ 30 };
-CONSTEXPR int BIRCHPLANKS{ 31 };
+constexpr int BIRCHLEAVES{ 29 };
+constexpr int BIRCHLOG{ 30 };
+constexpr int BIRCHPLANKS{ 31 };
 
-CONSTEXPR int ELMLEAVES{ 32 };
-CONSTEXPR int ELMLOG{ 33 };
-CONSTEXPR int ELMPLANKS{ 34 };
+constexpr int ELMLEAVES{ 32 };
+constexpr int ELMLOG{ 33 };
+constexpr int ELMPLANKS{ 34 };
 
-CONSTEXPR int CHEST{ 35 };
-CONSTEXPR int CRAFTINGTABLE{ 36 };
-CONSTEXPR int FURNACE{ 37 };
+constexpr int CHEST{ 35 };
+constexpr int CRAFTINGTABLE{ 36 };
+constexpr int FURNACE{ 37 };
 #pragma endregion
 
 // Sets default values

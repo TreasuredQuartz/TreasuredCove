@@ -422,7 +422,7 @@ namespace ArrayCopyHelper
 } // namespace ArrayCopyHelper
 
 
-TArray<TObjectPtr<USensorBase>> USenseReceiverComponent::GetSensorsByType(const ESensorType Sensor_Type) const
+TArray<TObjectPtr<USensorBase>>& USenseReceiverComponent::GetSensorsByType(const ESensorType Sensor_Type) const
 {
 	TArray<TObjectPtr<USensorBase>> Out;
 	switch (Sensor_Type)
@@ -1221,7 +1221,7 @@ void USenseReceiverComponent::RestoreSensorTestDefaults(TArray<FSenseSysRestoreO
 	for (const auto& It : Rest)
 	{
 		UObject* Obj = NewObject<UObject>(this, It.Class, It.ObjectName, Flags, It.DefaultObject);
-		TArray<USensorBase*>& SensorsArr = GetSensorsByType(It.SensorType);
+		TArray<TObjectPtr<USensorBase>>& SensorsArr = GetSensorsByType(It.SensorType);
 		switch (It.SensorType)
 		{
 			case ESensorType::None:

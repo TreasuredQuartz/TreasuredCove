@@ -304,10 +304,12 @@ AGameplayVoxel* AGameplayManager::GetActiveVoxel()
 
 bool AGameplayManager::InPlayArea(int32 X, int32 Y)
 {
-	return true;
-
-	FVector BoxSize = PlayArea->GetComponentLocation() + PlayArea->GetScaledBoxExtent();
-	return X < BoxSize.X && Y < BoxSize.Y;
+	FVector Location = PlayArea->GetComponentLocation();
+	FVector BoxSize = Location + PlayArea->GetScaledBoxExtent();
+	return X < BoxSize.X 
+		&& Y < BoxSize.Y
+		&& X > Location.X
+		&& Y > Location.Y;
 }
 
 void AGameplayManager::EnterPlayArea(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

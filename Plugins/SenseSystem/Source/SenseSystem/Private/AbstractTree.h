@@ -19,6 +19,7 @@
 #include "Containers/UnrealString.h"
 
 #include "DrawDebugHelpers.h"
+#include "Templates/ChooseClass.h"
 
 
 #if !defined(IF_CONSTEXPR)

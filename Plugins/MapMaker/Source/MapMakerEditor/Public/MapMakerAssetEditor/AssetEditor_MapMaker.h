@@ -9,13 +9,15 @@
 #include "UObject/ObjectSaveContext.h"
 #endif // #if ENGINE_MAJOR_VERSION == 5
 
+class UMapMaker;
+
 class MAPMAKEREDITOR_API FAssetEditor_MapMaker : public FAssetEditorToolkit, public FNotifyHook, public FGCObject
 {
 public:
 	FAssetEditor_MapMaker();
 	virtual ~FAssetEditor_MapMaker();
 
-	void InitMapMakerAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr< IToolkitHost >& InitToolkitHost, UMapMaker* Graph);
+	void InitMapMakerAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr< IToolkitHost >& InitToolkitHost, TObjectPtr<UMapMaker> Graph);
 
 	// IToolkit interface
 	virtual void RegisterTabSpawners(const TSharedRef<FTabManager>& TabManager) override;
@@ -90,7 +92,7 @@ protected:
 	void OnPackageSavedWithContext(const FString& PackageFileName, UPackage* Package, FObjectPostSaveContext ObjectSaveContext);
 
 protected:
-	class UMapMaker* EditingGraph;
+	TObjectPtr<UMapMaker> EditingGraph;
 	FPreviewScene_MapMaker PreviewScene;
 
 	/** Handle to the registered OnPackageSave delegate */

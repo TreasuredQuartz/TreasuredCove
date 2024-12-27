@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 // Gameplay Ability Dependencies
-#include "GACharacter.h"
+#include "Global/Actors/GACharacter.h"
 #include "GAActor.h"
 #include "GAWeapon.h"
 #include "GAAIController.h"
@@ -2293,8 +2293,6 @@ int AGACharacter::DetermineActiveMenuSelection(int MaxMenuCount, int Direction)
 
 	if (MaxMenuCount == 0)
 	{
-		return 1;
-
 		if (PC)
 		{
 			PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
@@ -2347,8 +2345,6 @@ int AGACharacter::DetermineSubMenuSelection(int MaxMenuCount, int Direction)
 
 	if (MaxMenuCount == 0)
 	{
-		return 1;
-
 		if (PC)
 		{
 			PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));

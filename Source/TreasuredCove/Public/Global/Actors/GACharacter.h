@@ -73,6 +73,7 @@ class USensorBase;
 
 class UParticleSystemComponent;
 class UProceduralMeshComponent;
+class UPhysicalAnimationComponent;
 class UWidgetComponent;
 
 UENUM(BlueprintType)
