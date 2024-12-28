@@ -2,7 +2,7 @@
 
 
 #include "Global/AbilitySystem/SkillTree/GASkillTreeNode.h"
-#include "GASkillTree.h"
+#include "Global/AbilitySystem/SkillTree/GASkillTree.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
 #define LOCTEXT_NAMESPACE "SkillTreeNode"

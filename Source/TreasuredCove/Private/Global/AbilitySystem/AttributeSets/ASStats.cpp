@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ASStats.h"
-#include "GASystemComponent.h"
+#include "Global/AbilitySystem/AttributeSets/ASStats.h"
+#include "Global/AbilitySystem/GASystemComponent.h"
 #include "GameplayAbilitiesModule.h"
 #include "AbilitySystemGlobals.h"
-#include "StaticLibrary.h"
+#include "Global/Libraries/StaticLibrary.h"
 
 void UASStats::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {

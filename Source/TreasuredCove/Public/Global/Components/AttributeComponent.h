@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
-#include "OnAttributeModifiedEvent.h"
+#include "Global/AbilitySystem/AttributeSets/OnAttributeModifiedEvent.h"
 #include "AttributeComponent.generated.h"
 
 class UAttributeSet;

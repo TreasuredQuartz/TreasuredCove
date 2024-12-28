@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameplayResidence.h"
-#include "TownSystemComponent.h"
-#include "TownSystemInterface.h"
+#include "Buildings/GameplayResidence.h"
+#include "TownSystem/TownSystemComponent.h"
+#include "TownSystem/TownSystemInterface.h"
 
 void AGameplayResidence::ReduceFatigue(AActor* User)
 {

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
-#include "GameTimeInterface.h"
+#include "TownSystem/GameTimeInterface.h"
 #include "GAGameState.generated.h"
 
 class UStaticMesh;

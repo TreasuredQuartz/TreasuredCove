@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnhancedInputComponent.h"
-#include "GAInputConfigData.h"
+#include "Global/Config/GAInputConfigData.h"
 #include "GameplayTagContainer.h"
 #include "InputAction.h"
 #include "GAEnhancedInputComponent.generated.h"

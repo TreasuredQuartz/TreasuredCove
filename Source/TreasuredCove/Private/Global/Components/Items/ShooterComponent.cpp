@@ -2,15 +2,16 @@
 
 
 #include "Global/Components/Items/ShooterComponent.h"
-#include "MagazineHolder.h"
-#include "ShooterAttatchment.h"
-#include "EquipmentComponent.h"
-#include "InventoryComponent.h"
-#include "GAProjectileMovementComponent.h"
+#include "Global/Components/Items/ShooterAttatchment.h"
+#include "Global/Components/Items/EquipmentComponent.h"
+#include "Global/Components/Items/InventoryComponent.h"
+#include "Global/Components/Items/GAProjectileMovementComponent.h"
+
+#include "Global/Actors/Items/BulletProjectile.h"
+#include "Global/Actors/Items/MagazineHolder.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "BulletProjectile.h"
 
 // class AContainer;
 

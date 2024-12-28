@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 
-#include "Emotion.h"
-#include "Language.h"
-#include "Race.h"
-#include "Species.h"
-#include "Relationship.h"
+#include "Global/Enumerations/Emotion.h"
+#include "Global/Enumerations/Language.h"
+#include "Global/Enumerations/Race.h"
+#include "Global/Enumerations/Species.h"
+#include "Global/Enumerations/Relationship.h"
 
 #include "DialogueComponent.generated.h"
 

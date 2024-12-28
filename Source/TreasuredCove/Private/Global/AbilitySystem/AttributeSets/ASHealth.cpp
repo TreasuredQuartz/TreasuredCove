@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ASHealth.h"
-#include "HealthComponent.h"
+#include "Global/AbilitySystem/AttributeSets/ASHealth.h"
+#include "Global/Components/Characters/HealthComponent.h"
 
 #include "AbilitySystemComponent.h"
 

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
-#include "SavedAttribute.h"
+#include "Global/Structs/SavedAttribute.h"
 #include "GASaveGame.generated.h"
 
 class AGAActor;

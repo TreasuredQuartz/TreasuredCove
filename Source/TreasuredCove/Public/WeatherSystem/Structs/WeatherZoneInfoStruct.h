@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AtmosphereType.h"
+#include "WeatherSystem/Enumerations/AtmosphereType.h"
 #include "WeatherZoneInfoStruct.generated.h"
 
 USTRUCT(BlueprintType)

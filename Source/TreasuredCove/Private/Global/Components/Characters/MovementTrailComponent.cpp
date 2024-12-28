@@ -1,10 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MovementTrailComponent.h"
-#include "MovementTrailActor.h"
+#include "Global/Components/Characters/MovementTrailComponent.h"
+#include "Global/Actors/MovementTrailActor.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "GACharacter.h"
 
 #include "Kismet/GameplayStatics.h"
 

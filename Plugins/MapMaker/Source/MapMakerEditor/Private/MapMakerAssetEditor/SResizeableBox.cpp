@@ -2,7 +2,7 @@
 
 
 #include "MapMakerAssetEditor/SResizeableBox.h"
-#include "SlateWrapperTypes.h"
+#include "Components/SlateWrapperTypes.h"
 
 void SResizeableBox::Construct(const FArguments& InArgs)
 {

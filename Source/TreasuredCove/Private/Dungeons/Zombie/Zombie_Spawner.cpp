@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Zombie_Spawner.h"
-#include "Zombie_Manager.h"
+#include "Dungeons/Zombie/Zombie_Spawner.h"
+#include "Dungeons/Zombie/Zombie_Manager.h"
 
-#include "HealthComponent.h"
+#include "Global/Components/Characters/HealthComponent.h"
 
 #include "Engine/World.h"
 #include "kismet/GameplayStatics.h"

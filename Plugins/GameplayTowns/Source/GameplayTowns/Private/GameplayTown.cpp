@@ -2,9 +2,9 @@
 
 #include "GameplayTown.h"
 #include "GameplayTownState.h"
-#include "GameplayJobSite.h"
-#include "GameplayResidence.h"
-#include "TownSystemComponent.h"
+#include "Buildings/GameplayJobSite.h"
+#include "Buildings/GameplayResidence.h"
+#include "TownSystem/TownSystemComponent.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"

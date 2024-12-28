@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 
-#include "PlanetNoiseSettings.h"
-#include "PlanetNoiseInterface.h"
+#include "Settings/PlanetNoiseSettings.h"
+#include "Interface/PlanetNoiseInterface.h"
 #include "PlanetNoise.generated.h"
 
 /** This struct inherits from an interface.

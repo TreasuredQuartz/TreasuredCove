@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlanetMaterialSettings.h"
+#include "Settings/PlanetMaterialSettings.h"
 
 #include "MinMax.h"
 #include "PlanetMaterialGenerator.generated.h"

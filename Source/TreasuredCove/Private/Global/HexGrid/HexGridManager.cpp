@@ -2,7 +2,7 @@
 
 
 #include "Global/HexGrid/HexGridManager.h"
-#include "HexGrid.h"
+#include "Global/HexGrid/HexGrid.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 

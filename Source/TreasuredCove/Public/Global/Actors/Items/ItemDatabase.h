@@ -39,7 +39,7 @@ public:
 	template <class T>
 	T* GetItemDataByClass() const
 	{
-		return FindItemDataByClass<T>()
+		return FindItemDataByClass<T>();
 	};
 
 	template<class T>

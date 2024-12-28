@@ -4,15 +4,15 @@
 
 // Core Class Dependencies
 #include "CoreMinimal.h"
-#include "Actors/GAActor.h"
-#include "PickupInterface.h"
+#include "Global/Actors/GAActor.h"
+#include "Global/Interfaces/PickupInterface.h"
 
 // Enums
-#include "WeaponType.h"
+#include "Global/Enumerations/WeaponType.h"
 
 // Structs
-#include "SavedAttribute.h"
-#include "GAItemInfoStruct.h"
+#include "Global/Structs/SavedAttribute.h"
+#include "Global/Structs/GAItemInfoStruct.h"
 
 // .generated file is always last include
 #include "GAWeapon.generated.h"

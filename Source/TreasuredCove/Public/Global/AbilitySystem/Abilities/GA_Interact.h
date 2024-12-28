@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/Abilities/GameplayAbilityBase.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
 #include "GA_Interact.generated.h"
 
 /**

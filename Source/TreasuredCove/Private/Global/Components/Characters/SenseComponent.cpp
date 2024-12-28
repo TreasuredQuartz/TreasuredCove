@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SenseComponent.h"
-#include "GACharacter.h"
+#include "Global/Components/Characters/SenseComponent.h"
+#include "Global/Actors/GACharacter.h"
 
 #include "Perception/PawnSensingComponent.h"
 

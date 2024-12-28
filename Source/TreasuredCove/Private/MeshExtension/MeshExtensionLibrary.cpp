@@ -1,12 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MeshExtensionLibrary.h"
+#include "MeshExtension/MeshExtensionLibrary.h"
 #include "ProceduralMeshComponent.h"
 #include "KismetProceduralMeshLibrary.h"
 #include "RawMesh.h"
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "Classes\Engine\StaticMesh.h"
+#include "Engine/StaticMesh.h"
+#include "PhysicsEngine/ConvexElem.h"
+#include "PhysicsEngine/BodySetup.h"
 //#include "SkeletalMeshMerge.h"
 //#include "Engine/SkeletalMeshSocket.h"
 //#include "Engine/SkeletalMesh.h"

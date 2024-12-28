@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "ItemKeyStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 #include "InteractionInterface.h"
 #include "PickupInterface.generated.h"
 

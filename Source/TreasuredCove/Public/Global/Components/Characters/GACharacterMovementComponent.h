@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "NavType.h"
+#include "Global/Enumerations/NavType.h"
 #include "GACharacterMovementComponent.generated.h"
 
 USTRUCT(BlueprintType)

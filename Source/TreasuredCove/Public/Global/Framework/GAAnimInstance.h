@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 
-#include "WeaponType.h"
+#include "Global/Enumerations/WeaponType.h"
 
 #include "GAAnimInstance.generated.h"
 

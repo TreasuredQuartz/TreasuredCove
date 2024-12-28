@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "ProceduralMeshSectionStruct.h"
+#include "Global/Structs/ProceduralMeshSectionStruct.h"
 #include "KatanaCreator.generated.h"
 
 class UPhysicalMaterial;

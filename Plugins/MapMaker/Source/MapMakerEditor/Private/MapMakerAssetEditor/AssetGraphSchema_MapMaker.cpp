@@ -5,11 +5,12 @@
 #include "MapMakerAssetEditor/EdGraph_MapMaker.h"
 #include "MapMakerAssetEditor/EdNode_MapMakerNode.h"
 #include "MapMakerAssetEditor/EdNode_MapMakerEdge.h"
-#include "MapMakerEditorPCH.h"
-#include "GraphEditorActions.h"
-#include "EditorCommands_MapMaker.h"
-#include "Framework/Commands/GenericCommands.h"
+#include "MapMakerAssetEditor/EditorCommands_MapMaker.h"
 #include "MapMakerAssetEditor/ConnectionDrawingPolicy_MapMaker.h"
+#include "MapMakerEditorPCH.h"
+
+#include "GraphEditorActions.h"
+#include "Framework/Commands/GenericCommands.h"
 
 #define LOCTEXT_NAMESPACE "AssetSchema_MapMaker"
 

@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAProjectile.h"
-#include "GAProjectileMovementComponent.h"
-#include "GAGameState.h"
-#include "GALibrary.h"
+#include "Global/Actors/Items/GAProjectile.h"
+#include "Global/Components/Items/GAProjectileMovementComponent.h"
+#include "Global/Framework/GAGameState.h"
+#include "Global/Libraries/GALibrary.h"
 
-#include "DestructibleMeshInterface.h"
+#include "Global/Interfaces/DestructibleMeshInterface.h"
 
-#include "GACharacter.h"
+#include "Global/Actors/GACharacter.h"
 #include "AbilitySystemComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Engine/Engine.h"

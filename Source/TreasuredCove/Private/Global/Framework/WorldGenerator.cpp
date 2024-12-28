@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "WorldGenerator.h"
+#include "Global/Framework/WorldGenerator.h"
 
 // Sets default values
 AWorldGenerator::AWorldGenerator()

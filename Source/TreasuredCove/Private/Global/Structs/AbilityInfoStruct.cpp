@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "AbilityInfoStruct.h"
-#include "GameplayAbilityBase.h"
+#include "Global/Structs/AbilityInfoStruct.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
 
 FAbilityInfo::FAbilityInfo()
 	: Name("")

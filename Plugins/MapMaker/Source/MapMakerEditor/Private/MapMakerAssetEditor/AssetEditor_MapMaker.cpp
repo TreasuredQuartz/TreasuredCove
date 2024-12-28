@@ -9,7 +9,6 @@
 #include "MapMakerAssetEditor/EdGraph_MapMaker.h"
 #include "MapMakerAssetEditor/EdNode_MapMakerNode.h"
 #include "MapMakerAssetEditor/EdNode_MapMakerEdge.h"
-#include "AssetEditor_MapMaker.h"
 #include "MapMakerEditorPCH.h"
 #include "HAL/PlatformApplicationMisc.h"
 #include "Framework/Commands/GenericCommands.h"

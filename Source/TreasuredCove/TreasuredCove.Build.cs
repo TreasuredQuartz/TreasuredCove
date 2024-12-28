@@ -7,6 +7,18 @@ public class TreasuredCove : ModuleRules
 	public TreasuredCove(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        PrecompileForTargets = PrecompileTargetsType.Any;
+
+        PublicIncludePaths.AddRange(new string[]
+        {
+            ModuleDirectory + "/Public",
+        });
+
+
+		PrivateIncludePaths.AddRange(new string[]
+		{
+			"TreasuredCove/Private",
+		});
 
         PrivateDependencyModuleNames.AddRange(new string[] 
 		{ 

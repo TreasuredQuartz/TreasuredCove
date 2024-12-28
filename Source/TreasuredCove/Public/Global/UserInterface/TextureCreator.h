@@ -5,7 +5,7 @@
 #include <memory>
 #include "CoreMinimal.h"
 #include "Engine/Texture2D.h"
-#include "Object.h"
+#include "UObject/NoExportTypes.h"
 #include "TextureCreator.generated.h"
 
 class UTextureRenderTarget2D;

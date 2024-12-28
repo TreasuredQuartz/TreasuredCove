@@ -1,4 +1,4 @@
-#include "PlanetSettingsCustomization.h"
+#include "Customization/PlanetSettingsCustomization.h"
 
 TSharedRef<IPropertyTypeCustomization> FPlanetSettingsCustomization::MakeInstance()
 {

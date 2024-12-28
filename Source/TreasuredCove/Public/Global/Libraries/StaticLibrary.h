@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "BulletStruct.h"
-#include "ItemKeyStruct.h"
+#include "Global/Structs/BulletStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 #include "StaticLibrary.generated.h"
 
 UCLASS()

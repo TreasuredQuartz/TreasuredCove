@@ -2,7 +2,8 @@
 
 
 #include "Global/AbilitySystem/SkillTree/GASkillTree.h"
-#include "GASkillTreeNode.h"
+#include "Global/AbilitySystem/SkillTree/GASkillTreeNode.h"
+#include "Global/Structs/SkillInfoStruct.h"
 
 UGASkillTree::UGASkillTree()
 {

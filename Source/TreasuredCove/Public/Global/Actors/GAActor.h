@@ -7,8 +7,8 @@
 #include "Abilities/GameplayAbility.h"
 
 #include "AbilitySystemInterface.h"
-#include "InteractionInterface.h"
-#include "ControlInputInterface.h"
+#include "Global/Interfaces/InteractionInterface.h"
+#include "Global/Interfaces/ControlInputInterface.h"
 
 #include "GAActor.generated.h"
 

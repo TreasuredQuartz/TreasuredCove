@@ -2,9 +2,9 @@
 
 
 #include "Global/UserInterface/Widgets/ItemEditor.h"
-#include "GACharacter.h"
-#include "GAActor.h"
-#include "RepositoryInterface.h"
+#include "Global/Actors/GACharacter.h"
+#include "Global/Actors/GAActor.h"
+#include "Global/Interfaces/RepositoryInterface.h"
 #include "Kismet/GameplayStatics.h"
 
 void UItemEditor::OnMenuOpened_Implementation()

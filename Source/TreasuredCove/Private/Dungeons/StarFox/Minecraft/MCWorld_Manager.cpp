@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MCWorld_Manager.h"
-#include "MCWorld_Voxel.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_Manager.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_Voxel.h"
 
 // Sets default values
 AMCWorld_Manager::AMCWorld_Manager()

@@ -1,6 +1,6 @@
 //
 
-#include "ResourceComponent.h"
+#include "TownSystem/ResourceComponent.h"
 
 void UResourceComponent::AddToResource(FName Name, float Amount)
 {

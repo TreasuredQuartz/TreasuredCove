@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FloatingTextActor.h"
+#include "Global/Actors/FloatingTextActor.h"
 #include "GravityWidget.generated.h"
 
 class UGAWidget;

@@ -6,7 +6,7 @@
 #include "AttributeSet.h"
 #include "ASStats.generated.h"
 
-#define DECLARE_NAMED_STAT_MODIFIER_GETTER(FunctionName, Property)FORCEINLINE float FunctionName##() const { return (Property##.GetCurrentValue() - 13) / 2; }
+// #define DECLARE_NAMED_STAT_MODIFIER_GETTER(FunctionName, Property) FORCEINLINE float FunctionName##() const { return (Property##.GetCurrentValue() - 13) / 2; }
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnExperienceModifiedDelegate, float, Experience, float, MaxExperience);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPointsModifiedDelegate, float, StatPoints, float, SkillPoints);
@@ -76,12 +76,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Level")
 	FGameplayAttributeData MaxExperience;
 
-	DECLARE_NAMED_STAT_MODIFIER_GETTER(GetChaModifier, Charisma);
+	/* DECLARE_NAMED_STAT_MODIFIER_GETTER(GetChaModifier, Charisma);
 	DECLARE_NAMED_STAT_MODIFIER_GETTER(GetConModifier, Constitution);
 	DECLARE_NAMED_STAT_MODIFIER_GETTER(GetDexModifier, Dexterity);
 	DECLARE_NAMED_STAT_MODIFIER_GETTER(GetIntModifier, Intelligence);
 	DECLARE_NAMED_STAT_MODIFIER_GETTER(GetStrModifier, Strength);
-	DECLARE_NAMED_STAT_MODIFIER_GETTER(GetWisModifier, Wisdom);
+	DECLARE_NAMED_STAT_MODIFIER_GETTER(GetWisModifier, Wisdom); */
 
 	/*FORCEINLINE float GetMaxHealthWithBonuses()
 	{

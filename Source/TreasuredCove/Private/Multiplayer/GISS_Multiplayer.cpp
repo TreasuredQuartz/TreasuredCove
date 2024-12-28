@@ -2,13 +2,13 @@
 
 
 #include "Multiplayer/GISS_Multiplayer.h"
-#include "MultiplayerLoadout.h"
-#include "MultiplayerLoadoutManager.h"
+#include "Multiplayer/MultiplayerLoadout.h"
+#include "Multiplayer/SGMultiplayerLoadouts.h"
+#include "Multiplayer/MultiplayerLoadoutManager.h"
 
-#include "PlayFab_GameInstanceSubsystem.h"
+#include "Multiplayer/Playfab/PlayFab_GameInstanceSubsystem.h"
 
 #include "AdvancedIdentityLibrary.h"
-#include "SGMultiplayerLoadouts.h"
 #include "kismet/GameplayStatics.h"
 
 FAccountAttributes::FAccountAttributes() :

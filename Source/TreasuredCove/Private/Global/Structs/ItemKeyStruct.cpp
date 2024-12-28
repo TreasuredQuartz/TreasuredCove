@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ItemKeyStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 #include "Misc/Crc.h"
 
 #if UE_BUILD_DEBUG

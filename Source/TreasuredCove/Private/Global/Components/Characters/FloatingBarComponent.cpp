@@ -6,7 +6,7 @@
 #include "Engine/UserInterfaceSettings.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "FloatingBarActor.h"
+#include "Global/Actors/FloatingBarActor.h"
 
 // Sets default values for this component's properties
 UFloatingBarComponent::UFloatingBarComponent()

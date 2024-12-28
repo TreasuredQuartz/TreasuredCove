@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "UObject/Class.h"
 #include "Modules/ModuleManager.h"
-#include "AssetData.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/Blueprint.h"
 

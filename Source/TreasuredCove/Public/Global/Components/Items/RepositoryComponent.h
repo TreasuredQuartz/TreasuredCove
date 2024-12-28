@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Repository.h"
-#include "Structs/ItemKeyStruct.h"
+#include "Global/Components/Items/Repository.h"
+#include "Global/Structs/ItemKeyStruct.h"
 #include "RepositoryComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRepositoryChanged);

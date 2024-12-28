@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PlanetShapeGenerator.h"
+#include "Generators/PlanetShapeGenerator.h"
 #include "PlanetNoise.h"
 #include "Engine/Engine.h"
  

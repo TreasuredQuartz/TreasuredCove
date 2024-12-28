@@ -63,7 +63,7 @@ protected:
 	void OnPackageSavedWithContext(const FString& PackageFileName, UPackage* Package, FObjectPostSaveContext ObjectSaveContext);
 
 protected:
-	UJsonDatabaseAsset* EditingDatabase;
+	TObjectPtr<UJsonDatabaseAsset> EditingDatabase;
 
 	/** Handle to the registered OnPackageSave delegate */
 	FDelegateHandle OnPackageSavedDelegateHandle;

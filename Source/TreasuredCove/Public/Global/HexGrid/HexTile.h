@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ProceduralMeshSectionStruct.h"
+#include "Global/Structs/ProceduralMeshSectionStruct.h"
 #include "HexTile.generated.h"
 
 // class UStaticMeshComponent;

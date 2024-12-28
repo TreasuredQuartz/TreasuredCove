@@ -5,9 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-#include "PlanetSettings.h"
-#include "PlanetShapeGenerator.h"
-#include "PlanetMaterialGenerator.h"
+#include "Settings/PlanetSettings.h"
+#include "Generators/PlanetShapeGenerator.h"
+#include "Generators/PlanetMaterialGenerator.h"
 
 #include "Components/TimelineComponent.h"
 #include "ProceduralPlanet.generated.h"

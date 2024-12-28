@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GameplayAbilityBase.h"
-#include "GALibrary.h"
-#include "GAActor.h"
-#include "GACharacter.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
+#include "Global/Libraries/GALibrary.h"
+#include "Global/Actors/GACharacter.h"
+#include "Global/Actors/GAActor.h"
 
 FAbilityInfo UGameplayAbilityBase::GetAbilityInfo()
 {

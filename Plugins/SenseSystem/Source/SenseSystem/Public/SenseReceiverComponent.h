@@ -149,7 +149,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "SenseSystem|SenseReceiver", meta = (Keywords = "Get Sensors By Type"))
 	TArray<USensorBase*> GetSensorsByType_BP(ESensorType Sensor_Type) const;
-	TArray<TObjectPtr<USensorBase>>& GetSensorsByType(ESensorType Sensor_Type) const;
+	TArray<TObjectPtr<USensorBase>> GetSensorsByType(ESensorType Sensor_Type) const;
 
 
 	/*Get Sensor with force validation By Class*/

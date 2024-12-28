@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PropertyEditor/Public/IPropertyTypeCustomization.h"
+#include "IPropertyTypeCustomization.h"
 
 class FPlanetSettingsCustomization : public IPropertyTypeCustomization
 {

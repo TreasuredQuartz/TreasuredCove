@@ -1,17 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAActor.h"
-#include "GACharacter.h"
-#include "GASystemComponent.h"
-#include "GAPlayerController.h"
-#include "GAEnhancedInputComponent.h"
-#include "GameplayAbilityBase.h"
-#include "GAInputConfigData.h"
-#include "AbilitySet.h"
+#include "Global/Actors/GAActor.h"
+#include "Global/Actors/GACharacter.h"
 
-#include "ItemMovementComponent.h"
-#include "PickupComponent.h"
-#include "EquippableComponent.h"
+#include "Global/AbilitySystem/AbilitySet.h"
+#include "Global/AbilitySystem/GASystemComponent.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
+
+#include "Global/Framework/GAPlayerController.h"
+
+#include "Global/Components/GAEnhancedInputComponent.h"
+#include "Global/Components/Items/PickupComponent.h"
+#include "Global/Components/Items/EquippableComponent.h"
+#include "Global/Components/Items/ItemMovementComponent.h"
+
+#include "Global/Config/GAInputConfigData.h"
 
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"

@@ -2,14 +2,13 @@
 
 #include "ProceduralPlanet.h"
 #include "PlanetLandscape.h"
-#include "PlanetShapeSettings.h"
-#include "PlanetShapeGenerator.h"
+#include "Settings/PlanetShapeSettings.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Camera/CameraComponent.h"
 #include "realtimeMeshComponent.h"
 
-#include "UnrealEditorSubsystem.h"
+#include "Subsystems/UnrealEditorSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/Engine.h"

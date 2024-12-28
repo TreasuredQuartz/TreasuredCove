@@ -3,7 +3,6 @@
 
 #include "Global/Components/Items/EquipmentComponent.h"
 #include "Global/Components/Items/EquippableComponent.h"
-#include "GAActor.h"
 
 // Sets default values for this component's properties
 UEquipmentComponent::UEquipmentComponent()

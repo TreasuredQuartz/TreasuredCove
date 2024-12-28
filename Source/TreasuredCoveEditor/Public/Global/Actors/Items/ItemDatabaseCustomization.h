@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "PropertyEditor/Public/IDetailCustomization.h"
+#include "IDetailCustomization.h"
 
 /**
  * 

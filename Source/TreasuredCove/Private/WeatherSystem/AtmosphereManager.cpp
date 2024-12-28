@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AtmosphereManager.h"
+#include "WeatherSystem/AtmosphereManager.h"
+#include "WeatherSystem/WeatherComponent.h"
 
 #include "Particles/ParticleSystemComponent.h"
 
-#include "WeatherComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values

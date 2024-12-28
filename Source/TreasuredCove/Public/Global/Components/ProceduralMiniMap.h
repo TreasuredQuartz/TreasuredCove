@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
-#include "ProceduralMeshSectionStruct.h"
+#include "Global/Structs/ProceduralMeshSectionStruct.h"
 #include "ProceduralMiniMap.generated.h"
 
 class UProceduralMeshComponent;

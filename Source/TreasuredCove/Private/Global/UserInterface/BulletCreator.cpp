@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BulletCreator.h"
-#include "DrawingCanvas.h"
+#include "Global/UserInterface/BulletCreator.h"
+#include "Global/UserInterface/DrawingCanvas.h"
 
 // Sets default values
 ABulletCreator::ABulletCreator()

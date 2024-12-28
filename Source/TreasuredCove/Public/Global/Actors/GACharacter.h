@@ -3,32 +3,34 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystemInterface.h"
-#include "InteractionInterface.h"
-#include "RepositoryInterface.h"
-#include "InventoryInterface.h"
-#include "DlgDialogueParticipant.h"
-#include "TownSystemInterface.h"
 #include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
 #include "Abilities/GameplayAbility.h"
+
+#include "Global/Interfaces/InteractionInterface.h"
+#include "Global/Interfaces/RepositoryInterface.h"
+#include "Global/Interfaces/InventoryInterface.h"
+
+#include "DlgSystem/DlgDialogueParticipant.h"
+#include "TownSystem/TownSystemInterface.h"
 #include "InputActionValue.h"
 
-#include "DialogueComponent.h"
+#include "Global/Components/Characters/DialogueComponent.h"
 
 #include "SenseSysHelpers.h"
 
-#include "Element.h"
-#include "TownJob.h"
-#include "WarPartyRole.h"
-#include "WeaponType.h"
-#include "AbilityType.h"
-#include "AttributeType.h"
-#include "NavType.h"
+#include "Global/Enumerations/Element.h"
+#include "Global/Enumerations/TownJob.h"
+#include "Global/Enumerations/WarPartyRole.h"
+#include "Global/Enumerations/WeaponType.h"
+#include "Global/Enumerations/AbilityType.h"
+#include "Global/Enumerations/AttributeType.h"
+#include "Global/Enumerations/NavType.h"
 
-#include "SavedAttribute.h"
-#include "GAActiveLoadoutStruct.h"
-#include "AICharacterInfoStruct.h"
-#include "ItemKeyStruct.h"
+#include "Global/Structs/SavedAttribute.h"
+#include "Global/Structs/GAActiveLoadoutStruct.h"
+#include "Global/Structs/AICharacterInfoStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 
 #include "GACharacter.generated.h"
 

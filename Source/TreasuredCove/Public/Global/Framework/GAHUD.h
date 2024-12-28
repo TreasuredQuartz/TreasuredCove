@@ -7,12 +7,12 @@
 #include "GameFramework/HUD.h"
 #include "GameplayAbilitySpec.h"
 
-#include "BulletStruct.h"
-#include "GAItemInfoStruct.h"
-#include "ItemKeyStruct.h"
+#include "Global/Structs/BulletStruct.h"
+#include "Global/Structs/GAItemInfoStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 
-#include "NavType.h"
-#include "AbilityType.h"
+#include "Global/Enumerations/NavType.h"
+#include "Global/Enumerations/AbilityType.h"
 
 #include "GAHUD.generated.h"
 
@@ -53,7 +53,7 @@ public:
 	void OnControllerChanged(bool bIsConnected);
 
 	//
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
+	/* UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
 	void AddAbilityToUI(FAbilityInfo AbilityInfo, EAbilityType AbilityType, FGameplayAbilitySpecHandle InHandle, bool bFromItem);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
@@ -129,7 +129,7 @@ public:
 	void OnUpdateCurrentBuilding(FName CurrentBuildingName);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
-	void OnUpdateTargetBuilding(FName TargetBuildingName);
+	void OnUpdateTargetBuilding(FName TargetBuildingName); // */
 
 	//---------------------------------
 	// User Interface Pass Functions
@@ -141,7 +141,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pausing")
 	void ExitPauseStudio();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+	/* UFUNCTION(BlueprintImplementableEvent, Category = "UI")
 	void ConfirmPressed();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
@@ -205,7 +205,7 @@ public:
 
 	//
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
-	void OnSwitchEquippedItems();
+	void OnSwitchEquippedItems(); 
 
 	//
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
@@ -228,7 +228,7 @@ public:
 	void OnDropItemFromInventory(uint8 Slot);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
-	void OnDropItem();
+	void OnDropItem(); // */
 
 public:
 	// Cursor

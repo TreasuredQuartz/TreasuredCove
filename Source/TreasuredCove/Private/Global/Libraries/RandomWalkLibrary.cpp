@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "RandomWalkLibrary.h"
+#include "Global/Libraries/RandomWalkLibrary.h"
 
 TArray<int32> URandomWalkLibrary::GenerateRandomWalk2D(uint8 height, uint8 width, uint8 maxSteps, int32 RandomSeed)
 {

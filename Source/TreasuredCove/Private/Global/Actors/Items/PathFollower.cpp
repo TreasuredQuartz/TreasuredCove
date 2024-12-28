@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PathFollower.h"
-#include "Path.h"
+#include "Global/Actors/Items/PathFollower.h"
+#include "Global/Actors/Items/Path.h"
 
 #include "Components/TimelineComponent.h"
 #include "Components/SplineComponent.h"

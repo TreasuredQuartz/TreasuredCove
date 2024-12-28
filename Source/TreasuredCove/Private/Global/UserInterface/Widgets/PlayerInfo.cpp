@@ -1,6 +1,6 @@
 // Fill out your copywrite description in the Description Page in Project Settings
 
-#include "PlayerInfo.h"
+#include "Global/UserInterface/Widgets/PlayerInfo.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"

@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "AtmosphereType.h"
-#include "WeatherZoneInfoStruct.h"
+#include "WeatherSystem/Enumerations/AtmosphereType.h"
+#include "WeatherSystem/Structs/WeatherZoneInfoStruct.h"
 #include "WeatherInterface.generated.h"
 
 // This class does not need to be modified.

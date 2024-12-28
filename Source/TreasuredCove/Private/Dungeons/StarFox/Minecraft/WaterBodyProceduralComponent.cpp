@@ -5,8 +5,9 @@
 #include "ProceduralMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "WaterSubsystem.h"
+#include "WaterBodyActor.h"
 #include "Misc/UObjectToken.h"
-#include "MeshExtensionLibrary.h"
+#include "MeshExtension/MeshExtensionLibrary.h"
 
 #if WITH_EDITOR
 #include "WaterIconHelper.h"

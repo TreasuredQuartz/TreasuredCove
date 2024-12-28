@@ -1,9 +1,9 @@
 
 #include "TreasuredCoveEditor.h"
 #include "Modules/ModuleManager.h"
-#include "ItemDatabase.h"
-#include "ItemDatabaseCustomization.h"
-#include "PropertyEditor/Public/PropertyEditorModule.h"
+#include "Global/Actors/Items/ItemDatabase.h"
+#include "Global/Actors/Items/ItemDatabaseCustomization.h"
+#include "PropertyEditorModule.h"
 
 IMPLEMENT_PRIMARY_GAME_MODULE(FTreasuredCoveEditorModule, TreasuredCoveEditor, "TreasuredCoveEditor");
 

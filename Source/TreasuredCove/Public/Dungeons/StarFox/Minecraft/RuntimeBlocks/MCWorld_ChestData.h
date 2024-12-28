@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InventoryInterface.h"
+#include "Global/Interfaces/InventoryInterface.h"
 #include "Dungeons/StarFox/Minecraft/RuntimeBlocks/BlockRuntimeData.h"
 #include "MCWorld_ChestData.generated.h"
 

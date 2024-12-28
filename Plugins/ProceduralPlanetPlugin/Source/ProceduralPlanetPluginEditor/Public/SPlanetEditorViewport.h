@@ -52,7 +52,7 @@ public:
 	bool SetPreviewAsset(UObject* InAsset);
 
 	/** Component for the preview mesh. */
-	UMeshComponent* PreviewMeshComponent;
+	TObjectPtr<UMeshComponent> PreviewMeshComponent;
 
 	/** The preview primitive we are using. */
 	EThumbnailPrimType PreviewPrimType;

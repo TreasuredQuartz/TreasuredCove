@@ -56,6 +56,6 @@ public:
 	static bool TriangulatePoly(TArray<uint32>& OutTris, const TArray<FProcMeshVertex>& PolyVerts, int32 VertBase, const FVector& PolyNormal);
 
 	/** Util to slice a convex hull with a plane */
-	static void SliceConvexElem(const FKConvexElem& InConvex, const FPlane& SlicePlane, TArray<FVector>& OutConvexVerts);
+	static void SliceConvexElem(const struct FKConvexElem& InConvex, const FPlane& SlicePlane, TArray<FVector>& OutConvexVerts);
 };
 

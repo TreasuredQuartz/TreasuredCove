@@ -2,10 +2,11 @@
 
 
 #include "JsonDatabaseAssetEditor/AssetEditor_JsonDatabase.h"
+#include "JsonDatabaseAssetEditor/SJsonEditor.h"
+#include "JsonDatabaseAssetEditor/SJsonBrowser.h"
+
 #include "JsonDatabaseAsset.h"
 
-#include "SJsonEditor.h"
-#include "SJsonBrowser.h"
 
 #define LOCTEXT_NAMESPACE "AssetEditor_JsonDatabase"
 

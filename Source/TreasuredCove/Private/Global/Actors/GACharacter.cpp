@@ -2,64 +2,64 @@
 
 // Gameplay Ability Dependencies
 #include "Global/Actors/GACharacter.h"
-#include "GAActor.h"
-#include "GAWeapon.h"
-#include "GAAIController.h"
-#include "GAPlayerController.h"
+#include "Global/Actors/GAActor.h"
+#include "Global/Actors/Items/GAWeapon.h"
+#include "Global/Framework/GAAIController.h"
+#include "Global/Framework/GAPlayerController.h"
 
 // Attribute sets
-#include "ASHealth.h"
-#include "ASAmmo.h"
-#include "ASStats.h"
-#include "ASUltimate.h"
-#include "ASWeaponStats.h"
+#include "Global/AbilitySystem/AttributeSets/ASHealth.h"
+#include "Global/AbilitySystem/AttributeSets/ASAmmo.h"
+#include "Global/AbilitySystem/AttributeSets/ASStats.h"
+#include "Global/AbilitySystem/AttributeSets/ASUltimate.h"
+#include "Global/AbilitySystem/AttributeSets/ASWeaponStats.h"
 
 // Abilities
-#include "GameplayAbilityBase.h"
-#include "AbilitySet.h"
-#include "GA_DecreaseSpread.h"
-#include "GA_IncreaseSpread.h"
-#include "GA_Interact.h"
+#include "Global/AbilitySystem/AbilitySet.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
+#include "Global/AbilitySystem/Abilities/GA_DecreaseSpread.h"
+#include "Global/AbilitySystem/Abilities/GA_IncreaseSpread.h"
+#include "Global/AbilitySystem/Abilities/GA_Interact.h"
 #include "GameplayTagContainer.h"
 
 // Custom Components
-#include "GACharacterMovementComponent.h"
+#include "Global/Components/Characters/GACharacterMovementComponent.h"
 // #include "GameFramework/CharacterMovementComponent.h"
-#include "GAEnhancedInputComponent.h"
+#include "Global/Components/GAEnhancedInputComponent.h"
 
 // Abilities
-#include "GASystemComponent.h"
-#include "GASkillTreeComponent.h"
-#include "GAInputConfigData.h"
+#include "Global/AbilitySystem/GASystemComponent.h"
+#include "Global/AbilitySystem/SkillTree/GASkillTreeComponent.h"
+#include "Global/Config/GAInputConfigData.h"
 
 // Attributes
-#include "HealthComponent.h"
-#include "ComboComponent.h"
+#include "Global/Components/Characters/HealthComponent.h"
+#include "Global/Components/ComboComponent.h"
 
 // AI or UI
-#include "TownSystemComponent.h"
-#include "FloatingTextComponent.h"
-#include "FloatingBarComponent.h"
-#include "FloatingItemInfoComponent.h"
-#include "FootprintComponent.h"
-#include "MovementTrailComponent.h"
+#include "TownSystem/TownSystemComponent.h"
+#include "Global/Components/Characters/FloatingTextComponent.h"
+#include "Global/Components/Characters/FloatingBarComponent.h"
+#include "Global/Components/Characters/FloatingItemInfoComponent.h"
+#include "Global/Components/Characters/FootprintComponent.h"
+#include "Global/Components/Characters/MovementTrailComponent.h"
 
 // Item interaction
-#include "PickupInterface.h"
-#include "InventoryComponent.h"
-#include "RepositoryComponent.h"
-#include "EquipmentComponent.h"
-#include "EquippableComponent.h"
-#include "PickupMagnetComponent.h"
-#include "PickupComponent.h"
-#include "CraftingComponent.h"
-#include "LaunchingComponent.h"
+#include "Global/Interfaces/PickupInterface.h"
+#include "Global/Components/Items/InventoryComponent.h"
+#include "Global/Components/Items/RepositoryComponent.h"
+#include "Global/Components/Items/EquipmentComponent.h"
+#include "Global/Components/Items/EquippableComponent.h"
+#include "Global/Components/Items/PickupMagnetComponent.h"
+#include "Global/Components/Items/PickupComponent.h"
+#include "Global/Components/Items/CraftingComponent.h"
+#include "Global/Components/LaunchingComponent.h"
 
 // Misc
 #include "Animation/AnimInstance.h"
 #include "GameFramework/DamageType.h"
 
-#include "CustomMovementMode.h"
+#include "Global/Enumerations/CustomMovementMode.h"
 
 // Engine Components
 #include "BrainComponent.h"
@@ -89,10 +89,10 @@
 #include "GameplayAbilitiesModule.h"
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputSubsystems.h"
-#include "StaticLibrary.h"
+#include "Global/Libraries/StaticLibrary.h"
 #include "TimerManager.h"
 #include "Engine/Engine.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 // #include "Engine/DirectionalLight.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogCharacter, Log, All);
@@ -275,7 +275,6 @@ void AGACharacter::BeginPlay()
 		CameraTiltTimeline->SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
 		CameraTiltTimeline->SetPlaybackPosition(0.f, false);
 	}
-	if (PC) PC->SetItemPriority_Client(bWeaponPriority);
 	if (TownInfo != nullptr)
 	{
 		TownInfo->UpdateDesiredLocation.AddUniqueDynamic(this, &AGACharacter::UpdateDesiredLocation);
@@ -2270,21 +2269,11 @@ uint8 AGACharacter::GetSubMenuCount() const
 void AGACharacter::ResetActiveMenuSelection()
 {
 	ActiveMenuCount = 1;
-
-	if (PC)
-	{
-		PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
-	}
 }
 
 void AGACharacter::ResetSubMenuSelection()
 {
 	SubMenuCount = 1;
-
-	if (PC)
-	{
-		PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
-	}
 }
 
 int AGACharacter::DetermineActiveMenuSelection(int MaxMenuCount, int Direction)
@@ -2293,10 +2282,6 @@ int AGACharacter::DetermineActiveMenuSelection(int MaxMenuCount, int Direction)
 
 	if (MaxMenuCount == 0)
 	{
-		if (PC)
-		{
-			PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
-		}
 	}
 
 	if (Direction > 0)
@@ -2328,11 +2313,6 @@ int AGACharacter::DetermineActiveMenuSelection(int MaxMenuCount, int Direction)
 		}
 	}
 
-	if (PC)
-	{
-		PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
-	}
-
 	// ResetSubMenuSelection();
 
 	return Value;
@@ -2345,10 +2325,6 @@ int AGACharacter::DetermineSubMenuSelection(int MaxMenuCount, int Direction)
 
 	if (MaxMenuCount == 0)
 	{
-		if (PC)
-		{
-			PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
-		}
 	}
 
 	if (Direction > 0)
@@ -2378,11 +2354,6 @@ int AGACharacter::DetermineSubMenuSelection(int MaxMenuCount, int Direction)
 			Value = MaxMenuCount;
 			SubMenuCount = MaxMenuCount;
 		}
-	}
-
-	if (PC)
-	{
-		PC->OnMenuUpdated_Client(FVector2D(ActiveMenuCount, SubMenuCount));
 	}
 
 	ResetActiveMenuSelection();
@@ -2490,46 +2461,25 @@ bool AGACharacter::AttributeCheck(FGameplayAttribute TestAttribute, uint8 Diffic
 
 void AGACharacter::OnStaminaModified(float Stamina, float MaxStamina)
 {
-	if(PC)
-	{
-		PC->OnStaminaModified_Client(Stamina, MaxStamina);
-	}
 }
 
 void AGACharacter::OnManaModified(float Mana, float MaxMana)
 {
-	if (PC)
-	{
-		PC->OnManaModified_Client(Mana, MaxMana);
-	}
 }
 
 // Called when experience has been changed
 void AGACharacter::OnExperienceModified(float Experience, float MaxExperience)
 {
-	if (PC)
-	{
-		PC->OnExperienceModified_Client(Experience, MaxExperience);
-	}
 }
 
 // Called when a stat changes
 void AGACharacter::OnStatModified(float Charisma, float Constitution, float Dexterity, float Intelligence, float Strength, float Wisdom)
 {
-	if (PC)
-	{
-		PC->OnStatModified_Client(Charisma, Constitution, Dexterity, Intelligence, Strength, Wisdom);
-	}
 }
 
 // Called when current ammo count changes
 void AGACharacter::OnAmmoModified(float Ammo, float MaxAmmo)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Purple, "Ammo Modified from character");
-	if (PC)
-	{
-		PC->OnCurrentWeaponAmmoModified_Client(Ammo, MaxAmmo);
-	}
 }
 
 // Called when Spread Angle Changes
@@ -2619,7 +2569,7 @@ void AGACharacter::Death(const AActor* ResponsibleActor, const AActor* Victim)
 	if (PC)
 	{
 		// PC->UnPossess();
-		PC->OnDeath_Client();
+		// PC->OnDeath_Client();
 
 		FInputModeUIOnly UIOnly;
 		PC->SetInputMode(UIOnly);
@@ -2657,10 +2607,6 @@ void AGACharacter::Death(const AActor* ResponsibleActor, const AActor* Victim)
 
 void AGACharacter::NotifyCanInteract_Implementation(FName InteractibleName, bool CanPickup)
 {
-	if (PC)
-	{
-		PC->NotifyCanInteract_Client(InteractibleName, CanPickup);
-	}
 }
 
 void AGACharacter::AddItemToInventory_Implementation(AGAActor* Item)
@@ -2837,13 +2783,6 @@ void AGACharacter::PickupItem(AActor* Item)
 		else if (Inventory->AddItem(Item))
 		{
 			Item->SetActorHiddenInGame(true);
-
-			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
-			if (Weapon && PC)
-			{
-				FGAItemInfo Info = Weapon->GetItemInfo();
-				PC->OnPickupItem_Client(Info);
-			}
 		}
 	}
 }
@@ -2868,18 +2807,6 @@ void AGACharacter::StowItem(AActor* Item)
 	{
 		FAttachmentTransformRules ItemAttachmentRules = FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
 		Item->AttachToComponent(this->GetMesh(), ItemAttachmentRules, this->GetMesh()->DoesSocketExist(FName("spine_03")) ? FName() : FName());
-		
-
-		if (PC)
-		{
-			PC->SetItemPriority_Client(bWeaponPriority);
-			AGAWeapon* Weapon = Cast<AGAWeapon>(Item);
-			if (Weapon)
-			{
-				FGAItemInfo Info = Weapon->GetItemInfo();
-				PC->OnStowedItem_Client(Info);
-			}
-		}
 
 		FString SlotName = FString("StowedItem");
 		Equipment->EquipItem(Item, SlotName);
@@ -2920,16 +2847,6 @@ void AGACharacter::AddStowedItemToInventory()
 		Inventory->AddItem(StowedItem);
 		FString SlotName = FString("StowedItem");
 		Equipment->RemoveItem(SlotName);
-
-		if (PC)
-		{
-			AGAWeapon* Weapon = Cast<AGAWeapon>(StowedItem);
-			if (Weapon)
-			{
-				FGAItemInfo Info = Weapon->GetItemInfo();
-				PC->OnPickupItem_Client(Info);
-			}
-		}
 	}
 }
 
@@ -2942,16 +2859,6 @@ void AGACharacter::AddEquippedItemToInventory()
 		Inventory->AddItem(HeldItem);
 		FString SlotName = FString("HeldItem");
 		Equipment->RemoveItem(SlotName);
-
-		if (PC)
-		{
-			AGAWeapon* Weapon = Cast<AGAWeapon>(HeldItem);
-			if (Weapon)
-			{
-				FGAItemInfo Info = Weapon->GetItemInfo();
-				PC->OnPickupItem_Client(Info);
-			}
-		}
 	}
 }
 
@@ -2984,8 +2891,6 @@ void AGACharacter::DropEquippedItem(const FVector& DropVelocity)
 
 		HeldItem->SetActorLocation(ItemLocation);
 		HeldItem->LaunchItem(DropVelocity, true, true);
-
-		if (PC) PC->OnDropItem_Client();
 	}
 }
 
@@ -3023,7 +2928,6 @@ bool AGACharacter::GetAllItems(const FString Category, TArray<FItemKey>& Items) 
 void AGACharacter::AddItemRepository(const FString Category, const FItemKey& Item)
 {
 	Repository->AddItem(Category, Item);
-	if (PC) PC->OnAddItemToRepository_Client(Item);
 }
 
 void AGACharacter::AddItemRepository(const FString Category, const FName Name, const uint8 Quantity)

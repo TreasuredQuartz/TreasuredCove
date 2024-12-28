@@ -1,7 +1,7 @@
 // Fill out your copywrite description in the Description Page in Project Settings
 
-#include "GAWidget.h"
-#include "NavType.h"
+#include "Global/UserInterface/Widgets/GAWidget.h"
+#include "Global/Enumerations/NavType.h"
 
 void UGAWidget::SetHUD(AGAHUD* HUD)
 {

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/GAActor.h"
+#include "Global/Actors/GAActor.h"
 #include "GAPotion.generated.h"
 
 /**

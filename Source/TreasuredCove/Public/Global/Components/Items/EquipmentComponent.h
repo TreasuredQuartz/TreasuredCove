@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/Items/InventoryComponent.h"
+#include "Global/Components/Items/InventoryComponent.h"
 #include "EquipmentComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemEquipped, const FString&, EquipSlotName, const AActor*, EquippedItem);

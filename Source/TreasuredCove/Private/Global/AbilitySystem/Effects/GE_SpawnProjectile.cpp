@@ -1,3 +1,3 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GE_SpawnProjectile.h"
+#include "Global/AbilitySystem/Effects/GE_SpawnProjectile.h"

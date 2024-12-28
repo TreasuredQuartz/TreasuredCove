@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "UniquePtr.h"
+#include "Templates/UniquePtr.h"
 #include "DrawingCanvas.generated.h"
 
 /**

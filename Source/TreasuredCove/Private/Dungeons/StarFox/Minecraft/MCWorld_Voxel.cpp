@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MCWorld_Voxel.h"
-#include "MCWorld_VoxelItem.h"
-#include "MCWorld_Instance.h"
-#include "WaterBodyProceduralActor.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_Voxel.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_VoxelItem.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_Instance.h"
+#include "Dungeons/StarFox/Minecraft/WaterBodyProceduralActor.h"
 #include "GameplayTileData.h"
 #include "SimplexNoiseBPLibrary.h"
-#include "MCWorld_BuildingHelperMacros.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_BuildingHelperMacros.h"
 
 #include "RealtimeMeshComponent.h"
 #include "RealtimeMeshSimple.h"
@@ -17,7 +17,7 @@
 #include "Engine/Selection.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "GALibrary.h"
+#include "Global/Libraries/GALibrary.h"
 
 #pragma region Constants
 const FVector VoxelMask[] = { FVector(0.00000, 0.00000, 1.00000), FVector(0.00000, 0.00000, -1.00000), FVector(0.00000, 1.00000, 0.00000), FVector(0.00000, -1.00000, 0.00000), FVector(1.00000, 0.00000, 0.00000), FVector(-1.00000, 0.00000, 0.00000) };

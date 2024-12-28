@@ -1,4 +1,4 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ASCombat.h"
+#include "Global/AbilitySystem/AttributeSets/ASCombat.h"
 

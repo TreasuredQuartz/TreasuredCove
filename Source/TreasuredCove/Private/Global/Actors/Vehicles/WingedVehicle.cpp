@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "WingedVehicle.h"
+#include "Global/Actors/Vehicles/WingedVehicle.h"
 
 // Sets default values
 AWingedVehicle::AWingedVehicle()

@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAPlayerController.h"
-#include "GASystemComponent.h"
-#include "GAHUD.h"
-#include "GAActor.h"
-#include "GACharacter.h"
+#include "Global/Framework/GAPlayerController.h"
+#include "Global/AbilitySystem/GASystemComponent.h"
+#include "Global/Framework/GAHUD.h"
+#include "Global/Actors/GAActor.h"
+#include "Global/Actors/GACharacter.h"
 
-#include "DlgContext.h"
-#include "DlgManager.h"
+#include "DlgSystem/DlgContext.h"
+#include "DlgSystem/DlgManager.h"
 #include "Engine/Engine.h"
 
 void AGAPlayerController::SetupInputComponent()
@@ -59,14 +59,14 @@ void AGAPlayerController::AddAbilityToUI_Client_Implementation(FAbilityInfo Abil
 {
 	if (!CanAccessHUD()) return;
 
-	HUD->AddAbilityToUI(AbilityInfo, AbilityType, InHandle, bFromItem);
+	// HUD->AddAbilityToUI(AbilityInfo, AbilityType, InHandle, bFromItem);
 }
 
 void AGAPlayerController::RemoveAbilityFromUI_Client_Implementation(FGameplayAbilitySpecHandle InHandle)
 {
 	if (!CanAccessHUD()) return;
 
-	HUD->RemoveAbilityFromUI(InHandle);
+	// HUD->RemoveAbilityFromUI(InHandle);
 }
 
 /* We are not using this right now
@@ -80,7 +80,7 @@ void AGAPlayerController::OnControllerChanged(bool bIsConnected)
 }
 */
 
-//
+/*
 void AGAPlayerController::OnDeath_Client_Implementation()
 {
 	if (!CanAccessHUD()) return;
@@ -187,18 +187,18 @@ void AGAPlayerController::OnUpdateTargetBuilding_Client_Implementation(FName Tar
 	if (!CanAccessHUD()) return;
 
 	HUD->OnUpdateTargetBuilding(TargetBuildingName);
-}
+} // */
 #pragma endregion
 
 /** User Interface */
 
 #pragma region UIInputHandling
-void AGAPlayerController::ReturnMainMenu_Client_Implementation()
+/* void AGAPlayerController::ReturnMainMenu_Client_Implementation()
 {
 	if (!CanAccessHUD()) return;
 
 	HUD->OpenMainMenu();
-}
+} // */
 
 void AGAPlayerController::BeginPause()
 {
@@ -211,7 +211,7 @@ void AGAPlayerController::BeginPause()
 
 		// FInputModeUIOnly InputMode;
 		// SetInputMode(InputMode);
-		HUD->OpenPauseMenu();
+		// HUD->OpenPauseMenu();
 	}
 	else {
 		EndPause_Client();
@@ -228,9 +228,10 @@ void AGAPlayerController::EndPause_Client_Implementation()
 
 	// FInputModeGameOnly InputMode;
 	// SetInputMode(InputMode);
-	HUD->ClosePauseMenu();
+	// HUD->ClosePauseMenu();
 }
 
+/*
 void AGAPlayerController::ConfirmPressed_Client_Implementation()
 {
 	if (!CanAccessHUD()) return;
@@ -321,11 +322,11 @@ void AGAPlayerController::SetItemPriority_Client_Implementation(bool Priority)
 	if (!CanAccessHUD()) return;
 
 	HUD->SetItemPriority(Priority);
-}
+} // */
 
 /** Inventory */
 
-//
+/*
 void AGAPlayerController::NotifyCanInteract_Client_Implementation(FName ItemName, bool CanPickup)
 {
 	if (!CanAccessHUD()) return;
@@ -362,7 +363,7 @@ void AGAPlayerController::OnStowedItem_Client_Implementation(const FGAItemInfo& 
 	if (!CanAccessHUD()) return;
 		
 	HUD->OnStowedItem(ItemInfo);
-}
+} // 
 
 //
 void AGAPlayerController::OnEquipItemFromInventory(uint8 Slot)
@@ -418,7 +419,7 @@ void AGAPlayerController::OnDropItem_Client_Implementation()
 {
 	if (!CanAccessHUD()) return;
 
-	HUD->OnDropItem();
+	// HUD->OnDropItem();
 }
 
 //
@@ -429,7 +430,7 @@ void AGAPlayerController::OnDropItemFromInventory(uint8 Slot)
 		Player = Cast<AGACharacter>(GetCharacter());
 	}
 	Player->DropItemFromInventory(Slot);
-}
+} // */
 #pragma endregion
 
 /** Dialogue */
@@ -441,7 +442,7 @@ void AGAPlayerController::StartDialogue_Client_Implementation(UDlgDialogue* Dial
 
 	ActiveContext = UDlgManager::StartDialogue2(Dialogue, OtherParticipant, GetPawn());
 
-	HUD->OnDialogueStarted();
+	// HUD->OnDialogueStarted();
 }
 
 //
@@ -459,5 +460,5 @@ void AGAPlayerController::SelectDialogueOption(int32 Index)
 
 	if (!CanAccessHUD()) return;
 
-	HUD->OnDialogueStarted();
+	// HUD->OnDialogueStarted();
 }

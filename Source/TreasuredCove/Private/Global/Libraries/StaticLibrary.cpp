@@ -1,9 +1,11 @@
+// Blah, Blah, Blah Copywrite notice etc.
 
 
-#include "StaticLibrary.h"
 
+
+
+#include "Global/Libraries/StaticLibrary.h"
 #include "GameplayTagContainer.h"
-
 #include "PhysicsEngine/BodySetup.h"
 
 float UStaticLibrary::GetSummedMassOfComponents(const AActor* Actor)

@@ -6,8 +6,8 @@
 // #include "RuntimeMeshCore.h"
 #include "UObject/NoExportTypes.h"
 
-#include "PlanetMeshSettings.h"
-#include "PlanetShapeGenerator.h"
+#include "Settings/PlanetMeshSettings.h"
+#include "Generators/PlanetShapeGenerator.h"
 #include "PlanetLandscape.generated.h"
 
 // 100,000

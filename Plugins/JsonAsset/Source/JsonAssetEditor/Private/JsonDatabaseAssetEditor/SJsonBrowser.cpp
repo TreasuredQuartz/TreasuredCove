@@ -2,9 +2,9 @@
 
 
 #include "JsonDatabaseAssetEditor/SJsonBrowser.h"
+#include "JsonDatabaseAssetEditor/SJsonBrowserAsset.h"
 #include "JsonDatabaseAsset.h"
 #include "JsonAsset.h"
-#include "SJsonBrowserAsset.h"
 
 #include "Widgets/Views/STileView.h"
 

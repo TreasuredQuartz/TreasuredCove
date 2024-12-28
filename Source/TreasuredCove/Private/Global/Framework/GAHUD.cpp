@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAHUD.h"
-#include "GAPlayerController.h"
-#include "GAGameInstance.h"
-#include "PauseAreaComponent.h"
+#include "Global/Framework/GAHUD.h"
+#include "Global/Framework/GAPlayerController.h"
+#include "Global/Framework/GAGameInstance.h"
+#include "Global/Components/Characters/PauseAreaComponent.h"
 
 #include "GameFramework/PlayerInput.h"
 
@@ -52,8 +52,10 @@ void AGAHUD::BeginPlay()
 //
 void AGAHUD::PlayerInputChecks()
 {
+	/*
 	if (bIsInMenu)
 	{
+		/*
 		// Event to close Pause Menu
 		if (PAUSE)
 		{
@@ -89,7 +91,7 @@ void AGAHUD::PlayerInputChecks()
 			return;
 		}
 
-		/* Navigation in ui Events */
+		/* Navigation in ui Events 
 		// Up
 		if (NAVUP)
 		{
@@ -119,7 +121,7 @@ void AGAHUD::PlayerInputChecks()
 			return;
 		}
 
-		/* Navigation On Top of UI */
+		/* Navigation On Top of UI 
 		// Up
 		if (CURSORUP)
 		{
@@ -146,7 +148,7 @@ void AGAHUD::PlayerInputChecks()
 		{
 			CursorMoveRight(-1);
 			return;
-		}
+		} // 
 	}
 	else
 	{
@@ -176,8 +178,8 @@ void AGAHUD::PlayerInputChecks()
 			CloseQuickMenu();
 			bIsQuickMenuUp = false;
 			return;
-		} */
-	}
+		} 
+	} // */
 
 	if (bIsQuickMenuUp) 
 	{
@@ -241,7 +243,7 @@ void AGAHUD::DrawHUD()
 	// Draw Menu */
 }
 
-//
+/*
 void AGAHUD::OnEquipItemFromInventory(uint8 Slot)
 {
 	PC->OnEquipItemFromInventory(Slot);
@@ -280,7 +282,9 @@ void AGAHUD::SetCursorMoveOnly(bool CursorOnly)
 
 	PlayerOwner->SetIgnoreLookInput(CursorOnly);
 }
+// */
 
+//
 void AGAHUD::EnterPauseStudio()
 {
 	if (!GetOwningPawn())

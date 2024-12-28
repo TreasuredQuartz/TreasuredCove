@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "VehicleMovementComponent.h"
-#include "VehicleMovementReplication.h"
+#include "Global/Components/Vehicles/VehicleMovementReplication.h"
 #include "AircraftMovementComponent.generated.h"
 
 /** Shared pointer for easy memory management of FSavedMove_Character, for accumulating and replaying network moves. */

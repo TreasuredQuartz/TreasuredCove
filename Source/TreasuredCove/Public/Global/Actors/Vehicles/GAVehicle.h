@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "WheeledVehiclePawn.h"
 //#include "GameFramework/Pawn.h"
-#include "VehicleMovementReplication.h"
+#include "Global/Components/Vehicles/VehicleMovementReplication.h"
 #include "AbilitySystemInterface.h"
-#include "InteractionInterface.h"
+#include "Global/Interfaces/InteractionInterface.h"
 #include "GameplayTagContainer.h"
 #include "GameplayAbilitySpecHandle.h"
-#include "SavedAttribute.h"
+#include "Global/Structs/SavedAttribute.h"
 #include "GAVehicle.generated.h"
 
 class UGameplayAbility;

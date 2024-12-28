@@ -1,5 +1,5 @@
-#include "SkillTreeFactory.h"
-#include "GASkillTree.h"
+#include "Global/AbilitySystem/SkillTree/SkillTreeFactory.h"
+#include "Global/AbilitySystem/SkillTree/GASkillTree.h"
 
 #define LOCTEXT_NAMESPACE "SkillTreeFactory"
 

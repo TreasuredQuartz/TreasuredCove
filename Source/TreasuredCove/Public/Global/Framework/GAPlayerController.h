@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "ControlInputInterface.h"
+#include "Global/Interfaces/ControlInputInterface.h"
 
-#include "BulletStruct.h"
-#include "GAItemInfoStruct.h"
-#include "ItemKeyStruct.h"
+#include "Global/Structs/BulletStruct.h"
+#include "Global/Structs/GAItemInfoStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 
-#include "AbilityType.h"
-#include "AttributeType.h"
-#include "NavType.h"
+#include "Global/Enumerations/AbilityType.h"
+#include "Global/Enumerations/AttributeType.h"
+#include "Global/Enumerations/NavType.h"
 
 #include "GAPlayerController.generated.h"
 
@@ -78,7 +78,7 @@ public:
 	void OnControllerChanged(bool bIsConnected);
 	*/
 
-	//
+	/*
 	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
 	void OnDeath_Client();
 	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
@@ -115,12 +115,13 @@ public:
 	//------------------------------
 
 	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
-	void ReturnMainMenu_Client();
+	void ReturnMainMenu_Client(); // */
 	UFUNCTION(BlueprintCallable, Category = "GAPlayerController|HUD")
 	void BeginPause();
 	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
 	void EndPause_Client();
 
+	/*
 	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
 	void ConfirmPressed_Client();
 	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
@@ -174,7 +175,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnDropItemFromInventory(uint8 Slot);
 	UFUNCTION(Client, Unreliable, BlueprintCallable, Category = "GAPlayerController|HUD")
-	void OnDropItem_Client();
+	void OnDropItem_Client(); // */
 
 	//------------------------------
 	// Dialogue Functions

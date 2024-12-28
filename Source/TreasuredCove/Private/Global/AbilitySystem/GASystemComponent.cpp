@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GASystemComponent.h"
-#include "GameplayAbilityBase.h"
+#include "Global/AbilitySystem/GASystemComponent.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
 
 void UGASystemComponent::AbilitySpecInputPressed(FGameplayAbilitySpec& Spec)
 {

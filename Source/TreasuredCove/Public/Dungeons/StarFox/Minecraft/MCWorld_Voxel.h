@@ -6,7 +6,7 @@
 #include "GameplayVoxel.h"
 
 #include "DTMCBlockInfoStruct.h"
-#include "ProceduralMeshSectionStruct.h"
+#include "Global/Structs/ProceduralMeshSectionStruct.h"
 #include "MCWorld_Voxel.generated.h"
 
 class URealtimeMeshComponent;

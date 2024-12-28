@@ -6,6 +6,7 @@
 #include "MapMakerAssetEditor/EdGraph_MapMaker.h"
 #include "MapMakerAssetEditor/MapMakerDragConnection.h"
 #include "MapMakerAssetEditor/SResizeableBox.h"
+#include "MapMakerAssetEditor/SMapMakerAsset.h"
 #include "MapMakerStyle.h"
 
 #include "MapMakerEditorPCH.h"
@@ -16,7 +17,6 @@
 #include "SlateOptMacros.h"
 #include "SGraphPin.h"
 #include "SGraphPanel.h"
-#include "SMapMakerAsset.h"
 
 
 #define LOCTEXT_NAMESPACE "EdNode_MapMaker"

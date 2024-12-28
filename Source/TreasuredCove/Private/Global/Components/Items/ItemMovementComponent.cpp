@@ -2,7 +2,7 @@
 
 
 #include "Global/Components/Items/ItemMovementComponent.h"
-#include "GAActor.h"
+#include "Global/Actors/GAActor.h"
 
 // Engine Includes
 #include "GameFramework/PhysicsVolume.h"

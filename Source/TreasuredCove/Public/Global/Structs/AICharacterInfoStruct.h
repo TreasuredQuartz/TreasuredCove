@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Relationship.h"
-#include "AttributeType.h"
+#include "Global/Enumerations/Relationship.h"
+#include "Global/Enumerations/AttributeType.h"
 #include "AICharacterInfoStruct.generated.h"
 
 UENUM(BlueprintType)

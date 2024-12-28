@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SCompoundWidget.h"
+#include "Widgets/SCompoundWidget.h"
 
 class SMapMakerPreviewViewport;
 class FPreviewScene_MapMaker;

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "RepositoryComponent.h"
+#include "Global/Components/Items/RepositoryComponent.h"
 
 #pragma region Defaults
 // Sets default values for this component's properties

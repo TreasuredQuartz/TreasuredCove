@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "ItemKeyStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 #include "InteractionInterface.generated.h"
 
 class AGAActor;

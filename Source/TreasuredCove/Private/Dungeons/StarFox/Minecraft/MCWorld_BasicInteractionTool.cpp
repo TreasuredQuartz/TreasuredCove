@@ -1,16 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MCWorld_BasicInteractionTool.h"
-#include "MCWorld_Manager.h"
-#include "MCWorld_Voxel.h"
-#include "MCWorld_VoxelItem.h"
-#include "GA_MCWorld_PlaceVoxel.h"
-#include "GA_MCWorld_RemoveVoxel.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_BasicInteractionTool.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_Manager.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_Voxel.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_VoxelItem.h"
+#include "Dungeons/StarFox/Minecraft/Abilities/GA_MCWorld_PlaceVoxel.h"
+#include "Dungeons/StarFox/Minecraft/Abilities/GA_MCWorld_RemoveVoxel.h"
 
-#include "GASystemComponent.h"
-
-#include "Gameframework/Character.h"
+#include "Global/AbilitySystem/GASystemComponent.h"
 
 #include "Engine/Engine.h"
 #include "DrawDebugHelpers.h"

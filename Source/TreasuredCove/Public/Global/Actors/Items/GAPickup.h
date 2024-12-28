@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "PickupInterface.h"
+#include "Global/Interfaces/PickupInterface.h"
 #include "GAPickup.generated.h"
 
 class UBoxComponent;
