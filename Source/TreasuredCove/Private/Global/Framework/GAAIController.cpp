@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAAIController.h"
-#include "GACharacter.h"
+#include "Global/Framework/GAAIController.h"
+#include "Global/Actors/GACharacter.h"
 
-#include "HealthComponent.h"
-#include "TownSystemComponent.h"
-#include "TeamComponent.h"
-#include "TeamManager.h"
-#include "GameplayBuilding.h"
+#include "Global/Components/Characters/HealthComponent.h"
+#include "TownSystem/TownSystemComponent.h"
+#include "Global/Components/Characters/TeamComponent.h"
+#include "Global/Components/Characters/TeamManager.h"
+#include "Buildings/GameplayBuilding.h"
 
 // Sense System Plugin
 #include "SenseReceiverComponent.h"

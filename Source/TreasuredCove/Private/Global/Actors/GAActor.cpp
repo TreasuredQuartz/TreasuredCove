@@ -1,17 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAActor.h"
-#include "GACharacter.h"
-#include "GASystemComponent.h"
-#include "GAPlayerController.h"
-#include "GAEnhancedInputComponent.h"
-#include "GameplayAbilityBase.h"
-#include "GAInputConfigData.h"
-#include "AbilitySet.h"
+#include "Global/Actors/GAActor.h"
+#include "Global/Actors/GACharacter.h"
 
-#include "ItemMovementComponent.h"
-#include "PickupComponent.h"
-#include "EquippableComponent.h"
+#include "Global/AbilitySystem/AbilitySet.h"
+#include "Global/AbilitySystem/GASystemComponent.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
+
+#include "Global/Framework/GAPlayerController.h"
+
+#include "Global/Components/GAEnhancedInputComponent.h"
+#include "Global/Components/Items/PickupComponent.h"
+#include "Global/Components/Items/EquippableComponent.h"
+#include "Global/Components/Items/ItemMovementComponent.h"
+
+#include "Global/Config/GAInputConfigData.h"
 
 #include "Components/BillboardComponent.h"
 #include "Components/BoxComponent.h"
@@ -72,6 +75,18 @@ void AGAActor::BeginPlay()
 	Super::BeginPlay();
 
 	IntializeAbilitySystem();
+
+	if (Equippable)
+	{
+		Equippable->OnEquipped.AddDynamic(this, &AGAActor::OnEquipped);
+		Equippable->OnUnEquipped.AddDynamic(this, &AGAActor::OnUnEquipped);
+	}
+
+	if (Pickupable)
+	{
+		Pickupable->OnPickup.AddDynamic(this, &AGAActor::OnPickedUp);
+		Pickupable->OnDrop.AddDynamic(this, &AGAActor::OnDropped);
+	}
 }
 
 void AGAActor::PostInitializeComponents()
@@ -197,7 +212,6 @@ void AGAActor::RemovePlayerAbilityInput(UGAEnhancedInputComponent* EIC, AGAPlaye
 
 void AGAActor::OnPickedUp_Implementation()
 {
-	bPickedUp = true;
 	SetActorEnableCollision(false);
 	DisableComponentsSimulatePhysics();
 	ItemMovement->Deactivate();
@@ -205,7 +219,6 @@ void AGAActor::OnPickedUp_Implementation()
 
 void AGAActor::OnDropped_Implementation()
 {
-	bPickedUp = false;
 	SetOwner(nullptr);
 	DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 	SetActorHiddenInGame(false);
@@ -215,8 +228,6 @@ void AGAActor::OnDropped_Implementation()
 
 void AGAActor::OnEquipped_Implementation()
 {
-	bEquipped = true;
-
 	AGAPlayerController* PC = Cast<APawn>(GetOwner())->GetController<AGAPlayerController>();
 	if (InputAbilityActions && PC)
 	{
@@ -228,7 +239,6 @@ void AGAActor::OnEquipped_Implementation()
 
 void AGAActor::OnUnEquipped_Implementation()
 {
-	bEquipped = false;
 }
 
 void AGAActor::LaunchItem(FVector LaunchVelocity, bool bXYOverride, bool bZOverride)

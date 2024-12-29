@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ASWeaponStats.h"
-#include "GACharacter.h"
+#include "Global/AbilitySystem/AttributeSets/ASWeaponStats.h"
+#include "Global/Actors/GACharacter.h"
 
 #include "AbilitySystemComponent.h"
 

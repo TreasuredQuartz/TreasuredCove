@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayBuilding.h"
-#include "TownSystemInterface.h"
+#include "TownSystem/TownSystemInterface.h"
 #include "GameplayJobSite.generated.h"
 
 class UResourceComponent;

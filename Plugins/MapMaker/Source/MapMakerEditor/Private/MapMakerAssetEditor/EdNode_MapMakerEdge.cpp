@@ -1,9 +1,9 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "EdNode_MapMakerEdge.h"
+#include "MapMakerAssetEditor/EdNode_MapMakerEdge.h"
 #include "MapMakerEdge.h"
-#include "EdNode_MapMakerNode.h"
+#include "MapMakerAssetEditor/EdNode_MapMakerNode.h"
 
 #define LOCTEXT_NAMESPACE "EdNode_MapMakerEdge"
 

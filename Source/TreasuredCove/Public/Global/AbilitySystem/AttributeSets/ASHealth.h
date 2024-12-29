@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
-#include "AttributeType.h"
+#include "Global/Enumerations/AttributeType.h"
 #include "AttributeMacros.h"
 #include "OnAttributeModifiedEvent.h"
 #include "ASHealth.generated.h"

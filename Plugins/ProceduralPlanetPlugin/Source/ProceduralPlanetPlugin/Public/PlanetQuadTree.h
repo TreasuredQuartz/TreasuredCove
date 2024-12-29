@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 
-#include "PlanetMeshSettings.h"
-#include "PlanetShapeGenerator.h"
+#include "Settings/PlanetMeshSettings.h"
+#include "Generators/PlanetShapeGenerator.h"
 
 /**
  * 

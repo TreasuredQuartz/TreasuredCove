@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAGameState.h"
+#include "Global/Framework/GAGameState.h"
 #include "GameplayClock.h"
 
 AGAGameState::AGAGameState()

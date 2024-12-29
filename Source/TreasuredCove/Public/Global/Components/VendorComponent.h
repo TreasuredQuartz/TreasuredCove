@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "ItemKeyStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 #include "VendorComponent.generated.h"
 
 /** A Component that holds information related to Vendors or Shops.

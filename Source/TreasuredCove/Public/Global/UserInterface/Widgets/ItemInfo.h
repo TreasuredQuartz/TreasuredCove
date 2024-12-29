@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Widgets/GAWidget.h"
+#include "GAWidget.h"
 #include "ItemInfo.generated.h"
 
 /**

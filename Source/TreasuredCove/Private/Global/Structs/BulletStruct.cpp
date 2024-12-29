@@ -1,4 +1,4 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "BulletStruct.h"
+#include "Global/Structs/BulletStruct.h"
 

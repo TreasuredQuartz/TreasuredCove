@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbilityBase.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
 #include "GA_SpawnProjectile.generated.h"
 
 class AGAProjectile;

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Object.h"
+#include "UObject/NoExportTypes.h"
 #include "GameplayJob.generated.h"
 
 class AGameplayJobSite;

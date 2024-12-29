@@ -2,7 +2,7 @@
 
 
 #include "Global/HexGrid/HexTile.h"
-#include "GALibrary.h"
+#include "Global/Libraries/GALibrary.h"
 #include "GameplayTileData.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"

@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAPickup.h"
-#include "InteractionInterface.h"
+#include "Global/Actors/Items/GAPickup.h"
+#include "Global/Interfaces/InteractionInterface.h"
 #include "Components/BoxComponent.h"
 
 // Sets default values

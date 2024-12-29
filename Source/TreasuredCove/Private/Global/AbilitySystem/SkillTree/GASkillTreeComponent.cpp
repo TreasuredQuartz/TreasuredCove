@@ -2,9 +2,9 @@
 
 
 #include "Global/AbilitySystem/SkillTree/GASkillTreeComponent.h"
-#include "GameplayAbilityBase.h"
-#include "GASkillTree.h"
-#include "GASkillTreeNode.h"
+#include "Global/AbilitySystem/SkillTree/GASkillTree.h"
+#include "Global/AbilitySystem/SkillTree/GASkillTreeNode.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
 

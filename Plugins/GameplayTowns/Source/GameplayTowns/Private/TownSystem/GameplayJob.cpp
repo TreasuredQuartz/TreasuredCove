@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameplayJob.h"
+#include "TownSystem/GameplayJob.h"
 
 // Sets default values
 UGameplayJob::UGameplayJob()

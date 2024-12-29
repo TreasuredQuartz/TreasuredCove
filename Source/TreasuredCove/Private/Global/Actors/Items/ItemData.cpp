@@ -3,7 +3,7 @@
 
 #include "Global/Actors/Items/ItemData.h"
 #include "Global/Actors/Items/ItemAttributeData.h"
-#include "GASkillTree.h"
+#include "Global/AbilitySystem/SkillTree/GASkillTree.h"
 
 TMap<FString, FText> UItemTypeData::GetPopupProperties() const
 {

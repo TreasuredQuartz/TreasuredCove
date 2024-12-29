@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAProjectileMovementComponent.h"
+#include "Global/Components/Items/GAProjectileMovementComponent.h"
 #include "Gameframework/PhysicsVolume.h"
 #include "DrawDebugHelpers.h"
 

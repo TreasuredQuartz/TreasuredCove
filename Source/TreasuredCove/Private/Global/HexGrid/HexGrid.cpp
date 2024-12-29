@@ -2,13 +2,13 @@
 
 
 #include "Global/HexGrid/HexGrid.h"
-#include "HexTile.h"
+#include "Global/HexGrid/HexTile.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "SimplexNoiseBPLibrary.h"
-#include "GALibrary.h"
+#include "Global/Libraries/GALibrary.h"
 #include "GameplayTileData.h"
 
-#include "RealtimeMeshDataTypes.h"
+// #include "RealtimeMeshDataTypes.h"
 #include "RealtimeMeshComponent.h"
 #include "RealtimeMeshSimple.h"
 

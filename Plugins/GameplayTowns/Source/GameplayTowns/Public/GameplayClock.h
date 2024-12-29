@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "GameTimeInterface.h"
+#include "TownSystem/GameTimeInterface.h"
 #include "GameplayClock.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameSpeedModified, float, GameSpeed);
@@ -23,7 +23,7 @@ enum class ETimeType : uint8
 	Centuries,
 	Eras,
 	Num UMETA(Hidden)
-};
+}; constexpr uint8 TimeEnum_MAX = static_cast<uint8>(ETimeType::Num);
 
 UCLASS()
 class GAMEPLAYTOWNS_API UGameplayClockComponent 
@@ -54,8 +54,8 @@ public:
 
 	int DayCounter;
 
-	UPROPERTY(EditDefaultsOnly, EditFixedSize, meta = (EditFixedOrder, ArraySizeEnum = "ETimeType"))
-	int GameDate[ETimeType::Num];
+	UPROPERTY(EditDefaultsOnly, EditFixedSize, meta = (EditFixedOrder))
+	int GameDate[TimeEnum_MAX];
 
 public:
 	float GetSolarTime();

@@ -19,6 +19,7 @@
 #include "Containers/UnrealString.h"
 
 #include "DrawDebugHelpers.h"
+#include "Templates/ChooseClass.h"
 
 
 #if !defined(IF_CONSTEXPR)
@@ -267,8 +268,8 @@ public:
 			static_assert(DimensionSize > 1, "DimensionSize <= 1");
 			return FBox2D(FVector2D(Min[0], Min[1]), FVector2D(Max[0], Max[1]));
 		}
-		checkNoEntry();
-		UE_ASSUME(0);
+		// checkNoEntry();
+		// UE_ASSUME(0);
 	}
 	FORCEINLINE operator FBox() const
 	{
@@ -280,8 +281,8 @@ public:
 		{
 			return FBox(FVector(Min[0], Min[1], 0), FVector(Max[0], Max[1], 0));
 		}
-		checkNoEntry();
-		UE_ASSUME(0);
+		// checkNoEntry();
+		// UE_ASSUME(0);
 	}
 	//end  ue4 Box
 };
@@ -376,7 +377,7 @@ public:
 		}
 		checkNoEntry();
 		UE_ASSUME(0);
-		return SubNodes[0];
+		// return SubNodes[0];
 	}
 
 	FORCEINLINE uint8 GetQuad(const PointType& P) const

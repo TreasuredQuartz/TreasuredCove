@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GALibrary.h"
-#include "GAGameState.h"
-#include "GameTimeInterface.h"
+#include "Global/Libraries/GALibrary.h"
+#include "Global/Framework/GAGameState.h"
+#include "TownSystem/GameTimeInterface.h"
 
 #include "AbilitySystemComponent.h"
 #include "GameplayTileData.h"

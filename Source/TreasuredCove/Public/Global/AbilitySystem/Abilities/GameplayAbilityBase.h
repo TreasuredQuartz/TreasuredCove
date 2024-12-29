@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "AbilityInfoStruct.h"
+#include "Global/Structs/AbilityInfoStruct.h"
 #include "GameplayAbilityBase.generated.h"
 \
 class AGAActor;

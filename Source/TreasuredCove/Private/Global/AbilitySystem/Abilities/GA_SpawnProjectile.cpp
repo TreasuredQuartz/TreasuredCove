@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA_SpawnProjectile.h"
-#include "GACharacter.h"
-#include "GAProjectile.h"
-#include "GALibrary.h"
-#include "AbilityTask_SpawnProjectile.h"
+#include "Global/AbilitySystem/Abilities/GA_SpawnProjectile.h"
+#include "Global/Actors/GACharacter.h"
+#include "Global/Actors/Items/GAProjectile.h"
+#include "Global/Libraries/GALibrary.h"
+#include "Global/AbilitySystem/AbilityTasks/AbilityTask_SpawnProjectile.h"
 
-#include "ASWeaponStats.h"
+#include "Global/AbilitySystem/AttributeSets/ASWeaponStats.h"
 
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"

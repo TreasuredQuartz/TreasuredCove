@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "LoadoutItemInfo.h"
+#include "Multiplayer/Struct/LoadoutItemInfo.h"
 #include "MultiplayerLoadout.generated.h"
 
 class UGASkillTreeComponent;

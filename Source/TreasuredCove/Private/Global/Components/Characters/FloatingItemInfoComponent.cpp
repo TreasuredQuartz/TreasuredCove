@@ -3,8 +3,7 @@
 
 #include "Global/Components/Characters/FloatingItemInfoComponent.h"
 #include "Global/Actors/FloatingItemInfoActor.h"
-
-#include "Global/Actors/Items/GAWeapon.h"
+#include "Global/Components/Items/PickupComponent.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Engine/UserInterfaceSettings.h"
@@ -75,23 +74,26 @@ void UFloatingItemInfoComponent::TickComponent(float DeltaTime, ELevelTick TickT
 		Params.AddIgnoredActor(GetOwner());
 		if (World->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_GameTraceChannel1, Params))
 		{
-			if (AGAWeapon* HitWeapon = Cast<AGAWeapon>(Hit.GetActor()))
+			if (AActor* HitActor = Hit.GetActor())
 			{
-				if (!HitWeapon->IsPickedUp())
+				if (UPickupComponent* Pickup = HitActor->GetComponentByClass<UPickupComponent>())
 				{
-					bLookingAtPickup = true;
-					PopupLocation = HitWeapon->GetActorLocation();
-					// PopupLocation.Z = Hit.Location.Z >= PopupLocation.Z ? Hit.Location.Z : PopupLocation.Z;
-					if (WeaponPickup != HitWeapon)
+					if (!Pickup->IsPickedUp())
 					{
-						if (WeaponPickup)
+						bLookingAtPickup = true;
+						PopupLocation = HitActor->GetActorLocation();
+						// PopupLocation.Z = Hit.Location.Z >= PopupLocation.Z ? Hit.Location.Z : PopupLocation.Z;
+						if (ActorPickup != HitActor)
 						{
-							RemovePopup();
+							if (ActorPickup)
+							{
+								RemovePopup();
+							}
+
+							ActorPickup = HitActor;
+
+							AddPopup_Client(ActorPickup, PopupLocation);
 						}
-
-						WeaponPickup = HitWeapon;
-
-						AddPopup_Client(WeaponPickup, PopupLocation);
 					}
 				}
 			}
@@ -103,7 +105,7 @@ void UFloatingItemInfoComponent::TickComponent(float DeltaTime, ELevelTick TickT
 		if (Popup)
 			RemovePopup();
 
-		WeaponPickup = nullptr;
+		ActorPickup = nullptr;
 	}
 	else
 	{

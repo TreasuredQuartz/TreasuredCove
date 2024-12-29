@@ -54,7 +54,7 @@ public:
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY()
-	class UEdGraph* EdGraph;
+	TObjectPtr<class UEdGraph> EdGraph;
 
 	UPROPERTY(EditDefaultsOnly, Category = "MapMaker_Editor")
 	bool bCanRenameNode;

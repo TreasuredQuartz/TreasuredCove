@@ -2,9 +2,9 @@
 
 
 #include "Global/Actors/Items/ItemDatabase.h"
-#include "GAWeapon.h"
+#include "Global/Actors/Items/GAWeapon.h"
 // #include "AssetManager.h"
-#include "ItemData.h"
+#include "Global/Actors/Items/ItemData.h"
 #include "Json.h"
 
 FItemDatabaseRow::FItemDatabaseRow()

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "VisualLoggerTypes.h"
 #include "GameplayTileData.generated.h"
 
 /* 3D Cube information
@@ -28,7 +27,7 @@ enum class EFaceOrientation : uint8
 	Front,
 	Back,
 	Num UMETA(Hidden)
-};
+}; constexpr uint8 FaceEnum_MAX = static_cast<uint8>(EFaceOrientation::Num);
 
 DECLARE_ENUM_TO_STRING(EFaceOrientation);
 
@@ -97,8 +96,8 @@ class GAMEPLAYTOWNS_API UGameplayTileData : public UPrimaryDataAsset
 public:
 	UGameplayTileData();
 
-	UPROPERTY(EditDefaultsOnly, EditFixedSize, meta = (EditFixedOrder, ArraySizeEnum="EFaceOrientation"))
-	FQuad StaticFaces[EFaceOrientation::Num];
+	UPROPERTY(EditDefaultsOnly, EditFixedSize, meta = (EditFixedOrder))
+	FQuad StaticFaces[FaceEnum_MAX];
 
 	FPrimaryAssetId GetPrimaryAssetId() const override;
 	

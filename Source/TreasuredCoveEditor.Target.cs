@@ -7,7 +7,10 @@ public class TreasuredCoveEditorTarget : TargetRules
 {
 	public TreasuredCoveEditorTarget(TargetInfo Target) : base(Target)
 	{
-		Type = TargetType.Editor;
+
+        DefaultBuildSettings = BuildSettingsVersion.Latest;
+        bOverrideBuildEnvironment = true;
+        Type = TargetType.Editor;
 
         ExtraModuleNames.AddRange(new string[] { "TreasuredCoveEditor" });
     }

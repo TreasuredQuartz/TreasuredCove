@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AnatomicalStructure.h"
+#include "Anatomy/AnatomicalStructure.h"
 #include "Anatomy/Organs/Organ.h"
 #include "Anatomy/Systems/OrganSystem.h"
 

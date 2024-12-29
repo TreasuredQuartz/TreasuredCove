@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ItemKeyStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 #include "CraftingRecipe.generated.h"
 
 class AActor;

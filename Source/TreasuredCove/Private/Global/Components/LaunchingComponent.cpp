@@ -2,7 +2,7 @@
 
 
 #include "Global/Components/LaunchingComponent.h"
-#include "ProjectilePathComponent.h"
+#include "Global/Components/Characters/ProjectilePathComponent.h"
 
 // Sets default values for this component's properties
 ULaunchingComponent::ULaunchingComponent()

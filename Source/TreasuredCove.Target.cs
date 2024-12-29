@@ -6,10 +6,10 @@ using System.Collections.Generic;
 public class TreasuredCoveTarget : TargetRules
 {
 	public TreasuredCoveTarget(TargetInfo Target) : base(Target)
-	{
-		Type = TargetType.Game;
-
-		ExtraModuleNames.AddRange( new string[] { "TreasuredCove" } );
+    {
+        DefaultBuildSettings = BuildSettingsVersion.Latest;
+        Type = TargetType.Game;
+        ExtraModuleNames.AddRange( new string[] { "TreasuredCove" } );
 
         if (bBuildEditor)
         {

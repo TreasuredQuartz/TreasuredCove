@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA_DecreaseSpread.h"
-#include "GACharacter.h"
+#include "Global/AbilitySystem/Abilities/GA_DecreaseSpread.h"
+#include "Global/Actors/GACharacter.h"
 #include "AbilitySystemComponent.h"
 
 void UGA_DecreaseSpread::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

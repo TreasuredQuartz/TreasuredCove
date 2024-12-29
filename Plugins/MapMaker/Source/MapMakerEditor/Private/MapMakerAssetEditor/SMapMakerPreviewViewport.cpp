@@ -10,16 +10,16 @@
 #include "DragAndDrop/AssetDragDropOp.h"
 #include "DragAndDrop/ExportTextDragDropOp.h"
 #include "DragAndDrop/BrushBuilderDragDropOp.h"
-#include "InViewportUIDragOperation.h"
+#include "Viewports/InViewportUIDragOperation.h"
 
 #include "Exporters/ExportTextContainer.h"
 #include "Subsystems/EditorAssetSubsystem.h"
 #include "UnrealWidget.h"
-#include "TabManager.h"
 #include "AssetSelection.h"
 #include "LevelUtils.h"
-#include "SNotificationList.h"
-#include "NotificationManager.h"
+#include "Widgets/Notifications/SNotificationList.h"
+#include "Framework/Notifications/NotificationManager.h"
+#include "ActorFactories/ActorFactory.h"
 
 #define LOCTEXT_NAMESPACE "LevelViewport"
 
@@ -375,10 +375,16 @@ bool SMapMakerPreviewViewport::HandlePlaceDraggedObjects(const FGeometry& MyGeom
 		if (!bShowDropContextMenu || !bCreateDropPreview)
 		{
 			// Otherwise just attempt to drop the object(s)
-			TArray< AActor* > TemporaryActors;
+			TArray< FTypedElementHandle > TemporaryActors;
 			// Only select actor on drop
 			const bool SelectActor = !bCreateDropPreview;
-			bDropSuccessful = LevelViewportClient->DropObjectsAtCoordinates(CachedOnDropLocalMousePos.X, CachedOnDropLocalMousePos.Y, DroppedObjects, TemporaryActors, false, bCreateDropPreview, SelectActor, ActorFactory);
+			// When Drop Objects At Coordinates is depreciated, do this instead.
+			FEditorViewportClient::FDropObjectOptions DragOptions = FEditorViewportClient::FDropObjectOptions();
+			DragOptions.bOnlyDropOnTarget = false;
+			DragOptions.bCreateDropPreview = bCreateDropPreview;
+			DragOptions.bSelectOutput = SelectActor;
+			DragOptions.FactoryToUse.SetObject(ActorFactory);
+			bDropSuccessful = LevelViewportClient->DropObjectsAtCoordinates(CachedOnDropLocalMousePos.X, CachedOnDropLocalMousePos.Y, DroppedObjects, TemporaryActors, DragOptions); // */
 		}
 		else if (bAllAssetWereLoaded && DroppedObjects.Num() > 0)
 		{

@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "AbilityTask_SpawnProjectile.h"
-#include "GAProjectile.h"
+#include "Global/AbilitySystem/AbilityTasks/AbilityTask_SpawnProjectile.h"
+#include "Global/Actors/Items/GAProjectile.h"
 #include "Engine/Engine.h"
 #include "AbilitySystemComponent.h"
-#include "GAProjectileMovementComponent.h"
+#include "Global/Components/Items/GAProjectileMovementComponent.h"
 
 UAbilityTask_SpawnProjectile* UAbilityTask_SpawnProjectile::SpawnProjectile(UGameplayAbility* OwningAbility, TSubclassOf<AGAProjectile> InClass, FTransform InLocation, float InProjectileVelocity, FGameplayEffectSpecHandle InGESpecHandle)
 {

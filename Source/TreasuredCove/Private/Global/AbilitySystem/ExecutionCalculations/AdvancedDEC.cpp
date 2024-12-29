@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AdvancedDEC.h"
+#include "Global/AbilitySystem/ExecutionCalculations/AdvancedDEC.h"
 #include "AbilitySystemComponent.h"
-#include "ASHealth.h"
-#include "ASWeaponStats.h"
-#include "GAProjectile.h"
+#include "Global/AbilitySystem/AttributeSets/ASHealth.h"
+#include "Global/AbilitySystem/AttributeSets/ASWeaponStats.h"
+#include "Global/Actors/Items/GAProjectile.h"
 #include "Engine/Engine.h"
 
 struct FAdvancedDamageStatics

@@ -24,7 +24,7 @@ public:
 	virtual UEdGraphNode* PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
-	UEdNode_MapMakerNode* NodeTemplate;
+	TObjectPtr<UEdNode_MapMakerNode> NodeTemplate;
 };
 
 USTRUCT()
@@ -41,7 +41,7 @@ public:
 	virtual UEdGraphNode* PerformAction(class UEdGraph* ParentGraph, UEdGraphPin* FromPin, const FVector2D Location, bool bSelectNewNode = true) override;
 	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
 
-	UEdNode_MapMakerEdge* NodeTemplate;
+	TObjectPtr<UEdNode_MapMakerEdge> NodeTemplate;
 };
 
 /**

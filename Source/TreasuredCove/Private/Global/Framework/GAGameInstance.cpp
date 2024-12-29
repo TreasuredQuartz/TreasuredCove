@@ -1,9 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAGameInstance.h"
-#include "GAPlayerController.h"
+#include "Global/Framework/GAGameInstance.h"
 #include "AbilitySystemGlobals.h"
-#include "CoreDelegates.h"
 
 void UGAGameInstance::Init()
 {

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayVoxel.h"
-#include "ProceduralMeshSectionStruct.h"
+#include "Global/Structs/ProceduralMeshSectionStruct.h"
 #include "HexGrid.generated.h"
 
 class UHexTile;

@@ -4,7 +4,6 @@
 #include "UObject/Class.h"
 #include "PropertyEditorModule.h"
 #include "Modules/ModuleManager.h"
-#include "AssetData.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/Blueprint.h"
 

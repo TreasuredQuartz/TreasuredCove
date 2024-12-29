@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AtmosphereVoxel.h"
-#include "WeatherComponent.h"
+#include "WeatherSystem/AtmosphereVoxel.h"
+#include "WeatherSystem/WeatherComponent.h"
 #include "GameplayManager.h"
 #include "SimplexNoiseBPLibrary.h"
 

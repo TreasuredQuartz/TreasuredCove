@@ -6,6 +6,7 @@
 #include "MapMakerAssetEditor/EdGraph_MapMaker.h"
 #include "MapMakerAssetEditor/MapMakerDragConnection.h"
 #include "MapMakerAssetEditor/SResizeableBox.h"
+#include "MapMakerAssetEditor/SMapMakerAsset.h"
 #include "MapMakerStyle.h"
 
 #include "MapMakerEditorPCH.h"
@@ -16,7 +17,6 @@
 #include "SlateOptMacros.h"
 #include "SGraphPin.h"
 #include "SGraphPanel.h"
-#include "SMapMakerAsset.h"
 
 
 #define LOCTEXT_NAMESPACE "EdNode_MapMaker"
@@ -489,7 +489,7 @@ FReply SEdNode_MapMakerNode::OnMouseMove(const FGeometry& MyGeometry, const FPoi
 			const FVector2D NodeLocation = FVector2D(MyEdNode->NodePosX, MyEdNode->NodePosY);
 			const FVector2D MouseLocation = MouseEvent.GetScreenSpacePosition();
 			const FVector2D AssetGridLocation = MyGeometry.AbsoluteToLocal(MouseLocation);
-			auto SnapToGrid = [](double value, double size) {return std::floor(value / size) * size; };
+			auto SnapToGrid = [](double value, double size) { return FMath::Floor(value / size) * size; };
 			const FVector AssetLocation = FVector(SnapToGrid(AssetGridLocation.X - GridCellSize, GridCellSize / 2), SnapToGrid(AssetGridLocation.Y - GridCellSize, GridCellSize / 2), 0);
 			Asset->AssetTransform.SetLocation(AssetLocation);
 			Asset->AssetTransform.SetScale3D(FVector(GridCellSize, GridCellSize, 0));

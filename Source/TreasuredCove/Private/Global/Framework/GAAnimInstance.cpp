@@ -1,14 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAAnimInstance.h"
-#include "GAActor.h"
-#include "GACharacter.h"
-#include "GACharacterMovementComponent.h"
-#include "CustomMovementMode.h"
-#include "Components/CapsuleComponent.h"
-#include "AimOffsetComponent.h"
+#include "Global/Framework/GAAnimInstance.h"
+#include "Global/Actors/GAActor.h"
+#include "Global/Actors/GACharacter.h"
+#include "Global/Components/Characters/GACharacterMovementComponent.h"
+#include "Global/Components/Items/AimOffsetComponent.h"
+#include "Global/Enumerations/CustomMovementMode.h"
 
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "KismetAnimationLibrary.h"

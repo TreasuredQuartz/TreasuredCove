@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAAbilitySystemGlobals.h"
+#include "Global/Framework/GAAbilitySystemGlobals.h"
 #include "AbilitySystemComponent.h"
 
 void UGAAbilitySystemGlobals::AllocAttributeSetInitter()

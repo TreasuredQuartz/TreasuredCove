@@ -1,2 +1,2 @@
 
-#include "SkillInfoStruct.h"
+#include "Global/Structs/SkillInfoStruct.h"

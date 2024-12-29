@@ -61,15 +61,22 @@ void UJsonAsset::RebuildAsset()
 		return;
 	}
 
-	JsonFileObject->GetStringField("format_version");
-	TSharedPtr<FJsonObject> JsonItem = JsonFileObject->GetObjectField("treasured:item");
+	FString FormatVersion = "format_version";
+	FString Namespace = "treasured";
+	FString ObjectClass = "item";
+	FString Description = "description";
+	FString Identifier = "identifier";
+	FString Components = "components";
+
+	JsonFileObject->GetStringField(*FormatVersion);
+	TSharedPtr<FJsonObject> JsonItem = JsonFileObject->GetObjectField(*(Namespace + ":" + ObjectClass));
 	if (JsonItem.IsValid())
 	{
 		AActor* CurrentItem = nullptr;
-		TSharedPtr<FJsonObject> JsonItemDescription = JsonItem->GetObjectField("description");
+		TSharedPtr<FJsonObject> JsonItemDescription = JsonItem->GetObjectField(*Description);
 		if (JsonItemDescription.IsValid())
 		{
-			FString ItemIdentifier = JsonItemDescription->GetStringField("identifier");
+			FString ItemIdentifier = JsonItemDescription->GetStringField(*Identifier);
 
 			/* for (FItemDatabaseRow& ItemRow : ItemDatabase)
 			{
@@ -85,7 +92,7 @@ void UJsonAsset::RebuildAsset()
 			} */
 		}
 
-		TSharedPtr<FJsonObject> JsonItemComponents = JsonItem->GetObjectField("components");
+		TSharedPtr<FJsonObject> JsonItemComponents = JsonItem->GetObjectField(*Components);
 		if (CurrentItem && JsonItemComponents.IsValid())
 		{
 			// NewItem->InitailizeFromJson(JsonItemComponents);

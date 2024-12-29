@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "OnAttributeModifiedEvent.h"
+#include "Global/AbilitySystem/AttributeSets/OnAttributeModifiedEvent.h"
 #include "Zombie_Spawner.generated.h"
 
 class AZombie_Manager;

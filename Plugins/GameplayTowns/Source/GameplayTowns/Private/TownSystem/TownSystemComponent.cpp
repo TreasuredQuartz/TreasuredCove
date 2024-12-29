@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "TownSystemComponent.h"
+#include "TownSystem/TownSystemComponent.h"
 #include "GameplayTown.h"
-#include "GameplayJobSite.h"
-#include "GameplayResidence.h"
+#include "Buildings/GameplayJobSite.h"
+#include "Buildings/GameplayResidence.h"
 
 #include "GameFramework/Pawn.h"
 #include "AIController.h"

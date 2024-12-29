@@ -2,13 +2,14 @@
 
 
 #include "Global/Actors/Items/ItemDatabaseCustomization.h"
-#include "PropertyEditor/Public/DetailLayoutBuilder.h"
-#include "PropertyEditor/Public/DetailCategoryBuilder.h"
-#include "PropertyEditor/Public/IDetailChildrenBuilder.h"
-#include "PropertyEditor/Public/DetailWidgetRow.h"
+#include "Global/Actors/Items/ItemDatabase.h"
+#include "Global/Actors/GAActor.h"
+
+#include "DetailLayoutBuilder.h"
+#include "DetailCategoryBuilder.h"
+#include "IDetailChildrenBuilder.h"
+#include "DetailWidgetRow.h"
 #include "PropertyCustomizationHelpers.h"
-#include "ItemDatabase.h"
-#include "GAActor.h"
 
 #define LOCTEXT_NAMESPACE "TreasuredCoveEditor"
 

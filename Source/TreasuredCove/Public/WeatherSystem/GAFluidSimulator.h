@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "FluidCubeStruct.h"
+#include "Global/Structs/FluidCubeStruct.h"
 #include "GAFluidSimulator.generated.h"
 
 #define FluidCube FFluidCubeStruct

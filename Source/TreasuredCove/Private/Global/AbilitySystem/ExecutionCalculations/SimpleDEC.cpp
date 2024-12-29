@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SimpleDEC.h"
-#include "ASHealth.h"
-#include "ASCombat.h"
+#include "Global/AbilitySystem/ExecutionCalculations/SimpleDEC.h"
+#include "Global/AbilitySystem/AttributeSets/ASHealth.h"
+#include "Global/AbilitySystem/AttributeSets/ASCombat.h"
 
 struct FSimpleDamageStatics
 {

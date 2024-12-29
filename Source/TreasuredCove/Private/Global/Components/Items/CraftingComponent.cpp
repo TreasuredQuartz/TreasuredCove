@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CraftingComponent.h"
+#include "Global/Components/Items/CraftingComponent.h"
 
 // Sets default values for this component's properties
 UCraftingComponent::UCraftingComponent()

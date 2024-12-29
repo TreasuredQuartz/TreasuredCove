@@ -1,6 +1,6 @@
 //
 
-#include "SPlayerInfo.h"
+#include "Global/UserInterface/Slate/SPlayerInfo.h"
 #include "SlateOptMacros.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"

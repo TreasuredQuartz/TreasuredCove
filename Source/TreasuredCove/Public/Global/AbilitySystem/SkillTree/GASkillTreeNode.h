@@ -6,7 +6,7 @@
 #include "CoreMinimal.h"
 #include "GenericGraphNode.h"
 #include "Templates/SharedPointer.h"
-#include "SkillInfoStruct.h"
+#include "Global/Structs/SkillInfoStruct.h"
 #include "GASkillTreeNode.generated.h"
 
 class UGASkillNode;

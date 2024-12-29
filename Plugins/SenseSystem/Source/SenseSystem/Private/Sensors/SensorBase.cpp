@@ -2322,7 +2322,7 @@ void USensorBase::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 	Super::PostEditChangeProperty(e);
 }
 
-EDataValidationResult USensorBase::IsDataValid(FDataValidationContext& ValidationErrors)
+EDataValidationResult USensorBase::IsDataValid(FDataValidationContext& ValidationErrors) const
 {
 	EDataValidationResult EIsValid = Super::IsDataValid(ValidationErrors);
 
@@ -2348,7 +2348,7 @@ EDataValidationResult USensorBase::IsDataValid(FDataValidationContext& Validatio
 	{
 		const auto Predicate = [](const TArray<FChannelSetup>& A, const int32 ID)
 		{ return (ID > 0 && A[ID] == A[ID - 1]) || A[ID].Channel > 64 || A[ID].Channel <= 0; };
-		ArrayHelpers::Filter_Sorted(ChannelSetup, Predicate);
+		// ArrayHelpers::Filter_Sorted(ChannelSetup, Predicate);
 		const FText ErrText = FText::FromString((TEXT("Duplicates in ChannelSetup USensorBase: %s"), *GetNameSafe(this)));
 		ValidationErrors.AddError(ErrText);
 		EIsValid = CombineDataValidationResults(EIsValid, EDataValidationResult::Invalid);
@@ -2899,7 +2899,7 @@ bool USensorBase::CheckSensorTestToDefaults(TArray<FSenseSysRestoreObject>& Rest
 					}
 					if (!DefaultSensor) break;
 
-					TArray<USensorTestBase*>& TestCDO_Arr = DefaultSensor->SensorTests;
+					TArray<TObjectPtr<USensorTestBase>>& TestCDO_Arr = DefaultSensor->SensorTests;
 					for (int32 j = 0; j < TestCDO_Arr.Num(); ++j)
 					{
 						if (IsValid(TestCDO_Arr[j]))

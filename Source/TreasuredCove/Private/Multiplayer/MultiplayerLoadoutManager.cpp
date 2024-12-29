@@ -3,7 +3,7 @@
 
 #include "Multiplayer/MultiplayerLoadoutManager.h"
 #include "Multiplayer/MultiplayerLoadout.h"
-#include "GASkillTreeComponent.h"
+#include "Global/AbilitySystem/SkillTree/GASkillTreeComponent.h"
 
 UMultiplayerLoadoutManager::UMultiplayerLoadoutManager()
 {
@@ -70,9 +70,13 @@ bool UMultiplayerLoadoutManager::AddPrimary(FLoadoutItemInfo& InPrimary)
 {
 	if (!Loadout) return false;
 
-	return Loadout->AddPrimary(InPrimary);
+	if (Loadout->AddPrimary(InPrimary))
+	{
+		OnSuccess.Broadcast();
+		return true;
+	}
 
-	OnSuccess.Broadcast();
+	return false;
 }
 
 bool UMultiplayerLoadoutManager::AddPrimaryAttachment(FLoadoutItemInfo& InPrimaryAttachment)

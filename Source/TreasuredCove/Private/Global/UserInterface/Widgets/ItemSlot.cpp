@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ItemSlot.h"
-#include "DraggedItemSlot.h"
-#include "ItemDragDropOperation.h"
-#include "WidgetBlueprintLibrary.h"
-#include "ItemInventory.h"
+#include "Global/UserInterface/Widgets/ItemSlot.h"
+#include "Global/UserInterface/Widgets/DraggedItemSlot.h"
+#include "Global/UserInterface/Widgets/ItemDragDropOperation.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Global/UserInterface/Widgets/ItemInventory.h"
 
 //
 void UItemSlot::NativeConstruct()

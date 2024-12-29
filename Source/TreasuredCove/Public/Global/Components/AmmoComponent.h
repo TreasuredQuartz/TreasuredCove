@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "AttributeComponent.h"
 #include "GameplayTagContainer.h"
-#include "OnAttributeModifiedEvent.h"
+#include "Global/AbilitySystem/AttributeSets/OnAttributeModifiedEvent.h"
 #include "AmmoComponent.generated.h"
 
 class UAbilitySystemComponent;

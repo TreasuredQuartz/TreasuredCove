@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PauseAreaComponent.h"
-#include "GAPauseStudioPawn.h"
+#include "Global/Components/Characters/PauseAreaComponent.h"
+#include "Global/Actors/GAPauseStudioPawn.h"
 
 #include "GameFramework/Character.h"
 

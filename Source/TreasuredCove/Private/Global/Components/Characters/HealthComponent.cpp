@@ -4,8 +4,8 @@
 #include "Global/Components/Characters/HealthComponent.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
-#include "ASHealth.h"
-#include "AttributeSetInfo.h"
+#include "Global/AbilitySystem/AttributeSets/ASHealth.h"
+#include "Global/AbilitySystem/AttributeSets/AttributeSetInfo.h"
 
 #define LOCTEXT_NAMESPACE "UHealthComponent"
 

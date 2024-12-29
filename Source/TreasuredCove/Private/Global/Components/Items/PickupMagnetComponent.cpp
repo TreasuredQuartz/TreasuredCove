@@ -1,14 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PickupMagnetComponent.h"
-#include "RepositoryComponent.h"
-#include "InteractionInterface.h"
-#include "RepositoryInterface.h"
+#include "Global/Components/Items/PickupMagnetComponent.h"
+#include "Global/Components/Items/RepositoryComponent.h"
+
+#include "Global/Interfaces/InteractionInterface.h"
+#include "Global/Interfaces/RepositoryInterface.h"
+#include "Global/Interfaces/PickupInterface.h"
+
 #include "Components/SphereComponent.h"
 #include "Gameframework/MovementComponent.h"
 #include "Engine/Engine.h"
-#include "Interfaces/PickupInterface.h"
 
 // Sets default values for this component's properties
 UPickupMagnetComponent::UPickupMagnetComponent()

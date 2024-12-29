@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MCWorld_VoxelItem.h"
-#include "MCWorld_Voxel.h"
-#include "DTMCBlockInfoStruct.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_VoxelItem.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_Voxel.h"
+#include "Dungeons/StarFox/Minecraft/DTMCBlockInfoStruct.h"
 #include "GameplayTileData.h"
 #include "Global/Libraries/GALibrary.h"
 #include "Global/Components/Items/BobbingMovementComponent.h"

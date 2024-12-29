@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Structs/ItemKeyStruct.h"
+#include "Global/Structs/ItemKeyStruct.h"
 #include "Repository.generated.h"
 
 /**

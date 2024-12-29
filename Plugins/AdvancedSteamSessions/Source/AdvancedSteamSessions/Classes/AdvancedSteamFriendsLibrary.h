@@ -273,7 +273,7 @@ enum class ESteamUserOverlayType : uint8
 
 static FString EnumToString(const FString& enumName, uint8 value)
 {
-	const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, *enumName, true);
+	const UEnum* EnumPtr = FindObject<UEnum>(GetTransientPackage(), *enumName, true);
 
 	if (!EnumPtr)
 		return FString();

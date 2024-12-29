@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAFluidSimulator.h"
-#include "DrawingCanvas.h"
+#include "WeatherSystem/GAFluidSimulator.h"
+#include "Global/UserInterface/DrawingCanvas.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/Canvas.h"

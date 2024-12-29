@@ -2,7 +2,7 @@
 
 
 #include "Global/Components/Characters/ProjectilePathComponent.h"
-#include "ProjectilePathActor.h"
+#include "Global/Actors/ProjectilePathActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 

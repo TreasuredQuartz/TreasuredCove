@@ -10,7 +10,7 @@ FPreviewScene_MapMaker::FPreviewScene_MapMaker(ConstructionValues CVS)
 	GetWorld()->GetWorldSettings()->NotifyBeginPlay();
 	GetWorld()->GetWorldSettings()->NotifyMatchStarted();
 	GetWorld()->GetWorldSettings()->SetActorHiddenInGame(false);
-	GetWorld()->bBegunPlay = true;
+	GetWorld()->SetBegunPlay(true);
 
 	// set light options 
 	DirectionalLight->SetRelativeLocation(FVector(-1024.f, 1024.f, 2048.f));

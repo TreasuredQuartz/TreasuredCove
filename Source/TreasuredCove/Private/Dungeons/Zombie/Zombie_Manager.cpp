@@ -1,14 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Zombie_Manager.h"
-#include "Zombie_Spawner.h"
-#include "Zombie_SettingsConfig.h"
-#include "TeamComponent.h"
-#include "TeamManager.h"
-#include "GACharacterMovementComponent.h"
+#include "Dungeons/Zombie/Zombie_Manager.h"
+#include "Dungeons/Zombie/Zombie_Spawner.h"
+#include "Dungeons/Zombie/Zombie_SettingsConfig.h"
+#include "Global/Components/Characters/TeamComponent.h"
+#include "Global/Components/Characters/TeamManager.h"
+#include "Global/Components/Characters/GACharacterMovementComponent.h"
+#include "Global/AbilitySystem/AttributeSets/ASHealth.h"
 #include "AbilitySystemComponent.h"
-#include "ASHealth.h"
 
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"

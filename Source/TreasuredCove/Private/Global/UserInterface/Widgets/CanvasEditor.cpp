@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "CanvasEditor.h"
-#include "TextureCreator.h"
+#include "Global/UserInterface/Widgets/CanvasEditor.h"
+#include "Global/UserInterface/TextureCreator.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Runtime/Engine/Classes/Engine/TextureRenderTarget2D.h"

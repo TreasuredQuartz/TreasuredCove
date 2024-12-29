@@ -2,7 +2,7 @@
 
 
 #include "Global/AbilitySystem/TargetActors/GATargetActor_ProjectilePath.h"
-#include "GameplayAbility.h"
+#include "Abilities/GameplayAbility.h"
 #include "GameFramework/PlayerController.h"
 
 void AGATargetActor_ProjectilePath::StartTargeting(UGameplayAbility* Ability)

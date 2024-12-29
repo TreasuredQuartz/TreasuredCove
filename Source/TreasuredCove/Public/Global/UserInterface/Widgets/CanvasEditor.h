@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Widgets/GAWidget.h"
+#include "GAWidget.h"
 #include "CanvasEditor.generated.h"
 
 class UTextureRenderTarget2D;

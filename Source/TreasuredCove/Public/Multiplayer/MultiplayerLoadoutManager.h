@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "LoadoutItemInfo.h"
+#include "Multiplayer/Struct/LoadoutItemInfo.h"
 #include "MultiplayerLoadoutManager.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSuccess);

@@ -4,9 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
-#include "AttributeType.h"
-#include "Race.h"
-#include "AICharacterInfoStruct.h"
+
+#include "Global/Enumerations/AttributeType.h"
+#include "Global/Structs/AICharacterInfoStruct.h"
+
 #include "SensedStimulStruct.h"
 #include "GAAIController.generated.h"
 

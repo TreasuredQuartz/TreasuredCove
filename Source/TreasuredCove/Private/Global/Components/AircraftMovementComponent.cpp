@@ -2,7 +2,7 @@
 
 
 #include "Global/Components/AircraftMovementComponent.h"
-#include "GAVehicle.h"
+#include "Global/Actors/Vehicles/GAVehicle.h"
 
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/GameNetworkManager.h"

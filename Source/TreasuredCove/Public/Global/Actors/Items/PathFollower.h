@@ -16,7 +16,7 @@ class UTimelineComponent;
 
 namespace ETimelineDirection
 {
-	enum Type;
+	enum Type : int;
 }
 
 UCLASS()

@@ -270,7 +270,7 @@ UClass* USenseSystemBPLibrary::GetOwnerBlueprintClassType(const EOwnerBlueprintC
 		{
 			checkNoEntry();
 			UE_ASSUME(0);
-			return nullptr;
+			// return nullptr;
 		}
 	}
 }

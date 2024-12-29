@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "MinMax.h"
-#include "PlanetShapeSettings.h"
+#include "Settings/PlanetShapeSettings.h"
 #include "PlanetShapeGenerator.generated.h"
 
 class IPlanetNoiseInterface;

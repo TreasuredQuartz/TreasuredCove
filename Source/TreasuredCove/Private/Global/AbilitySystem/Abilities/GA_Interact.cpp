@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA_Interact.h"
-#include "GACharacter.h"
-#include "GAActor.h"
+#include "Global/AbilitySystem/Abilities/GA_Interact.h"
+#include "Global/Actors/GACharacter.h"
+#include "Global/Actors/GAActor.h"
 
 #include "SenseReceiverComponent.h"
-#include "InteractionInterface.h"
+#include "Global/Interfaces/InteractionInterface.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"

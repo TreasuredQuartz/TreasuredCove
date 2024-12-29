@@ -2,8 +2,8 @@
 
 
 #include "Global/Components/Characters/GACharacterMovementComponent.h"
-#include "GACharacter.h"
-#include "CustomMovementMode.h"
+#include "Global/Actors/GACharacter.h"
+#include "Global/Enumerations/CustomMovementMode.h"
 #include "Components/CapsuleComponent.h"
 
 // Framework
@@ -1330,7 +1330,6 @@ float UGACharacterMovementComponent::GetMaxSpeed() const
 		default:
 			return MaxCustomMovementSpeed;
 		}
-		return MaxCustomMovementSpeed;
 	case MOVE_None:
 	default:
 		return 0.f;
@@ -1362,8 +1361,6 @@ float UGACharacterMovementComponent::GetMaxAcceleration() const
 	default:
 		return UCharacterMovementComponent::GetMaxAcceleration();
 	};
-
-	return UCharacterMovementComponent::GetMaxAcceleration();
 }
 
 float UGACharacterMovementComponent::GetMaxBrakingDeceleration() const

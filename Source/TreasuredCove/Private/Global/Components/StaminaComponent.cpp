@@ -3,8 +3,8 @@
 
 #include "Global/Components/StaminaComponent.h"
 #include "AbilitySystemComponent.h"
-#include "ASStamina.h"
-#include "AttributeSetInfo.h"
+#include "Global/AbilitySystem/AttributeSets/ASStamina.h"
+#include "Global/AbilitySystem/AttributeSets/AttributeSetInfo.h"
 
 #define LOCTEXT_NAMESPACE "UStaminaComponent"
 

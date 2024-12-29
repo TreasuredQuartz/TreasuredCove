@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "AbilityInfoStruct.h"
-#include "ProceduralMeshSectionStruct.h"
+#include "Global/Structs/AbilityInfoStruct.h"
+#include "Global/Structs/ProceduralMeshSectionStruct.h"
 #include "GALibrary.generated.h"
 
 class UGameplayTileData;

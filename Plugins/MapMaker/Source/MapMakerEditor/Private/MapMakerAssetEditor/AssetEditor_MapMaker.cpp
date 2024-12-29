@@ -9,7 +9,6 @@
 #include "MapMakerAssetEditor/EdGraph_MapMaker.h"
 #include "MapMakerAssetEditor/EdNode_MapMakerNode.h"
 #include "MapMakerAssetEditor/EdNode_MapMakerEdge.h"
-#include "AssetEditor_MapMaker.h"
 #include "MapMakerEditorPCH.h"
 #include "HAL/PlatformApplicationMisc.h"
 #include "Framework/Commands/GenericCommands.h"
@@ -51,7 +50,7 @@ FAssetEditor_MapMaker::~FAssetEditor_MapMaker()
 	UPackage::PackageSavedWithContextEvent.Remove(OnPackageSavedDelegateHandle);
 }
 
-void FAssetEditor_MapMaker::InitMapMakerAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr< IToolkitHost >& InitToolkitHost, UMapMaker* Graph)
+void FAssetEditor_MapMaker::InitMapMakerAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr< IToolkitHost >& InitToolkitHost, TObjectPtr<UMapMaker> Graph)
 {
 	EditingGraph = Graph;
 	CreateEdGraph();

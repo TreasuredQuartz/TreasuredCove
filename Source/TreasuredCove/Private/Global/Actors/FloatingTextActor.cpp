@@ -3,7 +3,6 @@
 
 #include "Global/Actors/FloatingTextActor.h"
 #include "Components/WidgetComponent.h"
-#include "GAWidget.h"
 
 // Sets default values
 AFloatingTextActor::AFloatingTextActor()

@@ -1,4 +1,7 @@
-#include "GAInputConfigData.h"
+// Copywrite notice
+
+
+#include "Global/Config/GAInputConfigData.h"
 #include "InputAction.h"
 #include "GameplayTagContainer.h"
 

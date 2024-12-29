@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "PlanetMaterialGenerator.h"
+#include "Generators/PlanetMaterialGenerator.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
 void FPlanetMaterialGenerator::UpdateSettings(FPlanetMaterialSettings inSettings)

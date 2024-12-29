@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayVoxel.h"
 #include "WeatherInterface.h"
-#include "WeatherZoneInfoStruct.h"
+#include "WeatherSystem/Structs/WeatherZoneInfoStruct.h"
 #include "AtmosphereVoxel.generated.h"
 
 /**

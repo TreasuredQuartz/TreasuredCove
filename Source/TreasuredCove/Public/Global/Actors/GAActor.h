@@ -7,8 +7,8 @@
 #include "Abilities/GameplayAbility.h"
 
 #include "AbilitySystemInterface.h"
-#include "InteractionInterface.h"
-#include "ControlInputInterface.h"
+#include "Global/Interfaces/InteractionInterface.h"
+#include "Global/Interfaces/ControlInputInterface.h"
 
 #include "GAActor.generated.h"
 
@@ -48,10 +48,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAActor|Animation", meta = (AllowPrivateAccess = true))
 	UBillboardComponent* SupportingHandOffset;
 
-	// Whether the item is on the ground or a character has it on their person or in their inventory.
-	uint8 bPickedUp:1;
-	uint8 bEquipped:1;
-
 public:	
 	// Sets default values for this actor's properties
 	AGAActor();
@@ -65,11 +61,6 @@ public:
 	// For animation blueprint off hand offset from default animation
 	virtual FTransform GetSupportingHandOffset() const;
 
-	// For State Checking
-	bool IsPickedUp() const { return bPickedUp; };
-
-	// For State Checking
-	bool IsEquipped() const { return bEquipped; };
 public:
 	/**	Begin UObject Interface	*/
 

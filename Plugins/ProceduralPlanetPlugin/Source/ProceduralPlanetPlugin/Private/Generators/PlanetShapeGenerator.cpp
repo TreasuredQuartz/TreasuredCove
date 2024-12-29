@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PlanetShapeGenerator.h"
+#include "Generators/PlanetShapeGenerator.h"
 #include "PlanetNoise.h"
 #include "Engine/Engine.h"
  
@@ -82,7 +82,7 @@ void FPlanetShapeGenerator::GenerateUVs(TArray<FVector>const& Points,
 	// Local variables //
 	int flipIndex = 0,
 		Index = 0;
-	float GoldenRatio = 1 + sqrt<int>(5),
+	float GoldenRatio = 1.0 + sqrt(5.0),
 		curIndex = 0,
 		curRadius = 0,
 		curTheta = 0,

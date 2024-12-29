@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "DialogueComponent.h"
+#include "Global/Components/Characters/DialogueComponent.h"
 
 // Sets default values for this component's properties
 UDialogueComponent::UDialogueComponent()

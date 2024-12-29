@@ -1,15 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GAWeapon.h"
-#include "GASkillTreeComponent.h"
-#include "RarityComponent.h"
-#include "UIInfoComponent.h"
-#include "EquippableComponent.h"
-#include "GAProjectileMovementComponent.h"
+#include "Global/Actors/Items/GAWeapon.h"
+#include "Global/AbilitySystem/SkillTree/GASkillTreeComponent.h"
+#include "Global/Components/Items/RarityComponent.h"
+#include "Global/Components/Items/UIInfoComponent.h"
+#include "Global/Components/Items/EquippableComponent.h"
+#include "Global/Components/Items/GAProjectileMovementComponent.h"
 #include "Global/Components/Characters/FloatingItemInfoComponent.h"
 #include "Global/Actors/Items/ItemData.h"
 
-#include "GameplayAbilityBase.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
 
 #include "Components/BoxComponent.h"
 

@@ -1,15 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ItemInventory.h"
-#include "ItemSlot.h"
-#include "PauseMenu.h"
+#include "Global/UserInterface/Widgets/ItemInventory.h"
+#include "Global/UserInterface/Widgets/ItemSlot.h"
+#include "Global/UserInterface/Widgets/PauseMenu.h"
+// #include "Components/PanelWidget.h"
 
 //
 void UItemInventory::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	PauseMenu = Cast<UPauseMenu>(GetParent());
+	// PauseMenu = Cast<UPauseMenu>(GetParent());
 }
 
 //

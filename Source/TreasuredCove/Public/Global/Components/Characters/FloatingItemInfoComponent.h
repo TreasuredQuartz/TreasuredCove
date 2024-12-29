@@ -69,7 +69,7 @@ private:
 
 	//
 	AFloatingItemInfoActor* Popup;
-	class AGAWeapon* WeaponPickup;
+	AActor* ActorPickup;
 
 public:	
 	// Sets default values for this component's properties

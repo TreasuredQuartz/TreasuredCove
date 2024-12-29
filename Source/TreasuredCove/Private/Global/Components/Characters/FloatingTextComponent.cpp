@@ -7,7 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "FloatingTextActor.h"
+#include "Global/Actors/FloatingTextActor.h"
 
 // Sets default values for this component's properties
 UFloatingTextComponent::UFloatingTextComponent()

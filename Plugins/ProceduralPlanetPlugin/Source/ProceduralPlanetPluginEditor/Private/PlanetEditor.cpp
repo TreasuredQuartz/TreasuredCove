@@ -11,7 +11,7 @@
 #include "Styling/AppStyle.h"
 
 #include "WorkflowOrientedApp/WorkflowTabManager.h"
-#include "BlueprintEditorUtils.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 
 #include "Widgets/Docking/SDockTab.h"
 

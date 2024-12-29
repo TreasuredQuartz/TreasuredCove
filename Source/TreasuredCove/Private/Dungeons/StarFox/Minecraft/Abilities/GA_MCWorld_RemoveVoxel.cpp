@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA_MCWorld_RemoveVoxel.h"
-#include "MCWorld_BasicInteractionTool.h"
-#include "MCWorld_Voxel.h"
+#include "Dungeons/StarFox/Minecraft/Abilities/GA_MCWorld_RemoveVoxel.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_BasicInteractionTool.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_Voxel.h"
 
-#include "GACharacter.h"
+#include "Global/Actors/GACharacter.h"
 
 #include "SenseReceiverComponent.h"
 

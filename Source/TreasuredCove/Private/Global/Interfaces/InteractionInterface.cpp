@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "InteractionInterface.h"
+#include "Global/Interfaces/InteractionInterface.h"
 
 void IInteractionInterface::InteractedWith_Implementation(AActor* OtherActor)
 {

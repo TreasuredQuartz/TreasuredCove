@@ -1,8 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "WaterBodyProceduralActor.h"
+#include "Dungeons/StarFox/Minecraft/WaterBodyProceduralActor.h"
 
-#include "WaterBodyProceduralComponent.h"
+#include "Dungeons/StarFox/Minecraft/WaterBodyProceduralComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
 #if WITH_EDITOR

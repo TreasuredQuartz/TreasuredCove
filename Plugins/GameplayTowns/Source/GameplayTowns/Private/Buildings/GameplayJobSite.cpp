@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "GameplayJobSite.h"
-#include "GameplayJob.h"
-#include "TownSystemComponent.h"
-#include "ResourceComponent.h"
+#include "Buildings/GameplayJobSite.h"
+#include "TownSystem/GameplayJob.h"
+#include "TownSystem/TownSystemComponent.h"
+#include "TownSystem/ResourceComponent.h"
 
 // Sets default values
 AGameplayJobSite::AGameplayJobSite(const FObjectInitializer& ObjectInitializer)

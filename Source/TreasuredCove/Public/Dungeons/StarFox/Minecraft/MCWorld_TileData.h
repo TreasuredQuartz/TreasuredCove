@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTileData.h"
-#include "ProceduralMeshSectionStruct.h"
 #include "MCWorld_TileData.generated.h"
 
 /**

@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA_MCWorld_SpawnItem.h"
-#include "MCWorld_VoxelItem.h"
-#include "MCWorld_Voxel.h"
+#include "Dungeons/StarFox/Minecraft/Abilities/GA_MCWorld_SpawnItem.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_VoxelItem.h"
+#include "Dungeons/StarFox/Minecraft/MCWorld_Voxel.h"
 #include "Abilities/Tasks/AbilityTask_SpawnActor.h"
 
-#include "GAActor.h"
+#include "Global/Actors/GAActor.h"
 
 void UGA_MCWorld_SpawnItem::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {

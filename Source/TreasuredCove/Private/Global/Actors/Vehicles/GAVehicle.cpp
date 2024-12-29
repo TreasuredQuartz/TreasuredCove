@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GAVehicle.h"
-#include "GASystemComponent.h"
-#include "GACharacter.h"
+#include "Global/Actors/Vehicles/GAVehicle.h"
+#include "Global/AbilitySystem/GASystemComponent.h"
+#include "Global/Actors/GACharacter.h"
 #include "ChaosVehicleMovementComponent.h"
 #include "VehicleMovementComponent.h"
 
@@ -13,13 +13,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstance.h"
 
-#include "AbilitySet.h"
-#include "GameplayAbilityBase.h"
-#include "ASHealth.h"
-#include "ASStats.h"
-#include "ASAmmo.h"
-#include "ASWeaponStats.h"
-#include "ASUltimate.h"
+#include "Global/AbilitySystem/AbilitySet.h"
+#include "Global/AbilitySystem/Abilities/GameplayAbilityBase.h"
 
 // Sets default values
 AGAVehicle::AGAVehicle()
@@ -210,6 +205,7 @@ void AGAVehicle::AquireAbilities(TArray<TSubclassOf<UGameplayAbility>> InAbiliti
 // Called during ability system initialization
 void AGAVehicle::InitializeAttributeSet(UAttributeSet* Set)
 {
+	/*
 	UASHealth* HealthSet = Cast<UASHealth>(Set);
 	if (HealthSet)
 	{
@@ -218,7 +214,7 @@ void AGAVehicle::InitializeAttributeSet(UAttributeSet* Set)
 
 		HealthSet->OnHealthModified.AddDynamic(this, &AGACharacter::OnHealthModified);
 		HealthSet->OnStaminaModified.AddDynamic(this, &AGACharacter::OnStaminaModified);
-		HealthSet->OnManaModified.AddDynamic(this, &AGACharacter::OnManaModified);*/
+		HealthSet->OnManaModified.AddDynamic(this, &AGACharacter::OnManaModified);
 		return;
 	}
 
@@ -226,14 +222,14 @@ void AGAVehicle::InitializeAttributeSet(UAttributeSet* Set)
 	if (StatSet)
 	{
 		/*StatSet->OnExperienceModified.AddDynamic(this, &AGACharacter::OnExperienceModified);
-		StatSet->OnStatModified.AddDynamic(this, &AGACharacter::OnStatModified);*/
+		StatSet->OnStatModified.AddDynamic(this, &AGACharacter::OnStatModified);
 		return;
 	}
 
 	UASAmmo* AmmoSet = Cast<UASAmmo>(Set);
 	if (AmmoSet)
 	{
-		/*AmmoSet->OnAmmoModified.AddDynamic(this, &AGACharacter::OnAmmoModified);*/
+		/*AmmoSet->OnAmmoModified.AddDynamic(this, &AGACharacter::OnAmmoModified);
 		return;
 	}
 
@@ -245,16 +241,16 @@ void AGAVehicle::InitializeAttributeSet(UAttributeSet* Set)
 		WeaponSet->OnADSAccuracyModified.AddDynamic(this, &AGACharacter::OnADSAccuracyModified);
 		WeaponSet->OnHandlingModified.AddDynamic(this, &AGACharacter::OnHandlingModified);
 		WeaponSet->OnRangeModified.AddDynamic(this, &AGACharacter::OnRangeModified);
-		WeaponSet->OnDamageModified.AddDynamic(this, &AGACharacter::OnDamageModified);*/
+		WeaponSet->OnDamageModified.AddDynamic(this, &AGACharacter::OnDamageModified);
 		return;
 	}
 
 	UASUltimate* UltimateSet = Cast<UASUltimate>(Set);
 	if (UltimateSet)
 	{
-		/*UltimateSet->OnUltimateChargeModified.AddDynamic(this, &AGACharacter::OnUltimateModified);*/
+		/*UltimateSet->OnUltimateChargeModified.AddDynamic(this, &AGACharacter::OnUltimateModified);
 		return;
-	}
+	} // */
 }
 
 // Called when loading

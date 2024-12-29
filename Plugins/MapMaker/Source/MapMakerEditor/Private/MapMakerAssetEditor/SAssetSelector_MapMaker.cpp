@@ -2,7 +2,7 @@
 
 
 #include "MapMakerAssetEditor/SAssetSelector_MapMaker.h"
-#include "EdGraph_MapMaker.h"
+#include "MapMakerAssetEditor/EdGraph_MapMaker.h"
 #include "MapMaker.h"
 #include "MapMakerAssetDatabase.h"
 #include "MapMakerAsset.h"

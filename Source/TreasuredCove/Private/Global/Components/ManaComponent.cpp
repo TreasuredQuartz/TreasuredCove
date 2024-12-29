@@ -3,8 +3,8 @@
 
 #include "Global/Components/ManaComponent.h"
 #include "AbilitySystemComponent.h"
-#include "AttributeSetInfo.h"
-#include "ASMana.h"
+#include "Global/AbilitySystem/AttributeSets/AttributeSetInfo.h"
+#include "Global/AbilitySystem/AttributeSets/ASMana.h"
 
 #define LOCTEXT_NAMESPACE "UManaComponent"
 

@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GameplayLibrary.h"
-#include "TownSystemInterface.h"
-#include "TownSystemComponent.h"
+#include "Library/GameplayLibrary.h"
+#include "TownSystem/TownSystemInterface.h"
+#include "TownSystem/TownSystemComponent.h"
 
 void UGameplayLibrary::SetGameTime(float InDeltaTime, float InGameSpeed, float InInitialGameTime, float* OutGameTime, int* OutDaysPassed)
 {

@@ -301,7 +301,7 @@ namespace Delaunay {
         ids.Sort([&dists](size_t i, size_t j) { return dists[i] < dists[j]; });
 
         // initialize a hash table for storing edges of the advancing convex hull
-        m_hash_size = static_cast<size_t>(FMath::CeilToDouble(sqrt<size_t>(n)));
+        m_hash_size = static_cast<size_t>(FMath::CeilToDouble(sqrt(n)));
         m_hash.Init(INVALID_INDEX, m_hash_size);
         
         // initialize arrays for tracking the edges of the advancing convex hull

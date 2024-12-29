@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "DrawingCanvas.h"
+#include "Global/UserInterface/DrawingCanvas.h"
 
 UDrawingCanvas::UDrawingCanvas()
 {
