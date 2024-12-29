@@ -33,7 +33,7 @@ void UPauseAreaComponent::EnterPauseArea_Client_Implementation()
 			return;
 
 		FVector Location = GetOwner()->GetActorLocation();
-		Location.Z += 500;
+		Location.Z -= 100000;
 		const FTransform spawnTransform = FTransform(FRotator::ZeroRotator, Location);
 		AGAPauseStudioPawn* NewPauseAreaActor = GetWorld()->SpawnActorDeferred<AGAPauseStudioPawn>(PauseAreaClass, spawnTransform, GetOwner(), nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 

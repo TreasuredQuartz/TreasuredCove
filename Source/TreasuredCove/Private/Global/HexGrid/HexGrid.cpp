@@ -733,11 +733,18 @@ void AHexGrid::UpdateMesh()
 
 UHexTile* AHexGrid::AddTile_Implementation(const FVector& TileLocation, int32 CurrentTileNum)
 {
-	FRotator Direction = (FVector::ZeroVector - TileLocation).ToOrientationQuat().Rotator();
-	FRotator Quatarian = FRotator(-90, 0, 0) + Direction;
-	// FVector Loc = Quatarian.RotateVector(UKismetMathLibrary::InverseTransformLocation(FTransform(FRotator(90, 0, 0), FVector::ZeroVector), TileLocation * VoxelSize));
+	FRotator Quatarian;
+	if (TileLocation.GetSafeNormal() == NormalVector)
+	{
+		Quatarian = NormalVector.Rotation() + FRotator(90, 0, 0);
+	}
+	else
+	{
+		Quatarian = UKismetMathLibrary::FindLookAtRotation(TileLocation.GetSafeNormal(), TileLocation) + FRotator(90, 0, 0);
+	}
+
 	if (MeshCollisionInstances)
-		MeshCollisionInstances->AddInstance(FTransform(Quatarian,(TileLocation * VoxelSize), Scale3D * 0.05));
+		MeshCollisionInstances->AddInstance(FTransform(Quatarian, (TileLocation * VoxelSize) * 1.01, Scale3D * 0.1));
 
 	UHexTile* NewTile = NewObject<UHexTile>();
 	if (NewTile)
