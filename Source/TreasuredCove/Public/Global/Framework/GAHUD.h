@@ -163,7 +163,7 @@ public:
 	void CursorMoveUp(float Val);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
-	void CursorMoveRight(float Val);
+	void CursorMoveRight(float Val); // */
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
 	void OpenMainMenu();
@@ -174,7 +174,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
 	void ClosePauseMenu();
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
+	/* UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")
 	void OnMenuUpdated(FVector2D MenuSelection);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Gameplay")

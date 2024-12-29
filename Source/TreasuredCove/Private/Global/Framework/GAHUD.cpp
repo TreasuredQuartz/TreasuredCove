@@ -52,10 +52,8 @@ void AGAHUD::BeginPlay()
 //
 void AGAHUD::PlayerInputChecks()
 {
-	/*
 	if (bIsInMenu)
 	{
-		/*
 		// Event to close Pause Menu
 		if (PAUSE)
 		{
@@ -66,7 +64,7 @@ void AGAHUD::PlayerInputChecks()
 		}
 
 		// Event to click or select buttons or other ui elements
-		if (CONFIRMPRESSED)
+		/* if (CONFIRMPRESSED)
 		{
 			ConfirmPressed();
 			return;
@@ -148,7 +146,7 @@ void AGAHUD::PlayerInputChecks()
 		{
 			CursorMoveRight(-1);
 			return;
-		} // 
+		} // */
 	}
 	else
 	{
@@ -178,8 +176,8 @@ void AGAHUD::PlayerInputChecks()
 			CloseQuickMenu();
 			bIsQuickMenuUp = false;
 			return;
-		} 
-	} // */
+		} // */
+	} 
 
 	if (bIsQuickMenuUp) 
 	{
@@ -205,8 +203,6 @@ void AGAHUD::DrawHUD_Reset()
 //
 void AGAHUD::DrawHUD()
 {
-	/*
-
 	if (!PlayerOwner)
 	{
 		PlayerOwner = GetOwningPlayerController();

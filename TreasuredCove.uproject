@@ -127,6 +127,14 @@
 		{
 			"Name": "UTC_LiquidShader",
 			"Enabled": true
+		},
+		{
+			"Name": "StudioTelemetry",
+			"Enabled": false
+		},
+		{
+			"Name": "UdpMessaging",
+			"Enabled": false
 		}
 	]
 }

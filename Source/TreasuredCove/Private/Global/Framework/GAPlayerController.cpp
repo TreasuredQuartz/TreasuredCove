@@ -102,10 +102,10 @@ void AGAPlayerController::OnHealed_Client_Implementation(AActor* SourceActor, EA
 	if (!CanAccessHUD()) return;
 
 	HUD->OnHealed(DeltaAmount);
-}
+} // */
 
 #pragma region PlayerInformation
-//
+/*
 void AGAPlayerController::OnHealthModified_Client_Implementation(float Health, float MaxHealth)
 {
 	if (!CanAccessHUD()) return;
@@ -211,7 +211,7 @@ void AGAPlayerController::BeginPause()
 
 		// FInputModeUIOnly InputMode;
 		// SetInputMode(InputMode);
-		// HUD->OpenPauseMenu();
+		HUD->OpenPauseMenu();
 	}
 	else {
 		EndPause_Client();
@@ -228,7 +228,7 @@ void AGAPlayerController::EndPause_Client_Implementation()
 
 	// FInputModeGameOnly InputMode;
 	// SetInputMode(InputMode);
-	// HUD->ClosePauseMenu();
+	HUD->ClosePauseMenu();
 }
 
 /*

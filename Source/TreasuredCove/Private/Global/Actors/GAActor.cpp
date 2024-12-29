@@ -75,6 +75,18 @@ void AGAActor::BeginPlay()
 	Super::BeginPlay();
 
 	IntializeAbilitySystem();
+
+	if (Equippable)
+	{
+		Equippable->OnEquipped.AddDynamic(this, &AGAActor::OnEquipped);
+		Equippable->OnUnEquipped.AddDynamic(this, &AGAActor::OnUnEquipped);
+	}
+
+	if (Pickupable)
+	{
+		Pickupable->OnPickup.AddDynamic(this, &AGAActor::OnPickedUp);
+		Pickupable->OnDrop.AddDynamic(this, &AGAActor::OnDropped);
+	}
 }
 
 void AGAActor::PostInitializeComponents()
@@ -200,7 +212,6 @@ void AGAActor::RemovePlayerAbilityInput(UGAEnhancedInputComponent* EIC, AGAPlaye
 
 void AGAActor::OnPickedUp_Implementation()
 {
-	bPickedUp = true;
 	SetActorEnableCollision(false);
 	DisableComponentsSimulatePhysics();
 	ItemMovement->Deactivate();
@@ -208,7 +219,6 @@ void AGAActor::OnPickedUp_Implementation()
 
 void AGAActor::OnDropped_Implementation()
 {
-	bPickedUp = false;
 	SetOwner(nullptr);
 	DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 	SetActorHiddenInGame(false);
@@ -218,8 +228,6 @@ void AGAActor::OnDropped_Implementation()
 
 void AGAActor::OnEquipped_Implementation()
 {
-	bEquipped = true;
-
 	AGAPlayerController* PC = Cast<APawn>(GetOwner())->GetController<AGAPlayerController>();
 	if (InputAbilityActions && PC)
 	{
@@ -231,7 +239,6 @@ void AGAActor::OnEquipped_Implementation()
 
 void AGAActor::OnUnEquipped_Implementation()
 {
-	bEquipped = false;
 }
 
 void AGAActor::LaunchItem(FVector LaunchVelocity, bool bXYOverride, bool bZOverride)
