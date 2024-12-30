@@ -26,8 +26,8 @@ enum class EFaceOrientation : uint8
 	Left,
 	Front,
 	Back,
-	Num UMETA(Hidden)
-}; constexpr uint8 FaceEnum_MAX = static_cast<uint8>(EFaceOrientation::Num);
+	FaceOrientation_MAX UMETA(Hidden)
+}; constexpr uint8 FaceEnum_MAX = static_cast<uint8>(EFaceOrientation::FaceOrientation_MAX);
 
 DECLARE_ENUM_TO_STRING(EFaceOrientation);
 
@@ -96,8 +96,10 @@ class GAMEPLAYTOWNS_API UGameplayTileData : public UPrimaryDataAsset
 public:
 	UGameplayTileData();
 
+#define FaceOrientation_MAX static_cast<uint8>(EFaceOrientation::FaceOrientation_MAX)
 	UPROPERTY(EditDefaultsOnly, EditFixedSize, meta = (EditFixedOrder))
-	FQuad StaticFaces[FaceEnum_MAX];
+	FQuad StaticFaces[FaceOrientation_MAX];
+#undef FaceOrientation_MAX
 
 	FPrimaryAssetId GetPrimaryAssetId() const override;
 	

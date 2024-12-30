@@ -124,7 +124,7 @@ void AHexGrid::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 		bShouldInitializeNoise = true;
 	}
 
-	Initialize(RandomSeed, VoxelSize, ChunkLineElements, ChunkIndex);
+	// Initialize(RandomSeed, VoxelSize, ChunkLineElements, ChunkIndex);
 
 	Super::PostEditChangeProperty(e);
 }
@@ -551,7 +551,7 @@ void AHexGrid::ConstructMesh()
 				if (bDrawFace)
 				{
 					FQuat Quatarian = (-Tile->GetTileLocation().GetSafeNormal()).ToOrientationQuat();
-					// FQuat Quatarian = FVector::DownVector.ToOrientationQuat();
+					
 					Triangle_Num = UGALibrary::CreateFaceFromTransform(TileSection, MeshSectionData, FTransform(Quatarian, Tile->GetTileLocation(), Scale3D), i, Triangle_Num, VoxelSize);
 				}
 			}
