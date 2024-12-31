@@ -14,6 +14,15 @@
 
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Sampling/SphericalFibonacci.h"
+#include "Misc/Crc.h"
+
+#if UE_BUILD_DEBUG
+FORCEINLINE uint32 GetTypeHash(const FHexCoord& Vector)
+{
+	uint32 Hash = FCrc::MemCrc32(&Vector, sizeof(Vector));
+	return Hash;
+}
+#endif
 
 static const FVector CubeVoxelMask[] = {
 	FVector(0.00000, 0.00000, 1.00000),
@@ -35,6 +44,7 @@ static const FVector2D HexMask[2][6] = {
 
 // Sets default values
 AHexGrid::AHexGrid()
+	: AGameplayVoxel()
 {
 	VoxelSize = 200;
 	ChunkLineElements = 32;
@@ -275,8 +285,9 @@ void initialize_sphere(TArray<FVector3d>& spherePoints, const unsigned int depth
 
 void AHexGrid::GenerateHexSphere()
 {
+	/*
 	BeforeChunkGenerated();
-	/*const auto Half = ChunkLineElements * 0.5;
+	const auto Half = ChunkLineElements * 0.5;
 	const double F[] = {
 		3.0 / 2.0, 0.0, sqrt(3.0) / 2.0, sqrt(3.0),
 		2.0 / 3.0, 0.0, -1.0 / 3.0, sqrt(3.0) / 3.0,
@@ -293,7 +304,7 @@ void AHexGrid::GenerateHexSphere()
 			Tiles[i] = AddTile(FVector(F[0] * q + F[1] * r, F[2] * q + F[3] * r, Height[i]), Types[i]);
 			++i;
 		}
-	}*/
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("===== Hex Grid Generating ======"));
 
@@ -302,8 +313,8 @@ void AHexGrid::GenerateHexSphere()
 	int i = 0;
 	for (const FVector3d& point : spherePoints)
 	{
-		/*if (!Tiles.IsValidIndex(i) || !Types.IsValidIndex(i)) 
-			break;*/
+		if (!Tiles.IsValidIndex(i) || !Types.IsValidIndex(i)) 
+			break;
 
 		const FVector3d point_tmp = point * 2;
 		Tiles.Add(AddTile(point_tmp, i));
@@ -315,7 +326,7 @@ void AHexGrid::GenerateHexSphere()
 	if (i != 0 && Tiles.IsValidIndex(--i))
 		UE_LOG(LogTemp, Warning, TEXT("===== Hex Grid Generation Success! ======"));
 
-	AfterChunkGenerated();
+	AfterChunkGenerated(); // */
 }
 
 const double GetInnerRadius(const double outerRadius) {
@@ -424,7 +435,7 @@ void AHexGrid::GenerateHexGrid()
 
 			if (!TileLocations.Contains(Pos))
 			{
-				Tiles.Add(AddTile(Pos, i));
+				Tiles.Add(FHexCoord(x, y, z), AddTile(Pos, i));
 				TileLocations.Add(Pos);
 				++i;
 			}
@@ -476,7 +487,7 @@ void AHexGrid::ChunkGenerating(const FIntVector& CurrentLocation, int32 Index)
 	const int i = Index;
 
 	// const int r = FMath::Max(-ChunkLineElements);
-	if (!Tiles.IsValidIndex(i) || !Types.IsValidIndex(i)) return;
+	if (!Tiles.Contains(FHexCoord(CurrentLocation.X, CurrentLocation.Y, CurrentLocation.Z)) || !Types.IsValidIndex(i)) return;
 	if (x > Half * 0.5 || x < -Half * 0.5) return;
 	if (CurrentLocation.Z > (SurfaceHeight + Height[i])) Types[i] = Types[i];
 
@@ -525,8 +536,11 @@ void AHexGrid::ConstructMesh()
 	if (Tiles.IsEmpty())
 		UE_LOG(LogTemp, Warning, TEXT("No Tiles"));
 
-	for (UHexTile* Tile : Tiles)
+	TArray<FHexCoord> Keys;
+	Tiles.GetKeys(Keys);
+	for (const FHexCoord& Key : Keys)
 	{
+		UHexTile* Tile = Tiles[Key];
 		// Nullptr possibility...
 		if (!Tile) continue;
 
@@ -577,29 +591,19 @@ void AHexGrid::ConstructMesh()
 
 	// URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
 
-	{ // Clear Section
+	/* { // Clear Section
 		const FRealtimeMeshSectionGroupKey SectionGroupKey = FRealtimeMeshSectionGroupKey::Create(0, FName("HexGrid"));
 		FRealtimeMeshSimpleCompletionCallback CompletionCallback;
 		RTMesh->RemoveSectionGroup(SectionGroupKey, CompletionCallback);
-	}
+	} // */
 	// Mesh->ClearSection(0, 0);
-	// Setup the two material slots
-	if (!Materials.IsEmpty()) 
-	{
-		for (int i = 0; i < Materials.Num(); ++i)
-		{
-			FName MaterialName = "Material_" + i;
-			RTMesh->SetupMaterialSlot(i, MaterialName, Materials[i]);
-			Mesh->SetMaterial(i, Materials[i]);
-		}
-		// Mesh->SetMaterial(i, Materials[i]);
-		// RTMesh->SetupMaterialSlot(0, FName(), Materials[0]);
-	}
 
 	// For each MeshSection, Create a new mesh section
 	for (int i = 0; i < MeshSections.Num(); ++i)
 	{
-		if (MeshSections[i].Vertices.Num() > 0)
+		const int32 MaterialIndex = i;
+		const FProceduralMeshSection& Section = MeshSections[i];
+		if (Section.Vertices.Num() > 0)
 		{
 			{ // Create Section
 				FRealtimeMeshStreamSet StreamSet;
@@ -618,39 +622,45 @@ void AHexGrid::ConstructMesh()
 				Builder.EnableColors();
 				Builder.EnablePolyGroups();
 
-				Builder.ReserveNumVertices(MeshSections[i].Vertices.Num());
-				for (int32 j = 0; j < MeshSections[i].Vertices.Num(); j++) 
+				Builder.ReserveNumVertices(Section.Vertices.Num());
+				for (int32 j = 0; j < Section.Vertices.Num(); j++) 
 				{
 					// We can add a vertex, and optionally set things like the tangents, color, texcoords.
 					// We can then get the new index from it to use later.
-					auto V = Builder.AddVertex(FVector3f(MeshSections[i].Vertices[j]));
-					V.SetNormalAndTangent(FVector3f(MeshSections[i].Normals[j]), FVector3f(MeshSections[i].Tangents[j]));
-					V.SetColor(MeshSections[i].VertexColors[j]);
-					V.SetTexCoord(FVector2f(MeshSections[i].UVs[j]));
+					auto V = Builder.AddVertex(FVector3f(Section.Vertices[j]));
+					V.SetNormalAndTangent(FVector3f(Section.Normals[j]), FVector3f(Section.Tangents[j]));
+					V.SetColor(Section.VertexColors[j]);
+					V.SetTexCoord(FVector2f(Section.UVs[j]));
 				}
 
-				for (int32 j = 0; j < MeshSections[i].Triangles.Num(); j+=3)
+				for (int32 j = 0; j < Section.Triangles.Num(); j+=3)
 				{
 					// Now we can add a triangle giving it the indices of the vertices for the 3 corners, as well as optionally supplying the polygroup
-					Builder.AddTriangle(MeshSections[i].Triangles[j], MeshSections[i].Triangles[j+1], MeshSections[i].Triangles[j+2], i);
+					Builder.AddTriangle(Section.Triangles[j], Section.Triangles[j+1], Section.Triangles[j+2], MaterialIndex);
 				}
+
+				if (Materials.IsValidIndex(MaterialIndex))
+				{
+					FName MaterialName = "Material_" + MaterialIndex;
+					RTMesh->SetupMaterialSlot(MaterialIndex, MaterialName, Materials[MaterialIndex]);
+				} // */
 
 				// Now create the group key. This is a unique identifier for the section group
 				// A section group contains one or more sections that all share the underlying buffers
 				// these sections can overlap the used vertex/index ranges depending on use case.
-				const FRealtimeMeshSectionGroupKey SectionGroupKey = FRealtimeMeshSectionGroupKey::Create(0, "HexGrid_" + i);
+				const FRealtimeMeshSectionGroupKey SectionGroupKey = FRealtimeMeshSectionGroupKey::Create(0, "HexGrid_" + MaterialIndex);
 
 				// Now create the section key, this is a unique identifier for a section within a group
 				// The section contains the configuration for the section, like the material slot,
 				// and the draw type, as well as the range of the index/vertex buffers to use to render.
 				// Here we're using the version to create the key based on the PolyGroup index
-				const FRealtimeMeshSectionKey PolyGroup0SectionKey = FRealtimeMeshSectionKey::CreateForPolyGroup(SectionGroupKey, i);
+				const FRealtimeMeshSectionKey PolyGroup0SectionKey = FRealtimeMeshSectionKey::CreateForPolyGroup(SectionGroupKey, MaterialIndex);
 
 				// This will create a new section group named "TestBox" at LOD 0, with the created stream data above. This will create the sections associated with the polygroup
 				RTMesh->CreateSectionGroup(SectionGroupKey, StreamSet, FRealtimeMeshSectionGroupConfig(ERealtimeMeshSectionDrawType::Static));
 
 				// Update the configuration of both the polygroup sections.
-				RTMesh->UpdateSectionConfig(PolyGroup0SectionKey, FRealtimeMeshSectionConfig(i));
+				RTMesh->UpdateSectionConfig(PolyGroup0SectionKey, FRealtimeMeshSectionConfig(MaterialIndex));
 
 				// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
 			}
@@ -663,6 +673,20 @@ void AHexGrid::ConstructMesh()
 			UE_LOG(LogTemp, Warning, TEXT("--Section has 0 vertices..."));
 		}
 	}
+	
+	// Setup the two material slots
+	/* if (!Materials.IsEmpty())
+	{
+		for (int i = 0; i < Materials.Num(); i++)
+		{
+			FName MaterialName = "Material_" + i;
+			RTMesh->SetupMaterialSlot(i, MaterialName, Materials[i]);
+		}
+		// Mesh->SetMaterial(i, Materials[i]);
+		// RTMesh->SetupMaterialSlot(0, FName(), Materials[0]);
+	} // */
+
+	// RTMesh->SetupMaterialSlot(0, FName(), RTMeshMaterial);
 }
 
 void AHexGrid::UpdateMeshSection(int32 MeshSectionIndex)
@@ -672,9 +696,11 @@ void AHexGrid::UpdateMeshSection(int32 MeshSectionIndex)
 
 	TArray<FProceduralMeshSection> MeshSections;
 	MeshSections.SetNum(6);
-
-	for (UHexTile* Tile : Tiles)
+	TArray<FHexCoord> Keys;
+	Tiles.GetKeys(Keys);
+	for (const FHexCoord& Key : Keys)
 	{
+		UHexTile* Tile = Tiles[Key];
 		// Nullptr, wrong section, or hidden
 		if (!Tile || 
 			Tile->GetTileType() - 1 != MeshSectionIndex || 
@@ -708,9 +734,12 @@ void AHexGrid::UpdateMesh()
 	// URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
 	TArray<FProceduralMeshSection> MeshSections;
 	MeshSections.SetNum(6);
-
-	for (UHexTile* Tile : Tiles)
+	TArray<FHexCoord> Keys;
+	Tiles.GetKeys(Keys);
+	for (const FHexCoord& Key : Keys)
 	{
+		UHexTile* Tile = Tiles[Key];
+
 		// Nullptr, wrong section, or hidden
 		if (!Tile || 
 			Tile->GetTileType() <= 0 ||
@@ -828,7 +857,12 @@ TArray<int32> AHexGrid::CalcHeight_Implementation() const
 	return Value;
 }
 
-FTransform AHexGrid::GetTileTransform(int32 TileIndex) const
+const FHexCoord& AHexGrid::GetTileCoordFromIndex(int32 Index) const
+{
+	return *new FHexCoord();
+}
+
+FTransform AHexGrid::GetTileCollisionTransform(int32 TileIndex) const
 {
 	FTransform InstanceTransform = FTransform();
 
@@ -836,24 +870,24 @@ FTransform AHexGrid::GetTileTransform(int32 TileIndex) const
 	return InstanceTransform;
 }
 
-void AHexGrid::SetTileVertexColor(const FLinearColor& Color, int32 TileIndex)
+void AHexGrid::SetTileVertexColor(const FLinearColor& Color, const FHexCoord& HexCoordinate)
 {
 	// Guard against array out-of-bounds access error
-	if (!Tiles.IsValidIndex(TileIndex) || Tiles[TileIndex]->GetTileType() == 0) return;
+	if (!Tiles.Contains(HexCoordinate) || Tiles[HexCoordinate]->GetTileType() == 0) return;
 
-	int32 MeshSectionIndex = Tiles[TileIndex]->GetTileType() - 1;
+	int32 MeshSectionIndex = Tiles[HexCoordinate]->GetTileType() - 1;
 
 	// Set Tile color
-	Tiles[TileIndex]->SetTileColor(Color);
+	Tiles[HexCoordinate]->SetTileColor(Color);
 
 	// Update Mesh Section with new Vertex Colors
 	// ConstructMesh();
 }
 
-void AHexGrid::SetTileHiddenInGame(bool NewHidden, int32 TileIndex)
+void AHexGrid::SetTileHiddenInGame(bool NewHidden, const FHexCoord& TileIndex)
 {
 	// Guard against array out-of-bounds access error
-	if (!Tiles.IsValidIndex(TileIndex)) return;
+	if (!Tiles.Contains(TileIndex)) return;
 
 	// Set Tile visible
 	Tiles[TileIndex]->SetTileHiddenInGame(NewHidden);
