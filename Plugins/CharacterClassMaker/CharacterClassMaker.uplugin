@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "CharacterClassMaker",
+	"Description": "Custom editor module for streamlined in-editor character class creation tools. An example of a character class would be a generic DND class, such as a Barabarian, where features are granted based on a level-up system.",
+	"Category": "Other",
+	"CreatedBy": "Brandon M Biggs",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "CharacterClassMaker",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
