@@ -138,8 +138,9 @@ TArray<FString> UJsonAsset::GetJsonStringAsArray() const
 FString UJsonAsset::ReadJsonFile()
 {
 	FString FileString;
+	FString FullFilePath = JsonFilePath + "/" + JsonFileName;
 	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
-	IFileHandle* File = FileManager.OpenRead(*JsonFileName);
+	IFileHandle* File = FileManager.OpenRead(*FullFilePath);
 
 	if (File)
 	{
@@ -155,7 +156,25 @@ FString UJsonAsset::ReadJsonFile()
 			// Yippee
 
 			// Convert file buffer to readable FString
-			FileString = BytesToString(FileBuffer, FileSize);
+			// FString BrokenString = BytesToString(FileBuffer, FileSize);
+			auto MyBytesToString = [&](const uint8* In, int32 Count)
+			{
+				FString Result;
+				Result.Empty(Count);
+
+				while (Count)
+				{
+					int16 Value = *In;
+
+					Result += TCHAR(Value);
+
+					++In;
+					Count--;
+				}
+				return Result;
+			};
+
+			FileString = MyBytesToString(FileBuffer, FileSize);
 		}
 		else
 		{
@@ -178,23 +197,17 @@ void UJsonAsset::SetAssetContents(FString NewAssetContents)
 	UE_LOG(LogTemp, Warning, TEXT("Previous Contents: %s"), *JsonFileLines);
 	UE_LOG(LogTemp, Warning, TEXT("New File Contents: %s"), *NewAssetContents);
 	JsonFileLines = NewAssetContents;
-
+	FString FullFilePath = JsonFilePath + "/" + JsonFileName;
 	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
-	IFileHandle* File = FileManager.OpenWrite(*JsonFileName);
+	IFileHandle* File = FileManager.OpenWrite(*FullFilePath);
 
 	if (File)
 	{
 		// for (const FString& FileLine : JsonFileLines)
 		FString FileLine = JsonFileLines;
 		{
-			// The size of our current line we are going to write.
-			int64 LineSize = FileLine.Len();
-
-			// Initalize our data buffer.
-			uint8* LineBuffer = (uint8*)TCHAR_TO_ANSI(*FileLine);
-
 			// Actually write our changes to file.
-			if (File->Write(LineBuffer, LineSize))
+			if (File->Write((const uint8*)TCHAR_TO_ANSI(*FileLine), FileLine.Len()))
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Successfully wrote to [%s]"), *GetAssetFileName());
 			}
@@ -211,5 +224,4 @@ void UJsonAsset::SetAssetContents(FString NewAssetContents)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Couldn't save file: %s"), *JsonFileName);
 	}
-
 }

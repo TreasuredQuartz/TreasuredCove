@@ -8,7 +8,7 @@ UJsonDatabaseAssetFactory::UJsonDatabaseAssetFactory(const FObjectInitializer& O
     : Super(ObjectInitializer)
 {
     SupportedClass = UJsonDatabaseAsset::StaticClass();
-    Formats.Add(TEXT("mcaddon;My custom Minecraft Pack extension"));
+    Formats.Add(TEXT("mcaddon;Minecraft Addon"));
 
     bCreateNew = true;
     bText = false;

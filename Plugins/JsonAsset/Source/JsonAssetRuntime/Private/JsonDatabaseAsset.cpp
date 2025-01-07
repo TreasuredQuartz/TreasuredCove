@@ -4,6 +4,7 @@
 #include "JsonDatabaseAsset.h"
 #include "JsonAsset.h"
 #include "Json.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 
 void UJsonDatabaseAsset::Initialize()
 {
@@ -13,6 +14,8 @@ void UJsonDatabaseAsset::Initialize()
 void UJsonDatabaseAsset::ImportZipFile()
 {
 	TArray<FString> Files;
+	TArray<FString> JsonFiles;
+
 	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
 	// IFileManager& FileManager = IFileManager::Get();
 
@@ -28,8 +31,20 @@ void UJsonDatabaseAsset::ImportZipFile()
 	}
 
 	FString FullPathFileName = FullPathDirectory;
-	FString FileExtension = "json";
-	FileManager.FindFiles(Files, *FullPathFileName, *FileExtension);
+	FString JsonFileExtension = "json";
+
+	TArray<FAssetData> AssetData;
+	FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	AssetRegistryModule.Get().GetAssetsByPath(FName(FullPathDirectory), AssetData);
+	for (FAssetData Asset : AssetData)
+	{
+		Asset.AssetClass == UJsonAsset::StaticClass()->GetFName();
+		Assets.Add(Cast<UJsonAsset>(Asset.GetAsset()));
+	}
+
+	FileManager.FindFiles(JsonFiles, *FullPathFileName, *JsonFileExtension);
+
+	Files.Append(JsonFiles);
 
 	Assets.Reserve(Files.Num());
 
