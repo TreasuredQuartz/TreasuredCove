@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class CharacterClassMaker : ModuleRules
+public class CharacterClassMakerRuntime : ModuleRules
 {
-	public CharacterClassMaker(ReadOnlyTargetRules Target) : base(Target)
+	public CharacterClassMakerRuntime(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		

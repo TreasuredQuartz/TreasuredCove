@@ -16,8 +16,13 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "CharacterClassMaker",
+			"Name": "CharacterClassMakerRuntime",
 			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "CharacterClassMakerEditor",
+			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}
 	]

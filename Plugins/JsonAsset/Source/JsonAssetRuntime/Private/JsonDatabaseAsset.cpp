@@ -7,13 +7,14 @@
 
 void UJsonDatabaseAsset::Initialize()
 {
-	ImportZipFile();
+	RebuildDatabase();
 }
 
 void UJsonDatabaseAsset::ImportZipFile()
 {
 	TArray<FString> Files;
-	IFileManager& FileManager = IFileManager::Get();
+	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+	// IFileManager& FileManager = IFileManager::Get();
 
 	FString FullPathDirectory = FPaths::ProjectContentDir() + Directory + "/";
 	if (!FileManager.DirectoryExists(*FullPathDirectory))
@@ -26,75 +27,78 @@ void UJsonDatabaseAsset::ImportZipFile()
 		UE_LOG(LogTemp, Warning, TEXT("JsonDatabaseAsset Directory {%s} does exist."), *FullPathDirectory);
 	}
 
-	FString FullPathFileName = FullPathDirectory + "*.json";
-	FileManager.FindFiles(Files, *FullPathFileName, true, false);
+	FString FullPathFileName = FullPathDirectory;
+	FString FileExtension = "json";
+	FileManager.FindFiles(Files, *FullPathFileName, *FileExtension);
 
 	Assets.Reserve(Files.Num());
 
-	TArray<FString> JsonString;
+	/* struct FFileVisitor : public IPlatformFile::FDirectoryVisitor {
+		bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory) override
+		{
+			if (bIsDirectory)
+			{
 
-	FText OutError;
-	if (FFileHelper::IsFilenameValidForSaving(*Files[0], OutError))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("File: %s is safe to save to."), *Files[0]);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Error: %s"), *OutError.ToString());
-	}
+			}
+			else
+			{
 
-	if (!FFileHelper::LoadANSITextFileToStrings(*Files[0], &IFileManager::Get(), JsonString))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Couldn't load file: %s"), *Files[0]);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Loaded file: %s"), *Files[0]);
-	}
+			}
+			return true;
+		}
+	};
+
+	FFileVisitor Visitor;
+	FileManager.IterateDirectoryRecursively(*FullPathFileName, Visitor); */
 
 	for (const FString& File : Files)
 	{
 		if (!IsNewFile(File)) continue;
-
-		if (!FFileHelper::LoadANSITextFileToStrings(*File, &IFileManager::Get(), JsonString))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Couldn't load file: %s"), *File);
-		}
 		
 		UJsonAsset* JsonAsset = NewObject<UJsonAsset>();
 		JsonAsset->Initialize(File);
 		Assets.Add(JsonAsset);
 	}
-
-	RebuildDatabase();
 }
 
 void UJsonDatabaseAsset::RebuildDatabase()
 {
+	Assets.Empty();
+
+	ImportZipFile();
+
 	for (UJsonAsset* JsonAsset : Assets)
 	{
 		JsonAsset->RebuildAsset();
 	}
+
+	NotifyDatabaseChanged();
+}
+
+void UJsonDatabaseAsset::NotifyDatabaseChanged() const
+{
+	OnChanged.Broadcast();
 }
 
 void UJsonDatabaseAsset::SetCurrentAsset(int32 InCurrentAssetIndex)
 {
 	CurrentAssetIndex = InCurrentAssetIndex;
 
-	OnEditNewAsset.ExecuteIfBound();
+	OnEditNewAsset.Broadcast();
 };
 
 void UJsonDatabaseAsset::CreateNewAsset()
 {
 	UJsonAsset* NewAsset = NewObject<UJsonAsset>();
 
-	if (IsNewFile(NewAsset->GetAssetFileName()) == false)
+	// If not a new file, then return.
+	if (!IsNewFile(NewAsset->GetAssetFileName()))
 		return;
 
 	Assets.Add(NewAsset);
 	SetCurrentAsset(Assets.Num() - 1);
 
-	OnEditNewAsset.ExecuteIfBound();
+	OnEditNewAsset.Broadcast();
 }
 
 bool UJsonDatabaseAsset::IsNewFile(FString FileName) const

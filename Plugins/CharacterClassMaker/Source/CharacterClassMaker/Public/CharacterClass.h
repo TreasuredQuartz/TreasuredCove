@@ -7,7 +7,7 @@
 #include "CharacterClass.generated.h"
 
 USTRUCT(BlueprintType)
-struct CHARACTERCLASSMAKER_API FFeatureList {
+struct CHARACTERCLASSMAKERRUNTIME_API FFeatureList {
 	GENERATED_BODY()
 
 public:
@@ -21,7 +21,7 @@ public:
  * 
  */
 UCLASS()
-class CHARACTERCLASSMAKER_API UCharacterClass : public UObject
+class CHARACTERCLASSMAKERRUNTIME_API UCharacterClass : public UObject
 {
 	GENERATED_BODY()
 

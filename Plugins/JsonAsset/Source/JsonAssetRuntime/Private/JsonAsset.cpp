@@ -33,22 +33,18 @@
 */
 void UJsonAsset::Initialize(FString InJsonFile)
 {
-	JsonFileName = InJsonFile;
+	InJsonFile.Split("/", &JsonFilePath, &JsonFileName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
 	
 	RebuildAsset();
 }
 
 void UJsonAsset::RebuildAsset()
 {
-	TArray<FString> JsonStrings;
-	if (!GetJsonFileAsStringArray(JsonStrings))
-	{
-		JsonStrings = JsonFileLines;
-	}
+	JsonFileLines = ReadJsonFile();
 
 	JsonFileObject = MakeShareable(new FJsonObject());
 	FArchive JsonArchive = FArchive();
-	JsonArchive << JsonStrings;
+	JsonArchive << JsonFileLines;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(&JsonArchive);
 
 	if (FJsonSerializer::Deserialize(JsonReader, JsonFileObject) && JsonFileObject.IsValid())
@@ -127,36 +123,93 @@ void UJsonAsset::RebuildAsset()
 	}
 }
 
-TArray<FString> UJsonAsset::GetJsonString() const
+FString UJsonAsset::GetJsonString() const
 {
-	TArray<FString> JsonString;
-	if (GetJsonFileAsStringArray(JsonString))
-	{
-		return JsonString;
-	}
-
 	return JsonFileLines;
 }
 
-bool UJsonAsset::GetJsonFileAsStringArray(TArray<FString>& JsonStrings) const
+TArray<FString> UJsonAsset::GetJsonStringAsArray() const
 {
-	FString JsonString;
-	if (!FFileHelper::LoadFileToString(JsonString, *JsonFileName))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Couldn't load file: %s"), *JsonFileName);
-		JsonStrings = { "{", "", "}" };
-		return false;
-	}
-
-	JsonString.ParseIntoArrayLines(JsonStrings);
-	return true;
+	TArray<FString> JsonStrings;
+	JsonFileLines.ParseIntoArrayLines(JsonStrings);
+	return JsonStrings;
 }
 
-void UJsonAsset::SetAssetContents(TArray<FString> NewAssetContents)
+FString UJsonAsset::ReadJsonFile()
 {
+	FString FileString;
+	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+	IFileHandle* File = FileManager.OpenRead(*JsonFileName);
+
+	if (File)
+	{
+		// Size of the file's contents.
+		int64 FileSize = File->Size();
+
+		// Buffer made to recieve the file's contents
+		uint8* FileBuffer = reinterpret_cast<uint8*>(FMemory::Malloc(FileSize + 1));
+
+		// Reading the file's contents into the premade file buffer.
+		if (File->Read(FileBuffer, FileSize))
+		{
+			// Yippee
+
+			// Convert file buffer to readable FString
+			FileString = BytesToString(FileBuffer, FileSize);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Couldn't read file: %s"), *JsonFileName);
+		}
+
+		// Close the file after reading (Succeffully or otherwise)
+		delete File;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Couldn't load file: %s"), *JsonFileName);
+	}
+
+	return FileString;
+}
+
+void UJsonAsset::SetAssetContents(FString NewAssetContents)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Previous Contents: %s"), *JsonFileLines);
+	UE_LOG(LogTemp, Warning, TEXT("New File Contents: %s"), *NewAssetContents);
 	JsonFileLines = NewAssetContents;
-	if (!FFileHelper::SaveStringArrayToFile(JsonFileLines, *JsonFileName))
+
+	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+	IFileHandle* File = FileManager.OpenWrite(*JsonFileName);
+
+	if (File)
+	{
+		// for (const FString& FileLine : JsonFileLines)
+		FString FileLine = JsonFileLines;
+		{
+			// The size of our current line we are going to write.
+			int64 LineSize = FileLine.Len();
+
+			// Initalize our data buffer.
+			uint8* LineBuffer = (uint8*)TCHAR_TO_ANSI(*FileLine);
+
+			// Actually write our changes to file.
+			if (File->Write(LineBuffer, LineSize))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Successfully wrote to [%s]"), *GetAssetFileName());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Failed to write to [%s]"), *GetAssetFileName());
+			}
+		}
+
+		// Close the file after writing (Succeffully or otherwise)
+		delete File;
+	}
+	else 
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Couldn't save file: %s"), *JsonFileName);
 	}
+
 }

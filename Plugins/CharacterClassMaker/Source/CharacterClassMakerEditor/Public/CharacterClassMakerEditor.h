@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FCharacterClassMakerModule : public IModuleInterface
+class FCharacterClassMakerEditorModule : public IModuleInterface
 {
 public:
 
