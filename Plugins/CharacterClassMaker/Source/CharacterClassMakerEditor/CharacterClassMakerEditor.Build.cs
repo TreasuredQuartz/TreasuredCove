@@ -43,6 +43,7 @@ public class CharacterClassMakerEditor : ModuleRules
 				// ... add private dependencies that you statically link with here ...	
 				"Slate",
                 "SlateCore",
+                "AssetTools",
             }
 			);
 		

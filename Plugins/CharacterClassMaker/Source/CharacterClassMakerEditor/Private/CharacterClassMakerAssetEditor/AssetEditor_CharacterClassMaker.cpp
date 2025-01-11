@@ -2,6 +2,7 @@
 
 
 #include "CharacterClassMakerAssetEditor/AssetEditor_CharacterClassMaker.h"
+#include "CharacterClassMakerAssetEditor/SCharacterClassEditor.h"
 #include "CharacterClass.h"
 
 
@@ -12,20 +13,22 @@ const FName CharacterClassMakerEditorAppName = FName(TEXT("CharacterClassMakerEd
 struct FCharacterClassMakerAssetEditorTabs
 {
 	// Tab identifiers
-	static const FName ClassEditorID;
-	static const FName ClassBrowserID;
+	static const FName ClassTraitsEditorID;
+	static const FName ClassFeaturesEditorID;
+	static const FName ClassPropertyID;
 };
 
 //////////////////////////////////////////////////////////////////////////
 
-const FName FCharacterClassMakerAssetEditorTabs::ClassEditorID(TEXT("ClassEditor"));
-const FName FCharacterClassMakerAssetEditorTabs::ClassBrowserID(TEXT("ClassBrowser"));
+const FName FCharacterClassMakerAssetEditorTabs::ClassTraitsEditorID(TEXT("ClassTraitsEditor"));
+const FName FCharacterClassMakerAssetEditorTabs::ClassFeaturesEditorID(TEXT("ClassFeaturesEditor"));
+const FName FCharacterClassMakerAssetEditorTabs::ClassPropertyID(TEXT("ClassMakerProperty"));
 
 //////////////////////////////////////////////////////////////////////////
 
 FAssetEditor_CharacterClassMaker::FAssetEditor_CharacterClassMaker()
 {
-	EditingDatabase = nullptr;
+	EditingClass = nullptr;
 
 	OnPackageSavedDelegateHandle = UPackage::PackageSavedWithContextEvent.AddRaw(this, &FAssetEditor_CharacterClassMaker::OnPackageSavedWithContext);
 }
@@ -37,7 +40,7 @@ FAssetEditor_CharacterClassMaker::~FAssetEditor_CharacterClassMaker()
 
 void FAssetEditor_CharacterClassMaker::InitCharacterClassMakerAssetEditor(const EToolkitMode::Type Mode, const TSharedPtr<IToolkitHost>& InitToolkitHost, UCharacterClass* CharacterClassMaker)
 {
-	EditingDatabase = CharacterClassMaker;
+	EditingClass = CharacterClassMaker;
 	// EditingDatabase->Initialize();
 
 	CreateInternalWidgets();
@@ -45,22 +48,30 @@ void FAssetEditor_CharacterClassMaker::InitCharacterClassMakerAssetEditor(const 
 	// Layout
 	const TSharedRef<FTabManager::FLayout> StandaloneDefaultLayout = FTabManager::NewLayout("Standalone_CharacterClassMakerEditor_Layout_v1")
 		->AddArea(
-			FTabManager::NewPrimaryArea()->SetOrientation(Orient_Horizontal)
+			FTabManager::NewPrimaryArea()->SetOrientation(Orient_Vertical)
 			->Split(
-				FTabManager::NewStack()
-				->SetSizeCoefficient(0.25f)
-				->AddTab(FCharacterClassMakerAssetEditorTabs::ClassBrowserID, ETabState::OpenedTab)->SetHideTabWell(true)
+				FTabManager::NewSplitter()->SetOrientation(Orient_Horizontal)->SetSizeCoefficient(0.9f)
+				->Split(
+					FTabManager::NewStack()
+					->SetSizeCoefficient(0.25f)
+					->AddTab(FCharacterClassMakerAssetEditorTabs::ClassPropertyID, ETabState::OpenedTab)->SetHideTabWell(true)
+				)
+				->Split(
+					FTabManager::NewStack()
+					->SetSizeCoefficient(0.75f)
+					->AddTab(FCharacterClassMakerAssetEditorTabs::ClassTraitsEditorID, ETabState::OpenedTab)->SetHideTabWell(true)
+				)
 			)
 			->Split(
 				FTabManager::NewStack()
-				->SetSizeCoefficient(0.75f)
-				->AddTab(FCharacterClassMakerAssetEditorTabs::ClassEditorID, ETabState::OpenedTab)->SetHideTabWell(true)
+				->SetSizeCoefficient(0.25f)
+				->AddTab(FCharacterClassMakerAssetEditorTabs::ClassFeaturesEditorID, ETabState::OpenedTab)->SetHideTabWell(true)
 			)
 		);
 
 	const bool bCreateDefaultStandaloneMenu = true;
 	const bool bCreateDefaultToolbar = true;
-	FAssetEditorToolkit::InitAssetEditor(Mode, InitToolkitHost, CharacterClassMakerEditorAppName, StandaloneDefaultLayout, bCreateDefaultStandaloneMenu, bCreateDefaultToolbar, EditingDatabase, false);
+	FAssetEditorToolkit::InitAssetEditor(Mode, InitToolkitHost, CharacterClassMakerEditorAppName, StandaloneDefaultLayout, bCreateDefaultStandaloneMenu, bCreateDefaultToolbar, EditingClass, false);
 }
 
 void FAssetEditor_CharacterClassMaker::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager)
@@ -70,13 +81,18 @@ void FAssetEditor_CharacterClassMaker::RegisterTabSpawners(const TSharedRef<FTab
 
 	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 
-	InTabManager->RegisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassEditorID, FOnSpawnTab::CreateSP(this, &FAssetEditor_CharacterClassMaker::SpawnTab_ClassEditor))
+	InTabManager->RegisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassTraitsEditorID, FOnSpawnTab::CreateSP(this, &FAssetEditor_CharacterClassMaker::SpawnTab_ClassEditor))
 		.SetDisplayName(LOCTEXT("ClassEditorTab", "Character Class Editor"))
 		.SetGroup(WorkspaceMenuCategoryRef)
 		.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "GraphEditor.EventGraph_16x"));
 
-	InTabManager->RegisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassBrowserID, FOnSpawnTab::CreateSP(this, &FAssetEditor_CharacterClassMaker::SpawnTab_ClassBrowser))
+	InTabManager->RegisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassFeaturesEditorID, FOnSpawnTab::CreateSP(this, &FAssetEditor_CharacterClassMaker::SpawnTab_ClassBrowser))
 		.SetDisplayName(LOCTEXT("ClassBrowserTab", "Class Browser"))
+		.SetGroup(WorkspaceMenuCategoryRef)
+		.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
+
+	InTabManager->RegisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassPropertyID, FOnSpawnTab::CreateSP(this, &FAssetEditor_CharacterClassMaker::SpawnTab_Details))
+		.SetDisplayName(LOCTEXT("DetailsTab", "Property"))
 		.SetGroup(WorkspaceMenuCategoryRef)
 		.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
 }
@@ -85,8 +101,9 @@ void FAssetEditor_CharacterClassMaker::UnregisterTabSpawners(const TSharedRef<FT
 {
 	FAssetEditorToolkit::UnregisterTabSpawners(InTabManager);
 
-	InTabManager->UnregisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassEditorID);
-	InTabManager->UnregisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassBrowserID);
+	InTabManager->UnregisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassTraitsEditorID);
+	InTabManager->UnregisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassFeaturesEditorID);
+	InTabManager->UnregisterTabSpawner(FCharacterClassMakerAssetEditorTabs::ClassPropertyID);
 }
 
 FName FAssetEditor_CharacterClassMaker::GetToolkitFName() const
@@ -96,22 +113,22 @@ FName FAssetEditor_CharacterClassMaker::GetToolkitFName() const
 
 FText FAssetEditor_CharacterClassMaker::GetBaseToolkitName() const
 {
-	return LOCTEXT("CharacterClassMakerEditorAppLabel", "Json Database Editor");
+	return LOCTEXT("CharacterClassMakerEditorAppLabel", "Character Class Maker Editor");
 }
 
 FText FAssetEditor_CharacterClassMaker::GetToolkitName() const
 {
-	const bool bDirtyState = EditingDatabase->GetOutermost()->IsDirty();
+	const bool bDirtyState = EditingClass->GetOutermost()->IsDirty();
 
 	FFormatNamedArguments Args;
-	Args.Add(TEXT("CharacterClassMakerName"), FText::FromString(EditingDatabase->GetName()));
+	Args.Add(TEXT("CharacterClassMakerName"), FText::FromString(EditingClass->GetName()));
 	Args.Add(TEXT("DirtyState"), bDirtyState ? FText::FromString(TEXT("*")) : FText::GetEmpty());
 	return FText::Format(LOCTEXT("CharacterClassMakerEditorToolkitName", "{CharacterClassMakerName}{DirtyState}"), Args);
 }
 
 FText FAssetEditor_CharacterClassMaker::GetToolkitToolTipText() const
 {
-	return FAssetEditorToolkit::GetToolTipTextForObject(EditingDatabase);
+	return FAssetEditorToolkit::GetToolTipTextForObject(EditingClass);
 }
 
 FLinearColor FAssetEditor_CharacterClassMaker::GetWorldCentricTabColorScale() const
@@ -135,12 +152,12 @@ void FAssetEditor_CharacterClassMaker::SaveAsset_Execute()
 
 void FAssetEditor_CharacterClassMaker::AddReferencedObjects(FReferenceCollector& Collector)
 {
-	Collector.AddReferencedObject(EditingDatabase);
+	Collector.AddReferencedObject(EditingClass);
 }
 
 TSharedRef<SDockTab> FAssetEditor_CharacterClassMaker::SpawnTab_ClassEditor(const FSpawnTabArgs& Args)
 {
-	check(Args.GetTabId() == FCharacterClassMakerAssetEditorTabs::ClassEditorID);
+	check(Args.GetTabId() == FCharacterClassMakerAssetEditorTabs::ClassTraitsEditorID);
 
 	TSharedRef<SDockTab> SpawnedTab = SNew(SDockTab)
 		.Label(LOCTEXT("ClassEditorTab_Title", "Class Editor"));
@@ -155,7 +172,7 @@ TSharedRef<SDockTab> FAssetEditor_CharacterClassMaker::SpawnTab_ClassEditor(cons
 
 TSharedRef<SDockTab> FAssetEditor_CharacterClassMaker::SpawnTab_ClassBrowser(const FSpawnTabArgs& Args)
 {
-	check(Args.GetTabId() == FCharacterClassMakerAssetEditorTabs::ClassBrowserID);
+	check(Args.GetTabId() == FCharacterClassMakerAssetEditorTabs::ClassFeaturesEditorID);
 
 	TSharedRef<SDockTab> SpawnedTab = SNew(SDockTab)
 		.Label(LOCTEXT("ClassBrowserTab_Title", "Class Browser"));
@@ -168,15 +185,40 @@ TSharedRef<SDockTab> FAssetEditor_CharacterClassMaker::SpawnTab_ClassBrowser(con
 	return SpawnedTab;
 }
 
+TSharedRef<SDockTab> FAssetEditor_CharacterClassMaker::SpawnTab_Details(const FSpawnTabArgs& Args)
+{
+	check(Args.GetTabId() == FCharacterClassMakerAssetEditorTabs::ClassPropertyID);
+
+	return SNew(SDockTab)
+#if ENGINE_MAJOR_VERSION < 5
+		.Icon(FAppStyle::GetBrush("LevelEditor.Tabs.Details"))
+#endif // #if ENGINE_MAJOR_VERSION < 5
+		.Label(LOCTEXT("Details_Title", "Property"))
+		[
+			PropertyWidget.ToSharedRef()
+		];
+}
+
 void FAssetEditor_CharacterClassMaker::CreateInternalWidgets()
 {
 	ClassEditorWidget = CreateClassEditorWidget();
 	ClassBrowserWidget = CreateClassBrowserWidget();
+
+	FDetailsViewArgs Args;
+	Args.bHideSelectionTip = true;
+	Args.NotifyHook = this;
+
+	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	PropertyWidget = PropertyModule.CreateDetailView(Args);
+	PropertyWidget->SetObject(EditingClass);
+	PropertyWidget->OnFinishedChangingProperties().AddSP(this, &FAssetEditor_CharacterClassMaker::OnFinishedChangingProperties);
+
+	// FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FDatatableEditorModule>("DatatableEditor");
 }
 
 TSharedRef<SCompoundWidget> FAssetEditor_CharacterClassMaker::CreateClassEditorWidget()
 {
-	return SNew(SButton); // SNew(SClassEditor, EditorModeManager.Get(), EditingDatabase);
+	return SNew(SCharacterClassEditor, EditingClass);
 }
 
 TSharedRef<SCompoundWidget> FAssetEditor_CharacterClassMaker::CreateClassBrowserWidget()
@@ -187,6 +229,10 @@ TSharedRef<SCompoundWidget> FAssetEditor_CharacterClassMaker::CreateClassBrowser
 void FAssetEditor_CharacterClassMaker::RebuildCharacterClassMaker()
 {
 	// EditingDatabase->RebuildDatabase();
+}
+
+void FAssetEditor_CharacterClassMaker::OnFinishedChangingProperties(const FPropertyChangedEvent& PropertyChangedEvent)
+{
 }
 
 void FAssetEditor_CharacterClassMaker::OnPackageSavedWithContext(const FString& PackageFileName, UPackage* Package, FObjectPostSaveContext ObjectSaveContext)

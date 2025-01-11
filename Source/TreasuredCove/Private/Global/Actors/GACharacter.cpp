@@ -222,13 +222,9 @@ AGACharacter::AGACharacter(const FObjectInitializer& ObjectInitializer) :
 
 	// Name values
 	Tags.Add(FName("GrassAffector"));
-	DominantHand = FName("grip_r");
 	HeadSocket = FName("head");
 
 	TeamID = 255;
-
-	SubMenuCount = 1;
-	ActiveMenuCount = 1;
 
 	DecreaseSpreadAbility = UGA_DecreaseSpread::StaticClass();
 	IncreaseSpreadAbility = UGA_IncreaseSpread::StaticClass();
@@ -252,7 +248,7 @@ void AGACharacter::BeginPlay()
 	Super::BeginPlay();
 
 	bIsPaused = false;
-	ChangeViewpoint(bFirstPerson);
+	// ChangeViewpoint(true /*bFirstPerson*/);
 	PhysicalAnimation->SetSkeletalMeshComponent(GetMesh());
 
 	// SightInitialRotation = Sight->GetComponentRotation();
@@ -320,16 +316,6 @@ void AGACharacter::Tick(float InDeltaTime)
 			}
 		}
 	}
-
-	if (bFirstPerson || !bLockedViewpoint && (GetCharacterMovement() && GetCharacterMovement()->MovementMode < MOVE_Falling && GetVelocity().Size() > 0 && GetVelocity().ForwardVector.X >= 0))
-	{
-		// Walking or NavWalking
-		bUseControllerRotationYaw = true;
-	}
-	else
-	{
-		bUseControllerRotationYaw = bFirstPerson;
-	}
 }
 
 // Called to bind functionality to input
@@ -375,28 +361,6 @@ void AGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	}
 
 	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AGACharacter::BeginPause);
-	// PlayerInputComponent->BindAction("Pause", IE_Released, this, &AGACharacter::EndPause);
-
-	/*PlayerInputComponent->BindAction("QuickSelect", IE_Pressed, this, &AGACharacter::BeginQuickSelect);
-	PlayerInputComponent->BindAction("QuickSelect", IE_Released, this, &AGACharacter::EndQuickSelect);
-
-	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &AGACharacter::BeginPause);
-	PlayerInputComponent->BindAction("Pause", IE_Released, this, &AGACharacter::EndPause);
-
-	PlayerInputComponent->BindAction("Primary", IE_Pressed, this, &AGACharacter::BeginPrimary);
-	PlayerInputComponent->BindAction("Primary", IE_Released, this, &AGACharacter::EndPrimary);
-
-	PlayerInputComponent->BindAction("Secondary", IE_Pressed, this, &AGACharacter::BeginSecondary);
-	PlayerInputComponent->BindAction("Secondary", IE_Released, this, &AGACharacter::EndSecondary);
-
-	PlayerInputComponent->BindAction("Throw", IE_Pressed, this, &AGACharacter::BeginThrow);
-	PlayerInputComponent->BindAction("Throw", IE_Released, this, &AGACharacter::EndThrow);
-
-	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &AGACharacter::BeginMelee);
-	PlayerInputComponent->BindAction("Melee", IE_Released, this, &AGACharacter::EndMelee);*/
-
-	// PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &AGACharacter::BeginInteract);
-	// PlayerInputComponent->BindAction("Interact", IE_Released, this, &AGACharacter::EndInteract);
 }
 
 // Called when possessed by a new controller
@@ -481,11 +445,11 @@ void AGACharacter::OnConstruction(const FTransform& Transform)
 	{
 		if (!bInitialized)
 		{
-			InitProceduralMesh();
+			;
 		}
 		else
 		{
-			UpdateProceduralMesh();
+			;
 		}
 	}
 }
@@ -502,116 +466,6 @@ void AGACharacter::PostEditChangeChainProperty(struct FPropertyChangedChainEvent
 	Super::PostEditChangeChainProperty(e);
 }
 #endif
-#pragma endregion
-
-#pragma region AnimationInverseKinematics
-// */
-//////////////////////////////////////////////////////
-/////			IK HELPER FUNCTIONS				//////
-/////			    DEPRECIATED					//////
-//////////////////////////////////////////////////////
-
-//float AGACharacter::IKFootTrace(float Distance, FName Bone)
-//{
-//	FVector LocationA = GetMesh()->GetBoneLocation(Bone);
-//	FVector LocationB = GetActorLocation();
-//
-//	FHitResult Hit;
-//	FVector Start = FVector(LocationA.X, LocationA.Y, LocationB.Z);
-//	FVector End = FVector(LocationA.X, LocationA.Y, LocationB.Z - Distance);
-//	FCollisionQueryParams CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
-//
-//	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-//	// DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-//
-//	float Result = 0.0f;
-//
-//	if (Hit.bBlockingHit)
-//	{
-//		// DrawDebugPoint(GetWorld(), Hit.Location, 10, FColor::Magenta, true, 1);
-//		FVector Difference = End - Hit.Location;
-//		Result = Difference.Size() / Scale;
-//	}
-//
-//	return Result;
-//}
-
-//float AGACharacter::IKFingerTrace(float Distance, FName Bone)
-//{
-//	FVector LocationA = GetMesh()->GetBoneLocation(Bone);
-//
-//	FHitResult Hit;
-//	FVector Start = FVector(LocationA.X, LocationA.Y, 0);
-//	FVector End = FVector(LocationA.X, LocationA.Y, 0 - Distance);
-//	FCollisionQueryParams CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
-//
-//	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-//	DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-//
-//	float Result = 0.0f;
-//
-//	if (Hit.bBlockingHit)
-//	{
-//		FVector Difference = End - Hit.Location;
-//		Result = Difference.Size();
-//	}
-//	else
-//	{
-//		FVector FingerVector;
-//		Start = FVector(Hit.Location);
-//		End = FVector(Hit.Location + FVector());
-//		CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
-//
-//		GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-//		DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-//
-//		if (Hit.bBlockingHit)
-//		{
-//			FVector Difference = End - Hit.Location;
-//			Result = Difference.Size();
-//		}
-//		else
-//		{
-//			Start = FVector(Hit.Location);
-//			End = FVector(Hit.Location + FVector());
-//			CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
-//
-//			GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-//			DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-//
-//			if (Hit.bBlockingHit)
-//			{
-//				FVector Difference = End - Hit.Location;
-//				Result = Difference.Size();
-//			}
-//		}
-//	}
-//
-//	return Result;
-//}
-
-//float AGACharacter::IKHandToLocation(FVector Location, FName Bone)
-//{
-//	FVector LocationA = GetMesh()->GetBoneLocation(Bone);
-//
-//	FHitResult Hit;
-//	FVector Start = FVector(LocationA);
-//	FVector End = FVector(Location);
-//	FCollisionQueryParams CollisionParems = FCollisionQueryParams(FName("IKTrace"), true, this);
-//
-//	GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, CollisionParems);
-//	DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 1, 0, 1);
-//
-//	float Result = 0.0f;
-//
-//	if (Hit.bBlockingHit)
-//	{
-//		FVector Difference = End - Hit.Location;
-//		Result = Difference.Size() / Scale;
-//	}
-//
-//	return Result;
-//}
 #pragma endregion
 
 #pragma region VisualEffects
@@ -675,132 +529,6 @@ void AGACharacter::SimulatePhysicalAnimation()
 	}
 }
 
-void AGACharacter::InitProceduralMesh()
-{
-	/*
-	if (!GetMesh())
-	{
-		return;
-	}
-
-	FSkeletalMeshRenderData* RenderData =
-		GetMesh()->GetSkeletalMeshRenderData();
-
-	if (!RenderData)
-	{
-		return;
-	}
-
-	FSkeletalMeshLODRenderData& DataArray =
-		RenderData->LODRenderData[0];
-
-	int32 A =
-		DataArray.RenderSections[0].NumVertices;
-
-	FSkinWeightVertexBuffer* SkinBuffer = GetMesh()->GetSkinWeightBuffer(0);
-
-	if (SkinBuffer == nullptr)
-	{
-		return;
-	}
-
-	for (int32 i = 0; i < A; i++)
-	{
-		FVector B =
-			USkinnedMeshComponent::GetSkinnedVertexPosition(GetMesh()
-			, i
-			, DataArray
-			, *SkinBuffer );
-		FVector C =
-			DataArray.StaticVertexBuffers.StaticMeshVertexBuffer.VertexTangentZ(i);
-		FVector2D D =
-			DataArray.StaticVertexBuffers.StaticMeshVertexBuffer.GetVertexUV(i, 0);
-
-		Vertices.Add(B);
-		Normals.Add(C);
-		UVs.Add(D);
-	}
-
-	FMultiSizeIndexContainerData IndicesData;
-	DataArray.MultiSizeIndexContainer.GetIndexBufferData(IndicesData);
-
-	for (int32 i = 0; i < IndicesData.Indices.Num(); i++)
-	{
-		int32 a = 0;
-		UInt32ToInt32(IndicesData.Indices[i], &a);
-		Tris.Add(a);
-	}
-
-	TArray<FColor> VertexColors;
-	TArray<FProcMeshTangent> Tangents;
-
-	RealMesh->CreateMeshSection(0, Vertices, Tris, Normals, UVs, VertexColors, Tangents, false);
-	*/
-}
-
-void AGACharacter::UpdateProceduralMesh()
-{
-	/*
-	if (!GetMesh())
-	{
-		return;
-	}
-
-	FSkeletalMeshRenderData* RenderData =
-		GetMesh()->GetSkeletalMeshRenderData();
-
-	if (!RenderData)
-	{
-		return;
-	}
-
-	FSkeletalMeshLODRenderData& DataArray =
-		RenderData->LODRenderData[0];
-
-	int32 A =
-		DataArray.RenderSections[0].NumVertices;
-
-	if (!GetMesh()->GetSkinWeightBuffer(0))
-	{
-		return;
-	}
-
-	for (int32 i = 0; i < A; i++)
-	{
-		FVector B =
-			GetMesh()->GetSkinnedVertexPosition(GetMesh()
-				, i
-				, DataArray
-				, *(GetMesh()->GetSkinWeightBuffer(0)));
-		FVector C =
-			DataArray.StaticVertexBuffers.StaticMeshVertexBuffer.VertexTangentZ(i);
-		FVector2D D =
-			DataArray.StaticVertexBuffers.StaticMeshVertexBuffer.GetVertexUV(i, 0);
-
-		Vertices[i] = B;
-		Normals[i] = C;
-		UVs[i] = D;
-	}
-
-	FMultiSizeIndexContainerData IndicesData;
-	DataArray.MultiSizeIndexContainer.GetIndexBufferData(IndicesData);
-
-	for (int32 i = 0; i < IndicesData.Indices.Num(); i++)
-	{
-		int32 a = 0;
-		UInt32ToInt32(IndicesData.Indices[i], &a);
-		Tris[i] = a;
-	}
-
-	TArray<FColor> VertexColors;
-	TArray<FProcMeshTangent> Tangents;
-
-	RealMesh->UpdateMeshSection(0, Vertices, Normals, UVs, VertexColors, Tangents);
-
-	bInitialized = true;
-	*/
-}
-
 void AGACharacter::Puncture(FVector ImpactLocation, FVector ImpactNormal, FVector ImpactExitPoint, float ImpactRadius, FVector ImpactForce)
 {
 	// UStaticLibrary::HolePunchProceduralMesh(RealMesh, ImpactLocation, ImpactNormal, ImpactExitPoint, ImpactRadius, EProcMeshSliceCapOption::CreateNewSectionForCap, MeshInsideColor, 6);
@@ -808,22 +536,6 @@ void AGACharacter::Puncture(FVector ImpactLocation, FVector ImpactNormal, FVecto
 	PSPuncture =
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EmitterTemplate, FTransform(FRotator(), ImpactLocation, FVector(1, 1, 1)), true);
 	PSPuncture->SetVectorParameter(FName("Velocity"), ImpactForce);
-}
-
-void AGACharacter::ChangeViewpoint(bool bInFirstPerson)
-{
-	if (!IsLocallyControlled())
-		return;
-
-	bFirstPerson = bInFirstPerson;
-	// bUseControllerRotationYaw = bFirstPerson;
-
-	OnChangeCameraType(bInFirstPerson);
-}
-
-void AGACharacter::OnChangeCameraType_Implementation(bool bInFirstPerson)
-{
-
 }
 
 void AGACharacter::BeginCameraTilt()
@@ -1013,11 +725,6 @@ void AGACharacter::InitializeAbilitySystem()
 			UE_LOG(LogTemp, Warning, TEXT("Override attributes with saved values..."));
 			PopulateSavedAttributes(AttributesToSave);
 		}
-
-		AddGameplayTag(FullHealthTag);
-		AddGameplayTag(FullAmmoTag);
-		AddGameplayTag(FullStaminaTag);
-		AddGameplayTag(FullManaTag);
 	}
 
 	// This should be a UDataAsset Instance. Meaning there is no need to spawn anything
@@ -1030,30 +737,11 @@ void AGACharacter::InitializeAbilitySystem()
 // Called during ability system initialization
 void AGACharacter::InitializeAttributeSet(UAttributeSet* Set)
 {
-	UASHealth* HealthSet = Cast<UASHealth>(Set);
-	if (HealthSet)
-	{
-		// HealthSet->OnDamaged.AddUniqueDynamic(this, &AGACharacter::OnDamaged);
-		// HealthSet->OnHealed.AddUniqueDynamic(this, &AGACharacter::OnHealed);
-		// HealthSet->OnHealthModified.AddUniqueDynamic(this, &AGACharacter::OnHealthModified);
-
-		// HealthSet->OnStaminaModified.AddUniqueDynamic(this, &AGACharacter::OnStaminaModified);
-		// HealthSet->OnManaModified.AddUniqueDynamic(this, &AGACharacter::OnManaModified);
-		return;
-	}
-
 	UASStats* StatSet = Cast<UASStats>(Set);
 	if (StatSet)
 	{
 		StatSet->OnExperienceModified.AddUniqueDynamic(this, &AGACharacter::OnExperienceModified);
 		StatSet->OnStatModified.AddUniqueDynamic(this, &AGACharacter::OnStatModified);
-		return;
-	}
-
-	UASAmmo* AmmoSet = Cast<UASAmmo>(Set);
-	if (AmmoSet)
-	{
-		// AmmoSet->OnAmmoModified.AddUniqueDynamic(this, &AGACharacter::OnAmmoModified);
 		return;
 	}
 
@@ -1066,13 +754,6 @@ void AGACharacter::InitializeAttributeSet(UAttributeSet* Set)
 		WeaponSet->OnHandlingModified.AddUniqueDynamic(this, &AGACharacter::OnHandlingModified);
 		WeaponSet->OnRangeModified.AddUniqueDynamic(this, &AGACharacter::OnRangeModified);
 		WeaponSet->OnDamageModified.AddUniqueDynamic(this, &AGACharacter::OnDamageModified);
-		return;
-	}
-
-	UASUltimate* UltimateSet = Cast<UASUltimate>(Set);
-	if (UltimateSet)
-	{
-		UltimateSet->OnUltimateChargeModified.AddUniqueDynamic(this, &AGACharacter::OnUltimateModified);
 		return;
 	}
 }
@@ -1205,7 +886,7 @@ void AGACharacter::RemoveAbilityFromUI(FGameplayAbilitySpecHandle InHandle)
 
 void AGACharacter::BeginQuickSelect()
 {
-	if (bIsPaused)
+	/* if (bIsPaused)
 	{
 		if (PC)
 		{
@@ -1234,12 +915,12 @@ void AGACharacter::BeginQuickSelect()
 		{
 			// PC->SetItemPriority(bWeaponPriority);
 		}
-	}
+	} // */
 }
 
 void AGACharacter::EndQuickSelect()
 {
-	if (bIsPaused)
+	/* if (bIsPaused)
 	{
 
 	}
@@ -1258,13 +939,13 @@ void AGACharacter::EndQuickSelect()
 		{
 
 		}
-	}
+	} // */
 }
 
 // Called to check whether we want to activate our weapon or our personal ability.
 bool AGACharacter::ShouldPrioritizeWeapon() const
 {
-	if (bWeaponPriority)
+	if (true /*bWeaponPriority*/)
 	{
 		if (AGAActor* HeldItem = GetHeldItem())
 		{
@@ -1721,13 +1402,13 @@ void AGACharacter::AbilityInputTagPressed(FGameplayTag Tag)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Pressed!");
 	AGAActor* HeldItem = GetHeldItem();
-	if (bWeaponPriority && HeldItem && HeldItem->AbilitySystem && HeldItem->AbilitySystem->HasAbilityInputTag(Tag)) HeldItem->AbilitySystem->AbilityInputTagPressed(Tag);
+	if (/*bWeaponPriority && */HeldItem && HeldItem->AbilitySystem && HeldItem->AbilitySystem->HasAbilityInputTag(Tag)) HeldItem->AbilitySystem->AbilityInputTagPressed(Tag);
 	else RenamedAbilitySystem->AbilityInputTagPressed(Tag);
 }
 void AGACharacter::AbilityInputTagReleased(FGameplayTag Tag)
 {
 	AGAActor* HeldItem = GetHeldItem();
-	if (bWeaponPriority && HeldItem && HeldItem->AbilitySystem && HeldItem->AbilitySystem->HasAbilityInputTag(Tag)) HeldItem->AbilitySystem->AbilityInputTagReleased(Tag);
+	if (/*bWeaponPriority && */HeldItem && HeldItem->AbilitySystem && HeldItem->AbilitySystem->HasAbilityInputTag(Tag)) HeldItem->AbilitySystem->AbilityInputTagReleased(Tag);
 	else RenamedAbilitySystem->AbilityInputTagReleased(Tag);
 }
 #pragma endregion
@@ -1999,17 +1680,6 @@ void AGACharacter::EndSprint()
 void AGACharacter::OnStartCrouch(float HeightAdjust, float ScaledHeightAdjust)
 {
 	Super::OnStartCrouch(HeightAdjust, ScaledHeightAdjust);
-
-	if (bFirstPerson && IsLocallyControlled())
-	{
-		if (GetMesh())
-		{
-			FVector& MeshRelativeLocation = GetMesh()->GetRelativeLocation_DirectMutable();
-			MeshRelativeLocation.Z -= 90;
-		}
-
-		BaseTranslationOffset.Z -= 90;
-	}
 }
 
 // Empty Override
@@ -2187,180 +1857,10 @@ void AGACharacter::MenuRight(float Val)
 	//	GetWorldTimerManager().ClearTimer(MenuLeftTimerHandle);
 	//}
 }
-
-void AGACharacter::MenuUpDelayed()
-{
-	/*if (bWeaponPriority && HeldItem)
-	{
-		
-	}
-	else
-	{
-		if (SubMenuCount == 0)
-			DetermineActiveMenuSelection(0, 1);
-		else if (MaxSubMenuSlots.Num() > SubMenuCount)
-			DetermineActiveMenuSelection(MaxActiveMenuSlots[SubMenuCount], 1);
-	}*/
-}
-
-void AGACharacter::MenuDownDelayed()
-{
-	/*if (bWeaponPriority && HeldItem)
-	{
-		
-	}
-	else
-	{
-		if (SubMenuCount == 0)
-			DetermineActiveMenuSelection(0, 1);
-		else if (MaxSubMenuSlots.Num() > SubMenuCount)
-			DetermineActiveMenuSelection(MaxActiveMenuSlots[SubMenuCount], -1);
-	}*/
-}
-
-void AGACharacter::MenuRightDelayed()
-{
-	/*if (bWeaponPriority && HeldItem)
-	{
-		
-	}
-	else
-	{
-		if (ActiveMenuCount == 0)
-			DetermineSubMenuSelection(0, 1);
-		else if (MaxSubMenuSlots[ActiveMenuCount])
-			DetermineSubMenuSelection(MaxSubMenuSlots[ActiveMenuCount], 1);
-	}*/
-}
-
-void AGACharacter::MenuLeftDelayed()
-{
-	/*if (bWeaponPriority && HeldItem)
-	{
-		
-	}
-	else
-	{
-		if (ActiveMenuCount == 0)
-			DetermineSubMenuSelection(0, -1);
-		else if (MaxSubMenuSlots[ActiveMenuCount])
-			DetermineSubMenuSelection(MaxSubMenuSlots[ActiveMenuCount], -1);
-	}*/
-}
 #pragma endregion
 #pragma endregion
 
 #pragma region Combat
-// */
-//////////////////////////////////////////////////////
-/////			CHARACTER COMBAT MENU			//////
-//////////////////////////////////////////////////////
-
-uint8 AGACharacter::GetActiveMenuCount() const
-{
-	return ActiveMenuCount;
-}
-
-uint8 AGACharacter::GetSubMenuCount() const
-{
-	return SubMenuCount;
-}
-
-void AGACharacter::ResetActiveMenuSelection()
-{
-	ActiveMenuCount = 1;
-}
-
-void AGACharacter::ResetSubMenuSelection()
-{
-	SubMenuCount = 1;
-}
-
-int AGACharacter::DetermineActiveMenuSelection(int MaxMenuCount, int Direction)
-{
-	int Value = -1;
-
-	if (MaxMenuCount == 0)
-	{
-	}
-
-	if (Direction > 0)
-	{
-		ActiveMenuCount += 1;
-
-		if (ActiveMenuCount <= MaxMenuCount)
-		{
-			Value = ActiveMenuCount;
-		}
-		else if (ActiveMenuCount > MaxMenuCount)
-		{
-			Value = 1;
-			ActiveMenuCount = 1;
-		}
-	}
-	else if (Direction < 0)
-	{
-		ActiveMenuCount -= 1;
-
-		if (ActiveMenuCount >= 1)
-		{
-			Value = ActiveMenuCount;
-		}
-		else if (ActiveMenuCount < 1)
-		{
-			Value = MaxMenuCount;
-			ActiveMenuCount = MaxMenuCount;
-		}
-	}
-
-	// ResetSubMenuSelection();
-
-	return Value;
-}
-
-int AGACharacter::DetermineSubMenuSelection(int MaxMenuCount, int Direction)
-{
-	PreviousActiveMenuIndex = ActiveMenuCount;
-	int Value = -1;
-
-	if (MaxMenuCount == 0)
-	{
-	}
-
-	if (Direction > 0)
-	{
-		SubMenuCount += 1;
-
-		if (SubMenuCount <= MaxMenuCount)
-		{
-			Value = SubMenuCount;
-		}
-		else if (SubMenuCount > MaxMenuCount)
-		{
-			Value = 1;
-			SubMenuCount = 1;
-		}
-	}
-	else if (Direction < 0)
-	{
-		SubMenuCount -= 1;
-
-		if (SubMenuCount >= 1)
-		{
-			Value = SubMenuCount;
-		}
-		else if (SubMenuCount < 1)
-		{
-			Value = MaxMenuCount;
-			SubMenuCount = MaxMenuCount;
-		}
-	}
-
-	ResetActiveMenuSelection();
-
-	return Value;
-}
-
 // */
 //////////////////////////////////////////////////////
 /////			CHARACTER COMBO					//////
@@ -2568,15 +2068,10 @@ void AGACharacter::Death(const AActor* ResponsibleActor, const AActor* Victim)
 
 	if (PC)
 	{
-		// PC->UnPossess();
-		// PC->OnDeath_Client();
-
 		FInputModeUIOnly UIOnly;
 		PC->SetInputMode(UIOnly);
-		// PC->DisableInput(PC);
 	}
 
-	ChangeViewpoint(false);
 	FloatingBarComponent->DestroyAllBars();
 	FVector LaunchVelocity;
 	LaunchingComponent->EndLaunch(LaunchVelocity);
@@ -3119,7 +2614,7 @@ void AGACharacter::OnSeen()
 
 void AGACharacter::CheckVisibleCharacters()
 {
-	for (FAICharacterInfo VisibleCharacter : AwareOfCharacters)
+	/* for (FAICharacterInfo VisibleCharacter : AwareOfCharacters)
 	{
 		FVector Start = AISenses->GetComponentLocation();
 		FVector End = VisibleCharacter.Target->AISenses->GetComponentLocation();
@@ -3205,7 +2700,7 @@ void AGACharacter::CheckVisibleCharacters()
 		}
 
 		DialogueParticipantInfo->Relationships.Contains(VisibleCharacter.Target);
-	}
+	} // */
 }
 
 void AGACharacter::CalculateShadowed()

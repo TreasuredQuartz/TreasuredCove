@@ -51,6 +51,7 @@ public:
 protected:
 	TSharedRef<SDockTab> SpawnTab_ClassEditor(const FSpawnTabArgs& Args);
 	TSharedRef<SDockTab> SpawnTab_ClassBrowser(const FSpawnTabArgs& Args);
+	TSharedRef<SDockTab> SpawnTab_Details(const FSpawnTabArgs& Args);
 
 	void CreateInternalWidgets();
 	TSharedRef<SCompoundWidget> CreateClassEditorWidget();
@@ -58,14 +59,16 @@ protected:
 
 	void RebuildCharacterClassMaker();
 
+	void OnFinishedChangingProperties(const FPropertyChangedEvent& PropertyChangedEvent);
 	void OnPackageSavedWithContext(const FString& PackageFileName, UPackage* Package, FObjectPostSaveContext ObjectSaveContext);
 
 protected:
-	TObjectPtr<UCharacterClass> EditingDatabase;
+	TObjectPtr<UCharacterClass> EditingClass;
 
 	/** Handle to the registered OnPackageSave delegate */
 	FDelegateHandle OnPackageSavedDelegateHandle;
 
 	TSharedPtr<SCompoundWidget> ClassEditorWidget;
 	TSharedPtr<SCompoundWidget> ClassBrowserWidget;
+	TSharedPtr<IDetailsView> PropertyWidget;
 };

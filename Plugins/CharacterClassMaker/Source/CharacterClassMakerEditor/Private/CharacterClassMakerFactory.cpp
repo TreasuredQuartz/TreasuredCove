@@ -7,7 +7,11 @@
 UCharacterClassMakerFactory::UCharacterClassMakerFactory()
 {
 	SupportedClass = UCharacterClass::StaticClass();
-	bCreateNew = true;
+
+    bCreateNew = true;
+    bText = false;
+    bEditorImport = false;
+    bEditAfterNew = false;
 }
 
 UObject* UCharacterClassMakerFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
