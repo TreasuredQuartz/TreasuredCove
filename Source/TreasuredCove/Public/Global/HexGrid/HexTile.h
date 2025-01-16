@@ -18,7 +18,7 @@ enum class EHexTileType : uint8
 };
 
 UCLASS(Blueprintable)
-class TREASUREDCOVE_API UHexTile : public UDataAsset
+class TREASUREDCOVE_API UHexTile : public UObject
 {
 	GENERATED_BODY()
 	

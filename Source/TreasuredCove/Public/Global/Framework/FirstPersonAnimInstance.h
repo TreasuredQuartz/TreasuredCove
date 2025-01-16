@@ -14,4 +14,14 @@ class TREASUREDCOVE_API UFirstPersonAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 	
+private:
+	float CrouchAlpha;
+	float WalkAnimAlpha;
+	float DipAlpha;
+	FVector WalkVector;
+	FVector SprintVector;
+	FVector LocationLagVector;
+	FRotator WalkRotator;
+	FRotator SprintRotator;
+	EMovementMode MovementMode;
 };

@@ -170,6 +170,9 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "HexGrid")
+	UHexTile* GetTileFromIndex(int32 Index) const;
+
+	UFUNCTION(BlueprintCallable, Category = "HexGrid")
 	const FHexCoord& GetTileCoordFromIndex(int32 Index) const;
 
 	UFUNCTION(BlueprintCallable, Category = "HexGrid")

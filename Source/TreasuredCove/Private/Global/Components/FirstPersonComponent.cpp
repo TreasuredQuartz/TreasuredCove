@@ -98,9 +98,9 @@ void UFirstPersonComponent::ChangeViewpoint(bool bInFirstPerson)
 			bFirstPerson ? FirstPersonMesh : ThirdPersonMesh
 		);
 
-		OwnerMeshComponent->SetRelativeRotation(
+		/* OwnerMeshComponent->SetRelativeRotation(
 			bFirstPerson ? FRotator(0, -90, 0) : FRotator::ZeroRotator
-		);
+		); // */
 
 		SpringArmComponent->TargetArmLength = 
 			bFirstPerson ? 0 : ThirdPersonArmLength;

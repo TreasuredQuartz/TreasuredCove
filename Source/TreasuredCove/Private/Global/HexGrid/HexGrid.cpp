@@ -857,6 +857,22 @@ TArray<int32> AHexGrid::CalcHeight_Implementation() const
 	return Value;
 }
 
+UHexTile* AHexGrid::GetTileFromIndex(int32 Index) const
+{
+	TArray<UHexTile*> Values;
+	Tiles.GenerateValueArray(Values);
+
+	for (UHexTile* CurTile : Values)
+	{
+		if (CurTile && CurTile->GetTileIndex() == Index)
+		{
+			return CurTile;
+		}
+	}
+
+	return Values.IsValidIndex(Index) ? Values[Index] : nullptr;
+}
+
 const FHexCoord& AHexGrid::GetTileCoordFromIndex(int32 Index) const
 {
 	return *new FHexCoord();
