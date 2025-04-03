@@ -4,19 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "HexProgressionComponent.generated.h"
+#include "ProgressionSystemComponent.generated.h"
 
-class AHexGridManager;
-class UHexGridEditor;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TREASUREDCOVE_API UHexProgressionComponent : public UActorComponent
+class TREASUREDCOVE_API UProgressionSystemComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UHexProgressionComponent();
+	UProgressionSystemComponent();
 
 protected:
 	// Called when the game starts
@@ -26,9 +24,5 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	AHexGridManager* GridManager;
-	UHexGridEditor* GridEditor;
-	TSubclassOf<AHexGridManager> GridManagerClass;
-	TSubclassOf<UHexGridEditor> GridEditorClass;
-	FTransform GridSpawnTransform;
+		
 };

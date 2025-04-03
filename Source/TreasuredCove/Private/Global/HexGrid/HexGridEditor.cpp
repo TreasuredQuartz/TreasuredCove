@@ -14,7 +14,7 @@ UHexGridEditor::UHexGridEditor()
 	, bInitialized(false)
 	, bHasBegunPlay(false)
 	, OwnerController(nullptr)
-	, HexGridManagerClass(AHexGridManager::StaticClass())
+	, HexManager(nullptr)
 	, TileSelectorClass(UHexTileSelector::StaticClass())
 	, TileSelector(nullptr)
 {

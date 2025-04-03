@@ -62,9 +62,6 @@ public:
 	// We expect a player to be controlling this object.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hex Grid")
 	APlayerController* OwnerController;
-	// The Manager class for the Hex Grid system (Mesh) to spawn in.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hex Grid")
-	TSubclassOf<AHexGridManager> HexGridManagerClass;
 	// The Selector class for determing the interaction method for editing the Hex Grid.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hex Grid")
 	TSubclassOf<UHexTileSelector> TileSelectorClass;

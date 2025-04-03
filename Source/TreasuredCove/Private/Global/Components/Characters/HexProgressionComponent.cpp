@@ -2,13 +2,16 @@
 
 
 #include "Global/Components/Characters/HexProgressionComponent.h"
+#include "kismet/GameplayStatics.h"
+#include "Global/HexGrid/HexGridManager.h"
+#include "Global/HexGrid/HexGridEditor.h"
 
 // Sets default values for this component's properties
 UHexProgressionComponent::UHexProgressionComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
 }
@@ -20,7 +23,12 @@ void UHexProgressionComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
+	AActor* NewActor = UGameplayStatics::BeginDeferredActorSpawnFromClass(GetOwner(), GridManagerClass, GridSpawnTransform, ESpawnActorCollisionHandlingMethod::AlwaysSpawn, GetOwner());
+	UGameplayStatics::FinishSpawningActor(NewActor, GridSpawnTransform);
+	GridManager = Cast<AHexGridManager>(NewActor);
+
+	GridEditor = NewObject<UHexGridEditor>();
+	GridEditor->HexManager = GridManager;
 }
 
 
