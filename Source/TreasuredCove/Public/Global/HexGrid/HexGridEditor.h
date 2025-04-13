@@ -59,9 +59,6 @@ protected:
 
 	/* Begin Public Properties */
 public:
-	// We expect a player to be controlling this object.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hex Grid")
-	APlayerController* OwnerController;
 	// The Selector class for determing the interaction method for editing the Hex Grid.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hex Grid")
 	TSubclassOf<UHexTileSelector> TileSelectorClass;

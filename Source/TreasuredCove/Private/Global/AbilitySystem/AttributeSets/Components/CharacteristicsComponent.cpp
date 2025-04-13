@@ -1,10 +1,10 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "Global/Components/Characters/DNDStatsComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/CharacteristicsComponent.h"
 
 // Sets default values for this component's properties
-UDNDStatsComponent::UDNDStatsComponent()
+UCharacteristicsComponent::UCharacteristicsComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -15,7 +15,7 @@ UDNDStatsComponent::UDNDStatsComponent()
 
 
 // Called when the game starts
-void UDNDStatsComponent::BeginPlay()
+void UCharacteristicsComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -25,7 +25,7 @@ void UDNDStatsComponent::BeginPlay()
 
 
 /* Called every frame
-void UDNDStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UCharacteristicsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 

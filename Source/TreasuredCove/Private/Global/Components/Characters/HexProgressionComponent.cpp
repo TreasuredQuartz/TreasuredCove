@@ -40,3 +40,13 @@ void UHexProgressionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// ...
 }
 
+void UHexProgressionComponent::StartEditing()
+{
+	if (GridEditor) GridEditor->StartEditing();
+}
+
+void UHexProgressionComponent::StopEditing()
+{
+	if (GridEditor) GridEditor->StopEditing();
+}
+

@@ -1,7 +1,7 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "Global/Components/ManaComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/ManaComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Global/AbilitySystem/AttributeSets/AttributeSetInfo.h"
 #include "Global/AbilitySystem/AttributeSets/ASMana.h"

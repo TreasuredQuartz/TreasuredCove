@@ -1,7 +1,7 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "Global/Components/AttributeComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/AttributeComponent.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
 

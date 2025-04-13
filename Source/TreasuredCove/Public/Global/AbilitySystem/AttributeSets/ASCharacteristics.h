@@ -4,32 +4,35 @@
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
-#include "ASStats.generated.h"
+#include "ASCharacteristics.generated.h"
 
 // #define DECLARE_NAMED_STAT_MODIFIER_GETTER(FunctionName, Property) FORCEINLINE float FunctionName##() const { return (Property##.GetCurrentValue() - 13) / 2; }
 
+UENUM(BlueprintType)
+enum ECharacteristic : uint8 {
+	Charisma,
+	Constitution,
+	Dexterity,
+	Intelligence,
+	Strength,
+	Wisdom,
+	Characteristic_MAX
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnExperienceModifiedDelegate, float, Experience, float, MaxExperience);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPointsModifiedDelegate, float, StatPoints, float, SkillPoints);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnStatModifiedDelegate, float, Charisma, float, Constitution, float, Dexterity, float, Intelligence, float, Strength, float, Wisdom);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacteristicModifiedDelegate, ECharacteristic, Characteristic, float, NewAmount);
 
 /**
  * 
  */
 UCLASS()
-class TREASUREDCOVE_API UASStats : 
+class TREASUREDCOVE_API UASCharacteristics : 
 	public UAttributeSet
 {
 	GENERATED_BODY()
 	
 public:
-	// All stat properties
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stats")
-	FGameplayAttributeData Vitality;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stats")
-	FGameplayAttributeData Vigor;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stats")
-	FGameplayAttributeData MentalEnergy;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stats")
 	FGameplayAttributeData Charisma;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stats")
@@ -71,11 +74,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Level")
 	FGameplayAttributeData Level;*/
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Level")
-	FGameplayAttributeData Experience;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Level")
-	FGameplayAttributeData MaxExperience;
-
 	/* DECLARE_NAMED_STAT_MODIFIER_GETTER(GetChaModifier, Charisma);
 	DECLARE_NAMED_STAT_MODIFIER_GETTER(GetConModifier, Constitution);
 	DECLARE_NAMED_STAT_MODIFIER_GETTER(GetDexModifier, Dexterity);
@@ -101,5 +99,5 @@ public:
 
 	FOnExperienceModifiedDelegate OnExperienceModified;
 	FOnPointsModifiedDelegate OnPointsModified;
-	FOnStatModifiedDelegate OnStatModified;
+	FOnCharacteristicModifiedDelegate OnCharacteristicModified;
 };

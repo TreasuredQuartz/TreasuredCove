@@ -426,11 +426,11 @@ public:
 	UGASystemComponent* RenamedAbilitySystem;
 
 	// Skill trees component
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
 	UGASkillTreeComponent* SkillTrees;
 	
 	// Attribute Set Classes to create components from
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<UAttributeSet>> AttributeSetClasses;
 	// Attribute Set Components
 	TArray<UAttributeSet*> AttributeSets;

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Global/Components/AttributeComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/AttributeComponent.h"
 #include "ManaComponent.generated.h"
 
 class UASMana;

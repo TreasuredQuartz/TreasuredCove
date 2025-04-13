@@ -10,7 +10,7 @@
 // Attribute sets
 #include "Global/AbilitySystem/AttributeSets/ASHealth.h"
 #include "Global/AbilitySystem/AttributeSets/ASAmmo.h"
-#include "Global/AbilitySystem/AttributeSets/ASStats.h"
+#include "Global/AbilitySystem/AttributeSets/ASCharacteristics.h"
 #include "Global/AbilitySystem/AttributeSets/ASUltimate.h"
 #include "Global/AbilitySystem/AttributeSets/ASWeaponStats.h"
 
@@ -33,7 +33,7 @@
 #include "Global/Config/GAInputConfigData.h"
 
 // Attributes
-#include "Global/Components/Characters/HealthComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/HealthComponent.h"
 #include "Global/Components/ComboComponent.h"
 
 // AI or UI
@@ -737,13 +737,14 @@ void AGACharacter::InitializeAbilitySystem()
 // Called during ability system initialization
 void AGACharacter::InitializeAttributeSet(UAttributeSet* Set)
 {
-	UASStats* StatSet = Cast<UASStats>(Set);
+	// Is now UASCharacteristics
+	/* UASStats* StatSet = Cast<UASStats>(Set);
 	if (StatSet)
 	{
 		StatSet->OnExperienceModified.AddUniqueDynamic(this, &AGACharacter::OnExperienceModified);
 		StatSet->OnStatModified.AddUniqueDynamic(this, &AGACharacter::OnStatModified);
 		return;
-	}
+	} // */
 
 	UASWeaponStats* WeaponSet = Cast<UASWeaponStats>(Set);
 	if (WeaponSet)

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AttributeComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/AttributeComponent.h"
 #include "GameplayTagContainer.h"
 #include "Global/AbilitySystem/AttributeSets/OnAttributeModifiedEvent.h"
 #include "AmmoComponent.generated.h"

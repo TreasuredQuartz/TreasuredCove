@@ -1,7 +1,7 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "Global/Components/StaminaComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/StaminaComponent.h"
 #include "AbilitySystemComponent.h"
 #include "Global/AbilitySystem/AttributeSets/ASStamina.h"
 #include "Global/AbilitySystem/AttributeSets/AttributeSetInfo.h"

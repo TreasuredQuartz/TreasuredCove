@@ -1,7 +1,7 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "Global/Components/Characters/HealthComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/HealthComponent.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
 #include "Global/AbilitySystem/AttributeSets/ASHealth.h"

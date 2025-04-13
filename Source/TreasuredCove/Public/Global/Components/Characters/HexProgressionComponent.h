@@ -28,7 +28,22 @@ public:
 
 	AHexGridManager* GridManager;
 	UHexGridEditor* GridEditor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
 	TSubclassOf<AHexGridManager> GridManagerClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
 	TSubclassOf<UHexGridEditor> GridEditorClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="HexGrid")
 	FTransform GridSpawnTransform;
+
+public:
+	// Call Manually (probably from UI I guess)
+	// After calling, call StopEditing when done.
+	UFUNCTION(BlueprintCallable, Category="HexGrid")
+	void StartEditing();
+
+	// Call manually
+	UFUNCTION(BlueprintCallable, Category = "HexGrid")
+	void StopEditing();
 };

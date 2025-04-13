@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "DNDStatsComponent.generated.h"
+#include "CharacteristicsComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TREASUREDCOVE_API UDNDStatsComponent : public UActorComponent
+class TREASUREDCOVE_API UCharacteristicsComponent : public UActorComponent
 {
 	GENERATED_BODY()
 private:
@@ -21,7 +21,7 @@ private:
 
 public:	
 	// Sets default values for this component's properties
-	UDNDStatsComponent();
+	UCharacteristicsComponent();
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
 	int32 GetChaScore() { return Charisma; };
