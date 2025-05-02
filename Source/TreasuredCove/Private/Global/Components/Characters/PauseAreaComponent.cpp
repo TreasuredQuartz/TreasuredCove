@@ -49,7 +49,7 @@ void UPauseAreaComponent::EnterPauseArea_Client_Implementation()
 		PauseArea = NewPauseAreaActor;
 
 		// In client/server only the server can activate a DataLayer
-		if (GetOwner()->HasAuthority())
+		/* if (GetOwner()->HasAuthority())
 		{
 			if (UDataLayerManager* DataLayerSubsystem = GetWorld()->GetDataLayerManager())
 			{
@@ -58,17 +58,17 @@ void UPauseAreaComponent::EnterPauseArea_Client_Implementation()
 
 				PauseInstance->AddActor(PauseArea);
 			}
-		}
+		} // */
 	}
 
 	// In client/server only the server can activate a DataLayer
-	if (GetOwner()->HasAuthority())
+	/* if (GetOwner()->HasAuthority())
 	{
 		if (UDataLayerManager* DataLayerSubsystem = GetWorld()->GetDataLayerManager())
 		{
 			DataLayerSubsystem->SetDataLayerRuntimeState(PauseAreaDataLayer, EDataLayerRuntimeState::Activated);
 		}
-	}
+	} // */
 
 	PauseArea->OnEnter();
 }
@@ -78,13 +78,13 @@ void UPauseAreaComponent::ExitPauseArea()
 	if (PauseArea) PauseArea->OnExit();
 
 	// In client/server only the server can activate a DataLayer
-	if (GetOwner()->HasAuthority())
+	/* if (GetOwner()->HasAuthority())
 	{
 		if (UDataLayerManager* DataLayerSubsystem = GetWorld()->GetDataLayerManager())
 		{
 			DataLayerSubsystem->SetDataLayerRuntimeState(PauseAreaDataLayer, EDataLayerRuntimeState::Unloaded);
 		}
-	}
+	} // */
 }
 
 void UPauseAreaComponent::OnPauseAreaDestroyed(AActor* DestroyedActor)

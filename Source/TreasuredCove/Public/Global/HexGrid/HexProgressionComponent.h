@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Global/Components/ProgressionComponent.h"
 #include "HexProgressionComponent.generated.h"
 
 class AHexGridManager;
 class UHexGridEditor;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TREASUREDCOVE_API UHexProgressionComponent : public UActorComponent
+class TREASUREDCOVE_API UHexProgressionComponent : public UProgressionComponent
 {
 	GENERATED_BODY()
 
@@ -28,6 +28,7 @@ public:
 
 	AHexGridManager* GridManager;
 	UHexGridEditor* GridEditor;
+	// UHexGridCivilization* GridCivilization;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
 	TSubclassOf<AHexGridManager> GridManagerClass;
@@ -46,4 +47,8 @@ public:
 	// Call manually
 	UFUNCTION(BlueprintCallable, Category = "HexGrid")
 	void StopEditing();
+
+	//
+	UFUNCTION(BlueprintCallable, Category = "HexGrid")
+	AHexGridManager* GetHexGridManager() { return GridManager; };
 };

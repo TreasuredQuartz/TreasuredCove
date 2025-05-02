@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Global/Framework/GAProgressionManager.h"
 #include "ProgressionManagerComponent.generated.h"
 
+class FProgressionComponentDetails;
+class AGAProgressionManager;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TREASUREDCOVE_API UProgressionManagerComponent : public UActorComponent
@@ -24,5 +27,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Progression")
+	TSubclassOf<AGAProgressionManager> ProgressionManagerClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Progression")
+	AGAProgressionManager* ProgressionManager;
 };

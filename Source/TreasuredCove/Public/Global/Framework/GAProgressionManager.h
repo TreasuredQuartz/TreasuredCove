@@ -9,7 +9,7 @@
 /** While APlayerState is replicated across all clients
  * This class is intended to replicate for each client only.
  */
-UCLASS()
+UCLASS(Blueprintable)
 class TREASUREDCOVE_API AGAProgressionManager : public AInfo
 {
 	GENERATED_BODY()

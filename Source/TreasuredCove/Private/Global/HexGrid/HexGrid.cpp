@@ -352,7 +352,7 @@ void AHexGrid::GenerateHexGrid()
 	NormalVector.FindBestAxisVectors(axisA, axisB);
 
 	// axisA and axisB are 90 degrees apart when each vector should be 30 degrees apart.
-	axisA = axisA.RotateAngleAxis(60.0f, NormalVector);
+	axisA = axisA.RotateAngleAxis(bFlatTop ? 90.0f : 60.0f, NormalVector);
 	axisC = axisA.RotateAngleAxis(60.0f, NormalVector);
 	axisB = axisB.ProjectOnToNormal(NormalVector);
 
@@ -412,9 +412,9 @@ void AHexGrid::GenerateHexGrid()
 				return FMath::Lerp(value * 1.0, value > 0 ? (value * mod - FMath::Log2(value + 1.0)) : (value * mod + FMath::Log2(-value + 1.0)), FMath::Abs(value / (max * 1.0)));
 			};
 
-			double LocX = CorrectSpacing(x, N);
-			double LocY = CorrectSpacing(y, N);
-			double LocZ = CorrectSpacing(z, N);
+			double LocX = bSphere ? CorrectSpacing(x, N) : x;
+			double LocY = bSphere ? CorrectSpacing(y, N) : y;
+			double LocZ = bSphere ? CorrectSpacing(z, N) : z;
 			FVector Offset =
 				// FVector(col * axis * 0.1 + axis * row * 0.1);
 				// FVector(x * 0.05, y * 0.05, z * 0.05);
@@ -426,12 +426,12 @@ void AHexGrid::GenerateHexGrid()
 				(LocZ * axisC); // */
 
 			FVector pointCube =
-				(Position * N * 1.4 + Offset);
+				(Position * N * (1 + TileOffset) + Offset);
 
 			FVector pointSphere =
 				pointCube.GetSafeNormal() * N * 2;
 
-			FVector Pos = pointSphere;
+			FVector Pos = bSphere ? pointSphere : pointCube;
 
 			if (!TileLocations.Contains(Pos))
 			{
@@ -564,7 +564,7 @@ void AHexGrid::ConstructMesh()
 				// Draws the current side's face
 				if (bDrawFace)
 				{
-					FQuat Quatarian = (-Tile->GetTileLocation().GetSafeNormal()).ToOrientationQuat();
+					FQuat Quatarian = bSphere ? (-Tile->GetTileLocation().GetSafeNormal()).ToOrientationQuat() : (-NormalVector).ToOrientationQuat();
 					
 					Triangle_Num = UGALibrary::CreateFaceFromTransform(TileSection, MeshSectionData, FTransform(Quatarian, Tile->GetTileLocation(), Scale3D), i, Triangle_Num, VoxelSize);
 				}

@@ -1,10 +1,10 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "Global/Components/ProgressionSystemComponent.h"
+#include "Global/Components/ProgressionComponent.h"
 
 // Sets default values for this component's properties
-UProgressionSystemComponent::UProgressionSystemComponent()
+UProgressionComponent::UProgressionComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -15,7 +15,7 @@ UProgressionSystemComponent::UProgressionSystemComponent()
 
 
 // Called when the game starts
-void UProgressionSystemComponent::BeginPlay()
+void UProgressionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -25,7 +25,7 @@ void UProgressionSystemComponent::BeginPlay()
 
 
 // Called every frame
-void UProgressionSystemComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UProgressionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 

@@ -4,7 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Global/Components/ProgressionComponent.h"
 #include "GASkillTree.h"
 #include "GASkillTreeComponent.generated.h"
 
@@ -15,7 +15,7 @@ class UAbilitySystemComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNewSkillTreeAdded);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TREASUREDCOVE_API UGASkillTreeComponent : public UActorComponent
+class TREASUREDCOVE_API UGASkillTreeComponent : public UProgressionComponent
 {
 	GENERATED_BODY()
 

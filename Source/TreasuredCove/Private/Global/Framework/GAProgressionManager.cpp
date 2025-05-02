@@ -2,7 +2,7 @@
 
 
 #include "Global/Framework/GAProgressionManager.h"
-#include "Global/Components/Characters/HexProgressionComponent.h"
+#include "Global/HexGrid/HexProgressionComponent.h"
 #include "Global/AbilitySystem/SkillTree/GASkillTreeComponent.h"
 
 AGAProgressionManager::AGAProgressionManager()

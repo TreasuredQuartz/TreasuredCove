@@ -13,8 +13,8 @@ UHexGridEditor::UHexGridEditor()
 	: bIsEditing(false)
 	, bInitialized(false)
 	, bHasBegunPlay(false)
-	, HexManager(nullptr)
 	, TileSelectorClass(UHexTileSelector::StaticClass())
+	, HexManager(nullptr)
 	, TileSelector(nullptr)
 {
 }

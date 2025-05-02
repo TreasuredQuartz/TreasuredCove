@@ -4,17 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "ProgressionSystemComponent.generated.h"
+#include "ProgressionComponent.generated.h"
 
-
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TREASUREDCOVE_API UProgressionSystemComponent : public UActorComponent
+/**
+ * 
+ */
+UCLASS(DefaultToInstanced, BlueprintType, abstract, meta = (ShortTooltip = "A ProgressionComponent is a reusable component that can be added to a ProgressionManagerComponent."))
+class TREASUREDCOVE_API UProgressionComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UProgressionSystemComponent();
+	UProgressionComponent();
 
 protected:
 	// Called when the game starts

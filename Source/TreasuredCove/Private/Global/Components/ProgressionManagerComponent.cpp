@@ -20,7 +20,7 @@ void UProgressionManagerComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
+	ProgressionManager = GetWorld()->SpawnActor<AGAProgressionManager>(ProgressionManagerClass);
 }
 
 

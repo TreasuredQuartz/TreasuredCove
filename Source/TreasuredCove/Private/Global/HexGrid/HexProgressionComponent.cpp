@@ -1,7 +1,7 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "Global/Components/Characters/HexProgressionComponent.h"
+#include "Global/HexGrid/HexProgressionComponent.h"
 #include "kismet/GameplayStatics.h"
 #include "Global/HexGrid/HexGridManager.h"
 #include "Global/HexGrid/HexGridEditor.h"

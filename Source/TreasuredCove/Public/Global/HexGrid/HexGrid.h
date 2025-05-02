@@ -64,7 +64,11 @@ private:
 	bool bResetOnRebuild = true;
 	bool bShouldInitializeNoise = true;
 	bool bShouldInitializeTiles = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
+	bool bSphere;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
+	float TileOffset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
 	float VerticalOffset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
@@ -100,6 +104,8 @@ public:
 	AHexGrid();
 	virtual ~AHexGrid() override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (ExposeOnSpawn = "true"))
+	uint8 bFlatTop : 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (ExposeOnSpawn = "true"))
 	FVector NormalVector;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (ExposeOnSpawn = "true"))
@@ -183,4 +189,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "HexGrid")
 	void SetTileHiddenInGame(bool NewHidden, const FHexCoord& InHexCoordinate);
+
+	UFUNCTION(BlueprintCallable, Category = "HexGrid")
+	void SetSphere(bool bNewSphere) { bSphere = bNewSphere; };
 };
