@@ -5,6 +5,7 @@
 	- [[Kiwi]]
 	- [[Quail]]
 	- [[Rabbit]]
+	- [[Grasshopper]]
 - Carnivores
 	- [[Wolf]]
 	- [[Sandworm]]
@@ -13,6 +14,7 @@
 	- [[Hawks]]
 - Omnivores
 	- [[Bear]]
+	- [[Dragon]]
 
 - Deep Forest Archtype
 	- 

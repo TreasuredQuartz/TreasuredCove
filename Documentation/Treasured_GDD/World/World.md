@@ -29,7 +29,7 @@ This section details the concept art and implementation of the world. The game t
 ### Upper Region:
 - [[Everwinter Forest Region]] —
 	- Lake
-	- Town
+	- [[Gehennam]]
 	- Dungeon
 ![[IcePalace_ConceptArt_01.jpg]]
 
@@ -103,6 +103,8 @@ As the design pillars dictate, this world is not static; as such it contains cer
 ### Start State
 
 Every Civilization (and therefore the towns they own), start with the bare minimum knowledge for creating buildings, and one Capital City.
+
+Gehennam, and Lipis Mas Equis are the only cities to be guaranteed creations at the start of every playthrough.
 
 ### End State
 

@@ -1,95 +1,56 @@
 {
   "main": {
-    "id": "60e5b3ea300ffd98",
+    "id": "3612944fd60ae38b",
     "type": "split",
     "children": [
       {
-        "id": "28b978be8c03d4b5",
+        "id": "1c62e18baf1beed4",
         "type": "tabs",
-        "dimension": 47.78880866425993,
         "children": [
           {
-            "id": "f8b7992d28151beb",
+            "id": "fca095e058c97769",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Game Design Document/Cover Page.md",
+                "file": "Quest The Missing Children.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Cover Page"
+              "title": "Quest The Missing Children"
             }
           },
           {
-            "id": "ad4999275146a0b8",
+            "id": "c395353ed63c58f0",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Characters.md",
+                "file": "Proficiency Trees.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Characters"
-            }
-          },
-          {
-            "id": "ce04e472898beffb",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Volcano Castle.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Volcano Castle"
+              "title": "Proficiency Trees"
             }
           }
         ],
         "currentTab": 1
-      },
-      {
-        "id": "a4409fa3b905218c",
-        "type": "tabs",
-        "dimension": 52.21119133574007,
-        "children": [
-          {
-            "id": "83d0b55a5969a7ba",
-            "type": "leaf",
-            "state": {
-              "type": "canvas",
-              "state": {
-                "file": "Untitled.canvas",
-                "viewState": {
-                  "x": 0,
-                  "y": 0,
-                  "zoom": 0
-                }
-              },
-              "icon": "lucide-layout-dashboard",
-              "title": "Untitled"
-            }
-          }
-        ]
       }
     ],
     "direction": "vertical"
   },
   "left": {
-    "id": "f66de5c49b34d4e2",
+    "id": "515bca718c2c2921",
     "type": "split",
     "children": [
       {
-        "id": "d26041e5fbad0366",
+        "id": "46cb8c574cd439a4",
         "type": "tabs",
         "children": [
           {
-            "id": "3a10f3d7a3aee1ef",
+            "id": "caef98394f76174b",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -102,7 +63,7 @@
             }
           },
           {
-            "id": "9f7d522294b7ed1f",
+            "id": "b75d0c7b8f421f9b",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -119,7 +80,7 @@
             }
           },
           {
-            "id": "7fc39f98b4f07b42",
+            "id": "37dc59b484b3cd58",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -135,20 +96,19 @@
     "width": 300
   },
   "right": {
-    "id": "67c9a58762a17f1c",
+    "id": "91e17733c220e42a",
     "type": "split",
     "children": [
       {
-        "id": "f2409609ba886fcc",
+        "id": "d989bc92f3405e19",
         "type": "tabs",
         "children": [
           {
-            "id": "7d0e66f1498f2d8a",
+            "id": "9e480fca051bb666",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "World.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -158,25 +118,24 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for World"
+              "title": "Backlinks"
             }
           },
           {
-            "id": "f6246f7fbb364ec6",
+            "id": "31ba99addc484dad",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "World.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from World"
+              "title": "Outgoing links"
             }
           },
           {
-            "id": "7a54f2dde15a2bc6",
+            "id": "75760929fe5f80ac",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -191,22 +150,20 @@
             }
           },
           {
-            "id": "ffcf581dbd8aa2e5",
+            "id": "cc68699f5b02ed07",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "World.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of World"
+              "title": "Outline"
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "horizontal",
@@ -223,45 +180,48 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "83d0b55a5969a7ba",
+  "active": "c395353ed63c58f0",
   "lastOpenFiles": [
-    "Untitled.canvas",
-    "Characters.md",
-    "Game Design Document/Cover Page.md",
-    "Volcano Castle.md",
-    "Star Destroyer.md",
-    "Dead Galaxy.md",
-    "Dungeons.md",
-    "Dead Space.md",
-    "Monster Region.md",
-    "Immortal Manor.md",
-    "World.md",
-    "Magic.md",
-    "Ice Palace.md",
-    "Center Region.md",
-    "Bear.md",
-    "Wolf.md",
-    "Weather.md",
-    "Watt Chimera.md",
-    "The Great Divide.md",
-    "Rarity.md",
-    "Quartz.md",
-    "Quail.md",
-    "Plot.md",
-    "Mudskipper.md",
-    "Monetization.md",
-    "Light.md",
-    "Img/MainIsland_Inkarnete_ConceptArt_01.jpg",
+    "Game Design Document/Main Documentation Page.md",
+    "Proficiency Trees.md",
+    "Quest The Missing Children.md",
+    "Game Design Document/In-Game Content Creation Tool Suite.md",
+    "World/Materials.md",
+    "World/Magic.md",
+    "Creatures/Creatures.md",
+    "World/World.md",
+    "World/Weather.md",
+    "World/Monster Region.md",
+    "Creatures/Watt Chimera.md",
+    "Creatures/Wolf.md",
+    "Game Design Document/Rarity.md",
+    "Game Design Document/Plot.md",
+    "Game Design Document/Monetization.md",
+    "World/Grassland Ecology.md",
+    "World/Dungeons.md",
+    "World/Dead Galaxy.md",
+    "World/Center Region.md",
+    "World/Star Destroyer.md",
+    "Creatures/Quail.md",
+    "Creatures/Bear.md",
+    "Characters/Yase.md",
+    "Creatures",
+    "World",
+    "Characters/Safire.md",
+    "Characters/Quartz.md",
+    "Characters/Mudskipper.md",
+    "Characters",
+    "Img/Mady_ConceptArt_01.jpg",
+    "Img/Autumn_ConceptArt_01.jpg",
+    "Img/Beth_ConceptArt_01.jpg",
     "Img/Biggs_MonsterRegion.jpg",
-    "Img/MainIsland_ConceptArt_08.jpg",
-    "Img/MainIsland_ConceptArt_07.jpg",
-    "Img/MainIsland_ConceptArt_03.jpg",
-    "Img/MainIsland_ConceptArt_06.jpg",
-    "Img/IcePalace_ConceptArt_01.jpg",
-    "Pasted image 20250504180408.jpg",
-    "Img",
-    "Img/MainIsland_ConceptArt_05.jpg",
-    "Img/MainIsland_ConceptArt_10.jpg",
-    "Game Design Document"
+    "Img/Elijah_ConceptArt_01.jpg",
+    "Img/Elijah_ConceptArt_02.jpg",
+    "Img/Exelese_ConceptArt_01.jpg",
+    "Img/Halios_ConceptArt_01.jpg",
+    "Img/Halios_ConceptArt_02.jpg",
+    "Img/Halios_ConceptArt_03.jpg",
+    "Game Design Document",
+    "Img"
   ]
 }

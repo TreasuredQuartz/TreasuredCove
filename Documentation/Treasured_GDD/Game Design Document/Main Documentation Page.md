@@ -132,21 +132,85 @@ ___
 
 # Concept Statement
 ___
-
+Skyrim meets Sid Myers: Civilization. First-Person Dwarf Fortress. Players get to interact, influence, and exist in a world that is out of their control.
 # Genre
 ___
+## FRPS: Fantasy Role Playing Simulator
 
+***Simulation:*** The player interacts with a world that emulates real-world factors.
+
+***Real-Time-Strategy:*** Non-Player-Controlled Civilizations play simultaneously with or against the player.
+
+***Action:*** Emphasizes physical challenges, including hand–eye coordination and reaction time.
+
+***Role-Playing-Game:*** Reoccurring characters tell a detailed story during the progression of the game.
 # Target Audience
 ___
 
 # Concept Paragraph and Unique Selling Points
 ___
+## 4X
 
+***Explore:*** The world is there for the player to travel and discover for themselves.
+
+***Expand:*** The player does not have ownership over any land, towns, or otherwise, but the Civilizations that have a positive relationship with the player may grow larger through the player's influence.
+
+***Exploit:*** The player absolutely exploits the creatures and non-living entities for personal gain.
+
+***Exterminate:*** The goal of the player is to complete various dungeons within the world; each dungeon determines its own conditions for completion, which may include extermination or a peaceful option.
 # Player Experience
 ___
+<span style="font-style: italic; color: grey;">Who is the player in the game?</span>
 
-# Art, sound and music
+The player is an entity of a Civilization, with all the functions and capability of any other civilization entity. For all intents and purposes, anything an NPC can do a player can do, and vise versa. There should be nothing to differentiate between them aside from motivations.
+
+<span style="font-style: italic; color: grey;">What is the setting?</span>
+
+The game is set in an Ancient Era, a time before tools and technologies have been discovered.
+It progresses through different eras based on the advancement in knowledge of the currently most advanced civilization. Early gameplay may feature primitive combat, while late gameplay may feature complex modern elements (such as guns).
+
+<span style="font-style: italic; color: grey;">How long does the game last? </span>
+
+The game is intended to last 1 hour per dungeon at a minimum and at least 20 hours in total playtime. This is the time required to complete the first playthrough of the game, not including any post game content.
+
+<span style="font-style: italic; color: grey;">What is the fantasy or aspiration the game grants the player?</span>
+
+The fantasy provided is the feeling of living alongside the game. As though the character in the world, is living in a real world with real goals and aspirations of their own, with infinite stories to unwind.
+
+<span style="font-style: italic; color: grey;">What emotions does the player feel by playing the game? </span>
+
+The player should feel curiosity a majority of the time; having that emotion replaced appropriately when satisfied.
+
+<span style="font-style: italic; color: grey;">What are the major phases of the player’s experience in the game? (This section can link to “Player Objectives and Progression” and leave most of the detail to that part of the design.)</span>
+
+# Key Moments
 ___
+As part of the player experience, and to help others understand the design, briefly discuss a few
+“key moments” in the game. Typical examples include an initial positive experience in the first
+1-5 minutes of the game; key struggles that must be overcome; and major victory,
+achievement, or resolution points the player experiences as part of their arc through the game.
+## The First Hour
+1. Spawned into the first town
+	- Introduced to the citizens
+	- Introduced to the quest board
+2. [[Quest The Missing Children|The Missing Children]]
+	- This quest marks the end of the tutorial, as when it is completed so too is the first stage of the game.
+3. A New beginning
+	- The player meets [[The Judge]], a character intended to act as a guide for the afterlife.
+	- They explain that a supernatural being can make contact with a soul after they die.
+	- The Judge can send them back, but only if they agree to bring the souls of their party back to him.
+4. Off The Leash
+	- At this point, the game lets go of its linear narrative.
+	- From this point on, the player can determine whether they want to explore the world to find new dungeons, work with the first town to expand it and help it's inhabitants, or to go into the wilderness and survive alone from the Civilizations.
+
+___
+
+5. [[Volcano Castle|Halios Dungeon]]
+6. [[Immortal Manor|Quartz Dungeon]]
+7. [[Monster Region|Mudkip Dungeon]]
+8. [[Dead Galaxy|Light Dungeon]]
+9. The Final Act
+10. Epilogue
 
 # Current Target Platform (and any system requirements)
 ___
@@ -154,31 +218,33 @@ Windows Personal Computers.
 
 # Competition
 ___
+Skyrim, Oblivion, Civilization VII, Dwarf Fortress.
 
 # Monetization
 ___
-
 [[Monetization]]
 
 # Links to Detailed Sections
 ___
-
 ## All Design Pillars
 
 [[Design Pillars]]
+
 ## Player objectives and progression
 
-• *Who is the player in the game?*
+• <span style="color: grey; font-style: italic">Who is the player in the game?</span>
 They are an adventurer; someone spawned into the world after the initial inhabitants, and therefore used by them to complete tasks either too dangerous or too arduous for themselves. 
 
-• *Synopsis of what the player knows when the game starts, and any following in-game
-narrative*
+After the tutorial, the player explores the world and completes dungeons across the landscape.
+
+• <span style="color: grey; font-style: italic">Synopsis of what the player knows when the game starts, and any following in-game
+narrative</span>
 The player is Incarnated by a magical well. This is the default manner in which NPCs and players spawn into the world. This well is the center of a town, as it would make sense for people to feel safe around this location, and be able to accrue future business interests through first impressions. They would be introduced into the mechanics of the world by the denizens of the town; the merchants of the town, the help posting board.
 
 Their initial goal is helping the town, until the undertaking of a specific quest in which they join a group of adventures that gets party-wiped, including the player. This marks the end of the tutorial, and is the key moment defining the next steps the player takes.
 
-• *Player’s primary goals and how they progress to them, including which parts are linear
-or based on player choices*
+• <span style="color: grey; font-style: italic">Player’s primary goals and how they progress to them, including which parts are linear
+or based on player choices</span>
 The player's primary goal is to find dungeons in the world, and complete them. They can be completed in any order, and each one changes the others in unique ways after completion. This can be the form of: 
 - New dialogue trees or paths due to new followers from the completed dungeon.
 - More or less difficulty on specific parts (Generally dungeons should become progressively more difficult)
@@ -201,7 +267,8 @@ tutorial areas
 • Game world physics: running, flying, falling, etc., -- anything of note for the design
 • How does the player move through the game in terms of locations, chapters, etc.
 • Easter Eggs planned, if any
-User Interface
+
+## User Interface
 • Specifics of all needed control schemes (selection, activation, radial or context menu
 use, tapping, dragging, etc.), ensuring that these are consistent across the game
 • Screen flow mockups: each screen/menu in full functional detail (wireframe, no art),
@@ -212,8 +279,10 @@ showing the player’s flow through all aspects of the game.
 
 ## MVP Systems and Features
 
-- Procedural Dungeons.
+- [[Dungeons|Procedural Dungeons]]
 - [[In-Game Content Creation Tool Suite]]
+- [[Rarity]]
+- [[Proficiency Trees]]
 
 • All major features such as character creation, crafting, combat, dialog, etc., including
 areas for monetization (if any), and specific puzzles or similar
@@ -241,6 +310,9 @@ areas for monetization (if any), and specific puzzles or similar
 
 [[Characters]]
 [[Creatures]]
+[[Monsters]]
+[[Items]]
+[[Materials]]
 
 ## Localization
 

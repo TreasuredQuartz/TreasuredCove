@@ -9,7 +9,7 @@ While the first two pillars may seem like the very definition of a game itself, 
 
 ## Treasured Design Pillars
 These pillars describe the fundamental rules that Treasured follows; all systems, decisions, and further designs should stem from the core pillars.
-- Evolving world — The game world should change over time.
-- Player freedom — Allowing players to craft a unique experience is essential.
-- Artistic Ascetic — The art direction is explicitly against realism.
-- Limitations are fun — Players need to be challenged to feel like they are learning.
+1. Evolving world — The game world should change over time.
+2. Player freedom — Allowing players to craft a unique experience is essential.
+3. Artistic Ascetic — The art direction is explicitly against realism.
+4. Limitations are fun — Players need to be challenged to feel like they are learning.

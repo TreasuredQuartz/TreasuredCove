@@ -1,4 +1,8 @@
 # Terrestrial
+
+## Deserts
+- [[Desert Ecology]]
+
 ## Grasslands:
 - [[Grassland Ecology]]
 - [[Savanna Ecology]]

@@ -1,3 +1,5 @@
+
+[[Sanctuary]]
 # Who is it about?
 
 The Immortal Creator — He is the brother of 3 others, and they embark on a quest together to save missing villagers in their town. They track a suspect to a cave in the cold forest, after they explore inside to discover a cursed artifact and a Lich, the four brothers are separated from life. Quartz uses the magical item to save his brethren’s lives by inflicting each one with a curse. They remain lifeless while they remain outside of their ideal fantasies, aside from Quartz who fantasizes about building each of their ideal dreams into reality.
@@ -29,3 +31,16 @@ Physical beings (even manifested by dream beings), cannot remove the barriers be
 Growing artificial clones using DNA doesn’t transfer the memories of the original, and even if the memories were transferred in a separate process, the original dream manifest would remain cursed; defeating the purpose.
 
 # How does it end?
+
+# Concept Art
+![[Quartz_ConceptArt_07.jpg]]
+
+![[Quartz_ConceptArt_05.jpg]]
+
+![[Quartz_ConceptArt_04.jpg]]
+
+![[Quartz_ConceptArt_03.jpg]]
+
+![[Quartz_ConceptArt_01.jpg]]
+
+![[Quartz_ConceptArt_02.jpg]]

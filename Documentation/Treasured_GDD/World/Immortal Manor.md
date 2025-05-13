@@ -15,3 +15,9 @@ The Palace Of Versailles features round-based Call-Of-Duty Zombies gameplay; usi
 
 
 ## Rewards
+
+## Concept Art
+
+![[IcePalace_ConceptArt_01.jpg]]
+
+![[IcePalace_ConceptArt_02.jpg]]
