@@ -8,7 +8,8 @@
 
 class UJsonAsset;
 
-DECLARE_DELEGATE(FOnDatabaseEditNewAsset);
+DECLARE_MULTICAST_DELEGATE(FOnDatabaseRebuild);
+DECLARE_MULTICAST_DELEGATE(FOnDatabaseEditNewAsset);
 
 /**
  * 
@@ -33,10 +34,12 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	FORCEINLINE UJsonAsset* GetCurrentAsset() const { return Assets.IsValidIndex(CurrentAssetIndex) ? Assets[CurrentAssetIndex] : nullptr; };
 
+	void NotifyDatabaseChanged() const;
 	void SetCurrentAsset(int32 InCurrentAssetIndex);
 	void CreateNewAsset();
 	bool IsNewFile(FString FileName) const;
 
 public:
+	FOnDatabaseRebuild OnChanged;
 	FOnDatabaseEditNewAsset OnEditNewAsset;
 };

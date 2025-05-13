@@ -75,6 +75,11 @@ void SJsonBrowserAsset::UpdateAsset()
 		];
 }
 
+void SJsonBrowserAsset::StartEditingName()
+{
+	EditableTextBlock->EnterEditingMode();
+}
+
 bool SJsonBrowserAsset::OnVerifyNameTextChanged(const FText& InText, FText& OutErrorMessage)
 {
 	if (EditingAsset)
@@ -102,7 +107,7 @@ FReply SJsonBrowserAsset::OnKeyDown(const FGeometry& Geometry, const FKeyEvent& 
 		// do stuff
 		// GetCurrentSelectedAsset();
 
-		EditableTextBlock->EnterEditingMode();
+		StartEditingName();
 	}
 
 	return FReply::Handled();

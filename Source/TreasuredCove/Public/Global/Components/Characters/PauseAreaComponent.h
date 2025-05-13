@@ -17,6 +17,9 @@ public:
 	// Sets default values for this component's properties
 	UPauseAreaComponent();
 
+	UPROPERTY(EditAnywhere, Category = "PauseArea")
+	TObjectPtr<const UDataLayerAsset> PauseAreaDataLayer;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -41,4 +44,5 @@ public:
 	//
 	UFUNCTION()
 	void OnPauseAreaDestroyed(AActor* DestroyedActor);
+
 };

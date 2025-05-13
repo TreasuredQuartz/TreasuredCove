@@ -3,7 +3,7 @@
 #include "Global/Framework/GAAIController.h"
 #include "Global/Actors/GACharacter.h"
 
-#include "Global/Components/Characters/HealthComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/HealthComponent.h"
 #include "TownSystem/TownSystemComponent.h"
 #include "Global/Components/Characters/TeamComponent.h"
 #include "Global/Components/Characters/TeamManager.h"

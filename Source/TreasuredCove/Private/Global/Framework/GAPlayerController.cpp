@@ -5,6 +5,7 @@
 #include "Global/Framework/GAHUD.h"
 #include "Global/Actors/GAActor.h"
 #include "Global/Actors/GACharacter.h"
+#include "Global/Components/Characters/PauseAreaComponent.h"
 
 #include "DlgSystem/DlgContext.h"
 #include "DlgSystem/DlgManager.h"

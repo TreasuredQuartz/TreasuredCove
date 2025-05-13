@@ -11,6 +11,48 @@ class UHexTile;
 class URealtimeMeshComponent;
 class URealtimeMeshSimple;
 
+USTRUCT(BlueprintType)
+struct FHexCoord { // Vector storage, cube constructor
+	GENERATED_BODY()
+
+private:
+	FIntVector3 Vector;
+
+public:
+	FHexCoord() : Vector(FIntVector3()) {}
+	FHexCoord(int q, int r, int s) : Vector{ q, r, s } {
+		check(q + r + s == 0);
+	};
+
+	inline int q() { return Vector[0]; }
+	inline int r() { return Vector[1]; }
+	inline int s() { return Vector[2]; }
+
+	// Compares
+	FORCEINLINE bool operator == (const FHexCoord& OtherInfo) const
+	{
+		return this->Vector == OtherInfo.Vector;
+	}
+	// Compares
+	FORCEINLINE bool operator != (const FHexCoord& OtherInfo) const
+	{
+		return this->Vector != OtherInfo.Vector;
+	}
+};
+
+
+// Hash function for TMap Compatibility
+#if UE_BUILD_DEBUG
+uint32 GetTypeHash(const FHexCoord& Vector);
+#else // optimize by inlining in shipping and development builds
+FORCEINLINE uint32 GetTypeHash(const FHexCoord& Vector)
+{
+	uint32 Hash = FCrc::MemCrc32(&Vector, sizeof(Vector));
+	return Hash;
+}
+#endif
+
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAddTileDelegate, const FVector2D&, TileLocation, uint8, TileType);
 
 UCLASS()
@@ -22,7 +64,11 @@ private:
 	bool bResetOnRebuild = true;
 	bool bShouldInitializeNoise = true;
 	bool bShouldInitializeTiles = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
+	bool bSphere;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
+	float TileOffset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
 	float VerticalOffset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
@@ -50,7 +96,7 @@ protected:
 	uint8 RandomSeed;
 	TArray<uint8> Types;
 	TArray<int32> Height;
-	TArray<UHexTile*> Tiles;
+	TMap<FHexCoord, UHexTile*> Tiles;
 	TArray<FVector> TileLocations;
 
 public:	
@@ -59,13 +105,18 @@ public:
 	virtual ~AHexGrid() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (ExposeOnSpawn = "true"))
+	uint8 bFlatTop : 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (ExposeOnSpawn = "true"))
 	FVector NormalVector;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid", meta = (ExposeOnSpawn = "true"))
 	FVector2D Location;
 	UPROPERTY(EditDefaultsOnly, Category = "HexGrid")
 	TArray<UMaterialInterface*> Materials;
 	UPROPERTY(EditDefaultsOnly, Category = "HexGrid")
+	UMaterialInterface* RTMeshMaterial;
+	UPROPERTY(EditDefaultsOnly, Category = "HexGrid")
 	class UGameplayTileData* MeshSectionData;
+
 public:
 	//~ Begin UObject/AActor Interface
 	virtual void PostLoad() override;
@@ -125,11 +176,20 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "HexGrid")
-	FTransform GetTileTransform(int32 TileIndex) const;
+	UHexTile* GetTileFromIndex(int32 Index) const;
 
 	UFUNCTION(BlueprintCallable, Category = "HexGrid")
-	void SetTileVertexColor(const FLinearColor& Color, int32 TileIndex);
+	const FHexCoord& GetTileCoordFromIndex(int32 Index) const;
 
 	UFUNCTION(BlueprintCallable, Category = "HexGrid")
-	void SetTileHiddenInGame(bool NewHidden, int32 TileIndex);
+	FTransform GetTileCollisionTransform(int32 CollisionInstanceIndex) const;
+
+	UFUNCTION(BlueprintCallable, Category = "HexGrid")
+	void SetTileVertexColor(const FLinearColor& Color, const FHexCoord& InHexCoordinate);
+
+	UFUNCTION(BlueprintCallable, Category = "HexGrid")
+	void SetTileHiddenInGame(bool NewHidden, const FHexCoord& InHexCoordinate);
+
+	UFUNCTION(BlueprintCallable, Category = "HexGrid")
+	void SetSphere(bool bNewSphere) { bSphere = bNewSphere; };
 };

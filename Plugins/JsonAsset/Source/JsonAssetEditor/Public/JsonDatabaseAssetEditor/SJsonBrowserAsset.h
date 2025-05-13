@@ -20,6 +20,7 @@ public:
 	void Construct(const FArguments& InArgs, UJsonAsset* InRepresentingAsset);
 
 	void UpdateAsset();
+	void StartEditingName();
 	virtual FReply OnKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent) override;
 	bool OnVerifyNameTextChanged(const FText& InText, FText& OutErrorMessage);
 	void OnNameTextCommited(const FText& InText, ETextCommit::Type CommitInfo);

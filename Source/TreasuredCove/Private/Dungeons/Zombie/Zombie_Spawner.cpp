@@ -4,7 +4,7 @@
 #include "Dungeons/Zombie/Zombie_Spawner.h"
 #include "Dungeons/Zombie/Zombie_Manager.h"
 
-#include "Global/Components/Characters/HealthComponent.h"
+#include "Global/AbilitySystem/AttributeSets/Components/HealthComponent.h"
 
 #include "Engine/World.h"
 #include "kismet/GameplayStatics.h"

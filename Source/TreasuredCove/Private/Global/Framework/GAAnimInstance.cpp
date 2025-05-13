@@ -51,8 +51,8 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 	// Character is valid at this point
 
 	// Camera mode
-	bFirstPerson =
-		Character->IsLocallyControlled() ? Character->bFirstPerson : false;
+	bFirstPerson = false;
+		// Character->IsLocallyControlled() ? Character->bFirstPerson : false;
 
 	// Multiply by weapon's Twist/Turn multiplier
 	if (bFirstPerson && false)
@@ -61,7 +61,6 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 			, (ControlDirection - Character->GetControlRotation())
 			, DeltaTime
 			, 20.f);
-
 	}
 
 	// Debug twist rate

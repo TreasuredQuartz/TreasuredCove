@@ -33,22 +33,18 @@
 */
 void UJsonAsset::Initialize(FString InJsonFile)
 {
-	JsonFileName = InJsonFile;
+	InJsonFile.Split("/", &JsonFilePath, &JsonFileName, ESearchCase::IgnoreCase, ESearchDir::FromEnd);
 	
 	RebuildAsset();
 }
 
 void UJsonAsset::RebuildAsset()
 {
-	TArray<FString> JsonStrings;
-	if (!GetJsonFileAsStringArray(JsonStrings))
-	{
-		JsonStrings = JsonFileLines;
-	}
+	JsonFileLines = ReadJsonFile();
 
 	JsonFileObject = MakeShareable(new FJsonObject());
 	FArchive JsonArchive = FArchive();
-	JsonArchive << JsonStrings;
+	JsonArchive << JsonFileLines;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(&JsonArchive);
 
 	if (FJsonSerializer::Deserialize(JsonReader, JsonFileObject) && JsonFileObject.IsValid())
@@ -127,35 +123,104 @@ void UJsonAsset::RebuildAsset()
 	}
 }
 
-TArray<FString> UJsonAsset::GetJsonString() const
+FString UJsonAsset::GetJsonString() const
 {
-	TArray<FString> JsonString;
-	if (GetJsonFileAsStringArray(JsonString))
-	{
-		return JsonString;
-	}
-
 	return JsonFileLines;
 }
 
-bool UJsonAsset::GetJsonFileAsStringArray(TArray<FString>& JsonStrings) const
+TArray<FString> UJsonAsset::GetJsonStringAsArray() const
 {
-	FString JsonString;
-	if (!FFileHelper::LoadFileToString(JsonString, *JsonFileName))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Couldn't load file: %s"), *JsonFileName);
-		JsonStrings = { "{", "", "}" };
-		return false;
-	}
-
-	JsonString.ParseIntoArrayLines(JsonStrings);
-	return true;
+	TArray<FString> JsonStrings;
+	JsonFileLines.ParseIntoArrayLines(JsonStrings);
+	return JsonStrings;
 }
 
-void UJsonAsset::SetAssetContents(TArray<FString> NewAssetContents)
+FString UJsonAsset::ReadJsonFile()
 {
+	FString FileString;
+	FString FullFilePath = JsonFilePath + "/" + JsonFileName;
+	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+	IFileHandle* File = FileManager.OpenRead(*FullFilePath);
+
+	if (File)
+	{
+		// Size of the file's contents.
+		int64 FileSize = File->Size();
+
+		// Buffer made to recieve the file's contents
+		uint8* FileBuffer = reinterpret_cast<uint8*>(FMemory::Malloc(FileSize + 1));
+
+		// Reading the file's contents into the premade file buffer.
+		if (File->Read(FileBuffer, FileSize))
+		{
+			// Yippee
+
+			// Convert file buffer to readable FString
+			// FString BrokenString = BytesToString(FileBuffer, FileSize);
+			auto MyBytesToString = [&](const uint8* In, int32 Count)
+			{
+				FString Result;
+				Result.Empty(Count);
+
+				while (Count)
+				{
+					int16 Value = *In;
+
+					Result += TCHAR(Value);
+
+					++In;
+					Count--;
+				}
+				return Result;
+			};
+
+			FileString = MyBytesToString(FileBuffer, FileSize);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Couldn't read file: %s"), *JsonFileName);
+		}
+
+		// Close the file after reading (Succeffully or otherwise)
+		delete File;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Couldn't load file: %s"), *JsonFileName);
+	}
+
+	return FileString;
+}
+
+void UJsonAsset::SetAssetContents(FString NewAssetContents)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Previous Contents: %s"), *JsonFileLines);
+	UE_LOG(LogTemp, Warning, TEXT("New File Contents: %s"), *NewAssetContents);
 	JsonFileLines = NewAssetContents;
-	if (!FFileHelper::SaveStringArrayToFile(JsonFileLines, *JsonFileName))
+	FString FullFilePath = JsonFilePath + "/" + JsonFileName;
+	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+	IFileHandle* File = FileManager.OpenWrite(*FullFilePath);
+
+	if (File)
+	{
+		// for (const FString& FileLine : JsonFileLines)
+		FString FileLine = JsonFileLines;
+		{
+			// Actually write our changes to file.
+			if (File->Write((const uint8*)TCHAR_TO_ANSI(*FileLine), FileLine.Len()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Successfully wrote to [%s]"), *GetAssetFileName());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Failed to write to [%s]"), *GetAssetFileName());
+			}
+		}
+
+		// Close the file after writing (Succeffully or otherwise)
+		delete File;
+	}
+	else 
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Couldn't save file: %s"), *JsonFileName);
 	}

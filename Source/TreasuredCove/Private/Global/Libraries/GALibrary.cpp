@@ -567,7 +567,8 @@ int32 UGALibrary::CreateFaceFromTransform(FProceduralMeshSection& MeshSection, c
 		// FQuat Angle = FQuat::ToAxisAndAngle(FVector::UpVector, InTransform.GetRotation().GetAngle());
 		FVector NewVert = (VertexData.Position * InVoxelSize * InTransform.GetScale3D()); 
 		FVector RotVert = InTransform.GetRotation().RotateVector(UKismetMathLibrary::InverseTransformLocation(FTransform(FRotator(90, 0, 0), FVector::ZeroVector), NewVert));
-		FVector NewNorm = InTransform.GetRotation().RotateVector(UKismetMathLibrary::InverseTransformLocation(FTransform(FRotator(90, 0, 0), FVector::ZeroVector), VertexData.Normal )).GetSafeNormal();
+		FVector NewNorm = InTransform.GetRotation().RotateVector(UKismetMathLibrary::InverseTransformLocation(FTransform(FRotator(90, 0, 0), FVector::ZeroVector), -VertexData.Normal )).GetSafeNormal();
+		// FVector NewNorm = RotVert.GetSafeNormal();
 		FVector NewNormAxisA;
 		FVector NewNormAxisB;
 		NewNorm.FindBestAxisVectors(NewNormAxisA, NewNormAxisB);

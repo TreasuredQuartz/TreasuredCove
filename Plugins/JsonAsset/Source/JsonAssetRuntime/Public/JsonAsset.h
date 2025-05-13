@@ -15,13 +15,15 @@ class JSONASSETRUNTIME_API UJsonAsset : public UObject
 public:
 	UJsonAsset() : 
 		JsonFileName("NewJsonFileName"),
-		JsonFileLines({ "{", "", "}" }),
+		JsonFilePath(),
+		JsonFileLines("{\n\n}"),
 		AssetBrush(FSlateBrush())
 	{};
 
 private:
 	FString JsonFileName;
-	TArray<FString> JsonFileLines;
+	FString JsonFilePath;
+	FString JsonFileLines;
 	FSlateBrush AssetBrush;
 	TSharedPtr<FJsonObject> JsonFileObject;
 
@@ -29,10 +31,11 @@ public:
 	void Initialize(FString JsonFile);
 	void RebuildAsset();
 
-	TArray<FString> GetJsonString() const;
-	bool GetJsonFileAsStringArray(TArray<FString>& JsonString) const;
+	FString GetJsonString() const;
+	TArray<FString> GetJsonStringAsArray() const;
+	FString ReadJsonFile();
 	const FSlateBrush* GetAssetBrush() const { return &AssetBrush; };
 	FString GetAssetFileName() const { return JsonFileName; };
 
-	void SetAssetContents(TArray<FString> NewAssetContents);
+	void SetAssetContents(FString NewAssetContents);
 };

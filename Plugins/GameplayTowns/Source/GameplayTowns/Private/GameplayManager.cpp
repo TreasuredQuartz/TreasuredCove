@@ -101,14 +101,14 @@ void AGameplayManager::PostEditChangeProperty(FPropertyChangedEvent& PropertyCha
 // Called when the game starts or when spawned
 void AGameplayManager::BeginPlay()
 {
-	APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0); 
+	ClearChunks();
 	
 	FTimerDelegate PlayerCoordDel;
 	PlayerCoordDel.BindUFunction(this, FName("UpdatePlayerCoordinate"));
 	FTimerHandle PlayerCoordHandle;
 	GetWorldTimerManager().SetTimer(PlayerCoordHandle, PlayerCoordDel, 1.0f, true);
 
-	// AddChunk();
+	AddChunk();
 
 	Super::BeginPlay();
 }
@@ -151,9 +151,6 @@ static int32 LODDistances[4] = {
 
 void AGameplayManager::AddChunk()
 {
-	// UE_LOG(LogTemp, Warning, TEXT("Adding Chunk!"));
-
-
 	if (RenderRange <= 0)
 	{
 		AddVoxelActor(FVector(ActiveChunkCoords), ActiveChunkCoords, 1);
@@ -271,7 +268,7 @@ void AGameplayManager::UpdatePlayerCoordinate()
 	FVector Location = GetActorLocation();
 
 	if (bUsePlayerPosition)
-		if(APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0)) 
+		if (APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0)) 
 			Location = Pawn->GetActorLocation();
 
 	PlayerCoords = FIntVector(Location);

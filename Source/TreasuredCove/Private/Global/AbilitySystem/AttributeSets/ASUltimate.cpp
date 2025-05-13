@@ -2,15 +2,69 @@
 
 
 #include "Global/AbilitySystem/AttributeSets/ASUltimate.h"
-#include "Global/Actors/GACharacter.h"
 
+#include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
+#include "Net/UnrealNetwork.h"
+
+void UASUltimate::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UASUltimate, UltimateCharge, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UASUltimate, MaxUltimateCharge, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UASUltimate, UltimateChargeRegenRate, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UASUltimate, UltimateChargeRegenDelay, COND_None, REPNOTIFY_Always);
+}
+
+void UASUltimate::OnRep_UltimateCharge(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UASUltimate, UltimateCharge, OldValue);
+
+	// Call the change callback, but without an instigator
+	// This could be changed to an explicit RPC in the future
+	// These events on the client should not be changing attributes
+
+	const float CurrentUltimateCharge = GetUltimateCharge();
+
+	OnUltimateChargeModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), CurrentUltimateCharge));
+
+	if (!bUltimateChargeZeroed && CurrentUltimateCharge <= 0.0f)
+	{
+		GEngine->AddOnScreenDebugMessage(-3, 5, FColor::Blue, FString("Replicated UltimateCharge Zeroed Called"));
+		OnUltimateChargeZeroed.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), CurrentUltimateCharge));
+	}
+
+	bUltimateChargeZeroed = (CurrentUltimateCharge <= 0.0f);
+}
+
+void UASUltimate::OnRep_MaxUltimateCharge(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UASUltimate, MaxUltimateCharge, OldValue);
+
+	OnMaxUltimateChargeModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetMaxUltimateCharge()));
+}
+
+void UASUltimate::OnRep_UltimateChargeRegenRate(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UASUltimate, UltimateChargeRegenRate, OldValue);
+
+	OnUltimateChargeRegenRateModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetUltimateChargeRegenRate()));
+}
+
+void UASUltimate::OnRep_UltimateChargeRegenDelay(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UASUltimate, UltimateChargeRegenDelay, OldValue);
+
+	OnUltimateChargeRegenDelayModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetUltimateChargeRegenDelay()));
+}
 
 UASUltimate::UASUltimate()
-	: MaxUltimateCharge(1200.f)
+	: bUltimateChargeZeroed(true)
+	, MaxUltimateCharge(1200.f)
 	, UltimateCharge(0.f)
-	, UltimateChargeRate(0.216f)
+	, UltimateChargeRegenRate(0.216f)
 {
 }
 
@@ -21,25 +75,11 @@ void UASUltimate::PreAttributeChange(const FGameplayAttribute& Attribute, float&
 
 	FProperty* UltimateProperty = FindFieldChecked<FProperty>(UASUltimate::StaticClass(), GET_MEMBER_NAME_CHECKED(UASUltimate, UltimateCharge));
 	FProperty* MaxUltimateProperty = FindFieldChecked<FProperty>(UASUltimate::StaticClass(), GET_MEMBER_NAME_CHECKED(UASUltimate, MaxUltimateCharge));
-	FProperty* UltimateChargeRateProperty = FindFieldChecked<FProperty>(UASUltimate::StaticClass(), GET_MEMBER_NAME_CHECKED(UASUltimate, UltimateChargeRate));
+	FProperty* UltimateChargeRateProperty = FindFieldChecked<FProperty>(UASUltimate::StaticClass(), GET_MEMBER_NAME_CHECKED(UASUltimate, UltimateChargeRegenRate));
 
 	if (Attribute == UltimateProperty)
 	{
 		NewValue = FMath::Clamp(NewValue, 0.0f, MaxUltimateCharge.GetCurrentValue());
-
-		AGACharacter* OwningCharacter = Cast<AGACharacter>(GetOwningActor());
-
-		if (OwningCharacter)
-		{
-			if (UltimateCharge.GetCurrentValue() == MaxUltimateCharge.GetCurrentValue())
-			{
-				OwningCharacter->AddGameplayTag(OwningCharacter->FullUltimateTag);
-			}
-			else
-			{
-				OwningCharacter->RemoveGameplayTag(OwningCharacter->FullUltimateTag);
-			}
-		}
 	}
 	else if (Attribute == MaxUltimateProperty)
 	{
@@ -76,10 +116,33 @@ void UASUltimate::PostGameplayEffectExecute(const struct FGameplayEffectModCallb
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	AGACharacter* OwningCharacter = Cast<AGACharacter>(GetOwningActor());
+	UAbilitySystemComponent* SourceAbilitySystem = GetOwningAbilitySystemComponent();
+	const FGameplayEffectContextHandle& EffectContext = Data.EffectSpec.GetEffectContext();
+	AActor* Instigator = EffectContext.GetOriginalInstigator();
+	AActor* Causer = EffectContext.GetEffectCauser();
 
-	if (OwningCharacter)
+	const float CurrentUltimateCharge = GetUltimateCharge();
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::SanitizeFloat(CurrentUltimateCharge));
+
+	if (SourceAbilitySystem)
 	{
-		OwningCharacter->OnUltimateModified(UltimateCharge.GetCurrentValue(), MaxUltimateCharge.GetCurrentValue());
+		// If UltimateCharge has actually changed activate callbacks
+		if (CurrentUltimateCharge != UltimateChargeBeforeAttributeChange)
+		{
+			OnUltimateChargeModified.Broadcast(FOnAttributeModifiedPayload(UltimateChargeBeforeAttributeChange, GetUltimateCharge(), GetOwningActor(), Causer, Instigator, &Data.EffectSpec));
+		}
+
+		if (!bUltimateChargeZeroed && (CurrentUltimateCharge <= 0.0f))
+		{
+			GEngine->AddOnScreenDebugMessage(-2, 5, FColor::Blue, FString("UltimateCharge Zeroed Called"));
+			OnUltimateChargeZeroed.Broadcast(FOnAttributeModifiedPayload(UltimateChargeBeforeAttributeChange, GetUltimateCharge(), GetOwningActor(), Causer, Instigator, &Data.EffectSpec));
+		}
+
+		// Check UltimateCharge again in case an event above changed it.
+		bUltimateChargeZeroed = (CurrentUltimateCharge <= 0.0f);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "Source AbilitySystem is null");
 	}
 }
