@@ -38,8 +38,8 @@ void UJsonDatabaseAsset::ImportZipFile()
 	AssetRegistryModule.Get().GetAssetsByPath(FName(FullPathDirectory), AssetData);
 	for (FAssetData Asset : AssetData)
 	{
-		Asset.AssetClass == UJsonAsset::StaticClass()->GetFName();
-		Assets.Add(Cast<UJsonAsset>(Asset.GetAsset()));
+		if (Asset.AssetClassPath == UJsonAsset::StaticClass()->GetClassPathName())
+			Assets.Add(Cast<UJsonAsset>(Asset.GetAsset()));
 	}
 
 	FileManager.FindFiles(JsonFiles, *FullPathFileName, *JsonFileExtension);
