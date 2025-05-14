@@ -12,6 +12,7 @@ void SJsonBrowser::Construct(const FArguments& InArgs, FEditorModeTools* Tools, 
 {
 	BrowsingDatabase = InDatabase;
 
+	BrowsingDatabase->OnChanged.Add(FOnDatabaseRebuild::FDelegate::CreateSP(this, &SJsonBrowser::RebuildBrowser));
 	RebuildBrowser();
 }
 
@@ -58,6 +59,26 @@ TSharedRef<ITableRow> SJsonBrowser::OnGenerateRowForList(TSharedPtr<FJsonBrowser
 		];
 }
 
+FReply SJsonBrowser::OnKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent)
+{
+	if (KeyEvent.GetKey() == EKeys::F2)
+	{
+		// do stuff
+		TSharedPtr<ITableRow> ItemWidget = TileView->WidgetFromItem(SelectedAsset);
+		if (ItemWidget.IsValid())
+		{
+			TSharedPtr<SWidget> Widget = ItemWidget->GetContent();
+			if (Widget.IsValid() && Widget->GetType() == "SJsonBrowserAsset")
+			{
+				TSharedPtr<SJsonBrowserAsset> ObjectWidget = StaticCastSharedPtr<SJsonBrowserAsset>(Widget);
+				ObjectWidget->StartEditingName();
+			}
+		}
+	}
+
+	return FReply::Handled();
+}
+
 FReply SJsonBrowser::OnBrowserClicked(const FGeometry& Geometry, const FPointerEvent& Event)
 {
 	return FReply::Handled();
@@ -65,7 +86,7 @@ FReply SJsonBrowser::OnBrowserClicked(const FGeometry& Geometry, const FPointerE
 
 void SJsonBrowser::OnItemClicked(TSharedPtr<FJsonBrowserTile> ClickedAsset)
 {
-	// IFileManager::Get().Move();
+	SelectedAsset = ClickedAsset;
 }
 
 void SJsonBrowser::OnItemDoubleClicked(TSharedPtr<FJsonBrowserTile> ClickedAsset)
@@ -80,6 +101,8 @@ void SJsonBrowser::OnItemDoubleClicked(TSharedPtr<FJsonBrowserTile> ClickedAsset
 
 		BrowsingDatabase->SetCurrentAsset(Index);
 	}
+
+	SelectedAsset = ClickedAsset;
 }
 
 FSlateBrush SJsonBrowser::GetAddButtonTileBrush() const

@@ -23,11 +23,17 @@ public:
 	// uint8 GridHeight;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
+	bool bSphere;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
 	double VerticalOffset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
 	double HorizontalOffset;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
 	double OddHorizontalOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
+	int32 SphereDepth;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HexGrid")
+	FVector RenderAngle;
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;

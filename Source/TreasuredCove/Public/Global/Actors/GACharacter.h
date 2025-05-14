@@ -176,33 +176,11 @@ private:
 
 	AGAPlayerController* PC;
 	AGAAIController* AC;
-	AGAWeapon* WeaponPickup;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character", meta = (AllowPrivateAccess = "true"))
-	UMaterialInterface* MeshInsideColor;
-
-	TArray<FVector> Vertices;
-	TArray<FVector> Normals;
-	TArray<FVector2D> UVs;
-	TArray<int32> Tris;
-	TArray<int> MaxActiveMenuSlots;
-	TArray<int> MaxSubMenuSlots;
-	TArray<FAICharacterInfo> AwareOfCharacters;
-#pragma endregion
-
-#pragma region ProceduralMesh
-	// Private and unfinshed
-	void InitProceduralMesh();
-	// Private and unfinshed
-	void UpdateProceduralMesh();
 #pragma endregion
 
 #pragma region ProtectedMembers
 protected:
 	uint8 TeamID;
-	uint8 PreviousActiveMenuIndex;
-	uint8 ActiveMenuCount;
-	uint8 SubMenuCount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wall Run")
 	UCurveFloat* WallRunTimelineCurve;
@@ -304,18 +282,6 @@ public:
 	// 
 	void MenuRight(float Val);
 	// 
-	UFUNCTION(BlueprintCallable)
-	void MenuUpDelayed();
-	// 
-	UFUNCTION(BlueprintCallable)
-	void MenuDownDelayed();
-	// 
-	UFUNCTION(BlueprintCallable)
-	void MenuRightDelayed();
-	// 
-	UFUNCTION(BlueprintCallable)
-	void MenuLeftDelayed();
-	// 
 	void ReturnToMainMenu();
 	// 
 	void BeginPause();
@@ -398,12 +364,6 @@ public:
 	void UpdateCameraTilt(float progress);
 	// Visual effect only for wall running rn
 	void EndCameraTilt();
-	UFUNCTION(BlueprintCallable)
-	void ChangeViewpoint(bool bInFirstPerson);
-	// Changes between first person and third person camera types
-	// @TODO Add enum camera type
-	UFUNCTION(BlueprintNativeEvent)
-	void OnChangeCameraType(bool bInFirstPerson);
 
 	UFUNCTION()
 	FTransform GetPawnSenseTransform();
@@ -412,35 +372,20 @@ public:
 
 #pragma region UserPreferrenceSettings
 public:
-	//
-	bool bIsUsingController = false;
-	bool bWeaponPriority = true;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
-	bool bFirstPerson = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
 	bool bToggleCrouch = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
-	bool bToggleQuickSelect = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
 	bool bToggleSprint = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
-	bool bLockedViewpoint = false;
 
+	bool bIsUsingController = false;
 	uint8 LookUpperLimit = 80;
 	int8 InvertUpDown = -1;
 
-	float DeltaTime;
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Locomotion", meta = (AllowPrivateAccess = "true"))
-		float WalkSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Locomotion", meta = (AllowPrivateAccess = "true"))
-		float SprintSpeed;*/
-	//
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
 	float VerticalLookRate;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
 	float HorizontalLookRate;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Settings", meta = (AllowPrivateAccess = "true"))
-	FName DominantHand;
+	float DeltaTime;
 #pragma endregion
 
 #pragma region LegacyMembers
@@ -456,29 +401,6 @@ public:
 	APhysicsConstraintActor* GripConstraint_s;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Animation|Locomotion", meta = (AllowPrivateAccess = "true"))
 	EWeaponType HeldWeaponType;
-#pragma endregion
-
-#pragma region GameplayTagMembers
-public:
-	/** Gameplay Tags */
-	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities|Tags")
-	FGameplayTag FullHealthTag;
-	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities|Tags")
-	FGameplayTag FullAmmoTag;
-	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities|Tags")
-	FGameplayTag FullManaTag;
-	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities|Tags")
-	FGameplayTag FullStaminaTag;
-	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities|Tags")
-	FGameplayTag FullExperienceTag;
-	//
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities|Tags")
-	FGameplayTag FullUltimateTag;
 #pragma endregion
 
 	// Attributes to save
@@ -504,11 +426,11 @@ public:
 	UGASystemComponent* RenamedAbilitySystem;
 
 	// Skill trees component
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
 	UGASkillTreeComponent* SkillTrees;
 	
 	// Attribute Set Classes to create components from
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Character|Abilities", meta = (AllowPrivateAccess = "true"))
 	TArray<TSubclassOf<UAttributeSet>> AttributeSetClasses;
 	// Attribute Set Components
 	TArray<UAttributeSet*> AttributeSets;
@@ -908,36 +830,10 @@ public:
 	// 
 	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
 	void SpawnValueBar(EAttributeType BarType, float CurrentValue, float MaxValue);
-	// 
-	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
-	int DetermineActiveMenuSelection(int MaxMenuCount, int Direction);
-	// 
-	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
-	void ResetActiveMenuSelection();
-	// 
-	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
-	int DetermineSubMenuSelection(int MaxMenuCount, int Direction);
-	// 
-	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
-	void ResetSubMenuSelection();
-	// 
-	UFUNCTION(BlueprintPure, Category = "Character|Abilities|Combat")
-	FVector2D GetCurrentMenuSelection()
-	{
-		return FVector2D(ActiveMenuCount, SubMenuCount);
-	}
-	//
-	UFUNCTION(BlueprintPure, Category = "Character|Abilities|Combat")
-	int GetPreviousActiveMenuIndex()
-	{
-		return PreviousActiveMenuIndex;
-	}
 	//
 	UFUNCTION(BlueprintCallable, Category = "Character|Abilities|Combat")
 	void Puncture(FVector ImpactLocation, FVector ImpactNormal, FVector ImpactExitPoint, float ImpactRadius, FVector ImpactForce);
 
 	uint8 GetTeamID() const;
-	uint8 GetActiveMenuCount() const;
-	uint8 GetSubMenuCount() const;
 #pragma endregion
 };

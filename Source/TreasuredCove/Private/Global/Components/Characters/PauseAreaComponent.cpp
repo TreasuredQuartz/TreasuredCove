@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "WorldPartition/DataLayer/DataLayerManager.h"
 
 // Sets default values for this component's properties
 UPauseAreaComponent::UPauseAreaComponent()
@@ -32,8 +33,8 @@ void UPauseAreaComponent::EnterPauseArea_Client_Implementation()
 		if (!PauseAreaClass)
 			return;
 
-		FVector Location = GetOwner()->GetActorLocation();
-		Location.Z += 500;
+		FVector Location = FVector::ZeroVector;
+		Location.Z -= 100000;
 		const FTransform spawnTransform = FTransform(FRotator::ZeroRotator, Location);
 		AGAPauseStudioPawn* NewPauseAreaActor = GetWorld()->SpawnActorDeferred<AGAPauseStudioPawn>(PauseAreaClass, spawnTransform, GetOwner(), nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
@@ -46,14 +47,44 @@ void UPauseAreaComponent::EnterPauseArea_Client_Implementation()
 		UGameplayStatics::FinishSpawningActor(NewPauseAreaActor, spawnTransform);
 
 		PauseArea = NewPauseAreaActor;
-		PauseArea->OnEnter();
+
+		// In client/server only the server can activate a DataLayer
+		/* if (GetOwner()->HasAuthority())
+		{
+			if (UDataLayerManager* DataLayerSubsystem = GetWorld()->GetDataLayerManager())
+			{
+				DataLayerSubsystem->SetDataLayerRuntimeState(PauseAreaDataLayer, EDataLayerRuntimeState::Loaded);
+				const UDataLayerInstance* PauseInstance = DataLayerSubsystem->GetDataLayerInstanceFromAsset(PauseAreaDataLayer);
+
+				PauseInstance->AddActor(PauseArea);
+			}
+		} // */
 	}
-	else PauseArea->OnEnter();
+
+	// In client/server only the server can activate a DataLayer
+	/* if (GetOwner()->HasAuthority())
+	{
+		if (UDataLayerManager* DataLayerSubsystem = GetWorld()->GetDataLayerManager())
+		{
+			DataLayerSubsystem->SetDataLayerRuntimeState(PauseAreaDataLayer, EDataLayerRuntimeState::Activated);
+		}
+	} // */
+
+	PauseArea->OnEnter();
 }
 
 void UPauseAreaComponent::ExitPauseArea()
 {
 	if (PauseArea) PauseArea->OnExit();
+
+	// In client/server only the server can activate a DataLayer
+	/* if (GetOwner()->HasAuthority())
+	{
+		if (UDataLayerManager* DataLayerSubsystem = GetWorld()->GetDataLayerManager())
+		{
+			DataLayerSubsystem->SetDataLayerRuntimeState(PauseAreaDataLayer, EDataLayerRuntimeState::Unloaded);
+		}
+	} // */
 }
 
 void UPauseAreaComponent::OnPauseAreaDestroyed(AActor* DestroyedActor)

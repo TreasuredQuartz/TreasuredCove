@@ -4,7 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Global/Components/ProgressionComponent.h"
 #include "GASkillTree.h"
 #include "GASkillTreeComponent.generated.h"
 
@@ -12,8 +12,10 @@
 class UGASkillTree;
 class UAbilitySystemComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNewSkillTreeAdded);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class TREASUREDCOVE_API UGASkillTreeComponent : public UActorComponent
+class TREASUREDCOVE_API UGASkillTreeComponent : public UProgressionComponent
 {
 	GENERATED_BODY()
 
@@ -42,6 +44,7 @@ public:
 	TMap<FString, UGASkillTree*> SkillTrees;
 
 	// This will add a new skill tree at runtime to this component
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	void AddSkillList(FString Category, UGASkillTree* SkillTree);
 	void AddSkillList(FString Category, TSubclassOf<UGASkillTree> SkillTreeClass);
 
@@ -50,4 +53,8 @@ public:
 	// Delegate bound function that gets called by created skill trees.
 	UFUNCTION()
 	void AquireSkill(TSubclassOf<UGameplayAbilityBase> Ability);
+
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnNewSkillTreeAdded OnNewSkillTreeAdded;
 };

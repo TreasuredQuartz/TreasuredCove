@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Global/AbilitySystem/AttributeSets/ASHealth.h"
-#include "Global/Components/Characters/HealthComponent.h"
 
 #include "AbilitySystemComponent.h"
 
@@ -52,14 +51,14 @@ void UASHealth::OnRep_HealthRegenRate(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UASHealth, HealthRegenRate, OldValue);
 
-	OnMaxHealthModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetHealthRegenRate()));
+	OnHealthRegenRateModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetHealthRegenRate()));
 }
 
 void UASHealth::OnRep_HealthRegenDelay(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UASHealth, HealthRegenDelay, OldValue);
 
-	OnMaxHealthModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetHealthRegenDelay()));
+	OnHealthRegenDelayModified.Broadcast(FOnAttributeModifiedPayload(OldValue.GetCurrentValue(), GetHealthRegenDelay()));
 }
 
 UASHealth::UASHealth()
@@ -122,31 +121,22 @@ void UASHealth::PostGameplayEffectExecute(const struct FGameplayEffectModCallbac
 
 	if (SourceAbilitySystem)
 	{
-		AActor* SourceActor = SourceAbilitySystem->GetOwner();
+		const float CurrentHealth = GetHealth();
 
-		if (SourceActor)
+		// If health has actually changed activate callbacks
+		if (CurrentHealth != HealthBeforeAttributeChange)
 		{
-			const float CurrentHealth = GetHealth();
-
-			// If health has actually changed activate callbacks
-			if (CurrentHealth != HealthBeforeAttributeChange)
-			{
-				OnHealthModified.Broadcast(FOnAttributeModifiedPayload(HealthBeforeAttributeChange, GetHealth(), GetOwningActor(), Causer, Instigator, &Data.EffectSpec));
-			}
-
-			if (!bHealthZeroed && (CurrentHealth <= 0.0f))
-			{
-				GEngine->AddOnScreenDebugMessage(-2, 5, FColor::Blue, FString("Health Zeroed Called"));
-				OnHealthZeroed.Broadcast(FOnAttributeModifiedPayload(HealthBeforeAttributeChange, GetHealth(), GetOwningActor(), Causer, Instigator, &Data.EffectSpec));
-			}
-
-			// Check health again in case an event above changed it.
-			bHealthZeroed = (CurrentHealth <= 0.0f);
+			OnHealthModified.Broadcast(FOnAttributeModifiedPayload(HealthBeforeAttributeChange, GetHealth(), GetOwningActor(), Causer, Instigator, &Data.EffectSpec));
 		}
-		else
+
+		if (!bHealthZeroed && (CurrentHealth <= 0.0f))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, "SourceActor is null");
+			GEngine->AddOnScreenDebugMessage(-2, 5, FColor::Blue, FString("Health Zeroed Called"));
+			OnHealthZeroed.Broadcast(FOnAttributeModifiedPayload(HealthBeforeAttributeChange, GetHealth(), GetOwningActor(), Causer, Instigator, &Data.EffectSpec));
 		}
+
+		// Check health again in case an event above changed it.
+		bHealthZeroed = (CurrentHealth <= 0.0f);
 	}
 	else
 	{

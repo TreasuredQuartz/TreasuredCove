@@ -44,6 +44,7 @@ public:
 	/* Adds a new textbox with the string to the list */
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FJsonBrowserTile> Item, const TSharedRef<STableViewBase>& OwnerTable);
 
+	FReply OnKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent) override;
 	FReply OnBrowserClicked(const FGeometry& Geometry, const FPointerEvent& Event);
 	void OnItemClicked(TSharedPtr<FJsonBrowserTile> ClickedAsset);
 	void OnItemDoubleClicked(TSharedPtr<FJsonBrowserTile> ClickedAsset);
@@ -53,9 +54,12 @@ public:
 private:
 	UJsonDatabaseAsset* BrowsingDatabase;
 
-	/* The actual UI list */
+	/* The actual UI list. */
 	TSharedPtr<STileView<TSharedPtr<FJsonBrowserTile>>> TileView;
 
-	/* The Items array that the list updates from */
+	/* The Items array that the list updates from. */
 	TArray<TSharedPtr<FJsonBrowserTile>> JsonFiles;
+
+	/* The current UI Item that has been selected in the list. */
+	TSharedPtr<FJsonBrowserTile> SelectedAsset;
 };

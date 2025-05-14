@@ -71,6 +71,7 @@ void UGASkillTreeComponent::AddSkillList(FString Category, UGASkillTree* SkillTr
 		SkillTree->Initialize();
 		SkillTree->OnAquired.AddDynamic(this, &UGASkillTreeComponent::AquireSkill);
 		SkillTrees.Add(Category, SkillTree);
+		OnNewSkillTreeAdded.Broadcast();
 	}
 }
 

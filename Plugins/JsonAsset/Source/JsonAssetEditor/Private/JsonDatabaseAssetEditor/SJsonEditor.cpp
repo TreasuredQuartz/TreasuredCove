@@ -14,7 +14,7 @@ void SJsonEditor::Construct(const FArguments& InArgs, FEditorModeTools* Tools, U
 	EditingDatabase = InEditingDatabase;
 	if (EditingDatabase)
 	{
-		EditingDatabase->OnEditNewAsset.BindRaw(this, &SJsonEditor::RebuildEditor);
+		EditingDatabase->OnEditNewAsset.Add(FOnDatabaseEditNewAsset::FDelegate::CreateSP(this, &SJsonEditor::RebuildEditor));
 		RebuildEditor();
 	}
 }
@@ -27,13 +27,13 @@ void SJsonEditor::RebuildEditor()
 	EditingFile = EditingDatabase->GetCurrentAsset();
 	if (!EditingFile) return;
 	
-	FString FullString;
-	TArray<FString> JsonString = EditingFile->GetJsonString();
+	FString FullString = EditingFile->GetJsonString();
+	/* TArray<FString> JsonString = EditingFile->GetJsonString();
 
 	for (FString String : JsonString)
 	{
 		FullString += String + "\n";
-	}
+	} */
 
 	this->ChildSlot
 		.HAlign(HAlign_Fill)
@@ -42,6 +42,7 @@ void SJsonEditor::RebuildEditor()
 			SAssignNew(InlineEditableText, SMultiLineEditableTextBox)
 				.Text(FText::FromString(FullString))
 				.OnVerifyTextChanged(this, &SJsonEditor::OnVerifyFileTextChanged)
+				// .OnTextChanged(this, &SJsonEditor::OnFileTextChanged)
 				.OnTextCommitted(this, &SJsonEditor::OnFileTextCommited)
 		];
 }
@@ -54,9 +55,9 @@ bool SJsonEditor::OnVerifyFileTextChanged(const FText& InText, FText& OutErrorMe
 	EditingFile = EditingDatabase->GetCurrentAsset();
 	if (!EditingFile) return false;
 
-	TArray<FString> JsonString = EditingFile->GetJsonString();
-	TArray<FString> NewString;
-	InText.ToString().ParseIntoArrayLines(NewString, false);
+	FString JsonString = EditingFile->GetJsonString();
+	FString NewString = InText.ToString();
+	// InText.ToString().ParseIntoArrayLines(NewString, false);
 
 	// If they are different, then it has changed.
 	return NewString != JsonString;
@@ -69,8 +70,9 @@ void SJsonEditor::OnFileTextCommited(const FText& InText, ETextCommit::Type Comm
 		const FScopedTransaction Transaction(LOCTEXT("JsonEditorEditAssetContents", "Json Editor: Edit Asset Contents"));
 		EditingDatabase->Modify();
 		EditingDatabase->GetCurrentAsset()->Modify();
-		TArray<FString> NewString;
-		InText.ToString().ParseIntoArrayLines(NewString, false);
+		FString NewString = InText.ToString();
+		UE_LOG(LogTemp, Warning, TEXT("Setting [%s] Contents to: %s"), *EditingDatabase->GetCurrentAsset()->GetAssetFileName(), *NewString);
+		// InText.ToString().ParseIntoArrayLines(NewString, false);
 		EditingDatabase->GetCurrentAsset()->SetAssetContents(NewString);
 		RebuildEditor();
 	}

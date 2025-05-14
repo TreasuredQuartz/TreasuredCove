@@ -3,6 +3,9 @@
 #include "Modules/ModuleManager.h"
 #include "Global/Actors/Items/ItemDatabase.h"
 #include "Global/Actors/Items/ItemDatabaseCustomization.h"
+#include "Global/Components/ProgressionManagerComponent.h"
+
+#include "DetailLayoutBuilder.h"
 #include "PropertyEditorModule.h"
 
 IMPLEMENT_PRIMARY_GAME_MODULE(FTreasuredCoveEditorModule, TreasuredCoveEditor, "TreasuredCoveEditor");
@@ -20,8 +23,9 @@ void FTreasuredCoveEditorModule::StartupModule()
 		// this tells the property editor which is the struct property our customization will applied on.
 		UItemDatabase::StaticClass()->GetFName(),
 		// this is where our MakeInstance() method is usefull
-		FOnGetDetailCustomizationInstance::CreateStatic(&FItemDatabaseCustomization::MakeInstance));
-
+		FOnGetDetailCustomizationInstance::CreateStatic(&FItemDatabaseCustomization::MakeInstance)
+	);
+	// PropertyModule.Register
 	PropertyModule.NotifyCustomizationModuleChanged();
 }
 
