@@ -37,6 +37,10 @@ public class GenericGraphEditor : ModuleRules
 			new string[]
 			{
                 "GenericGraphRuntime",
+                "SubobjectDataInterface",
+                "SubobjectEditor",
+                "GameProjectGeneration",
+                "ToolWidgets",
                 "AssetTools",
                 "Slate",
                 "InputCore",

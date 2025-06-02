@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Quest The Missing Children.md",
+                "file": "World/Immortal Manor.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Quest The Missing Children"
+              "title": "Immortal Manor"
             }
           },
           {
@@ -27,16 +27,25 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Proficiency Trees.md",
+                "file": "Characters/Quartz.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Proficiency Trees"
+              "title": "Quartz"
+            }
+          },
+          {
+            "id": "6fbc04d9d9a841af",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -180,47 +189,46 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "c395353ed63c58f0",
+  "active": "fca095e058c97769",
   "lastOpenFiles": [
-    "Game Design Document/Main Documentation Page.md",
-    "Proficiency Trees.md",
+    "Img/Yase_ConceptArt_03.jpg",
+    "Img/Yase_ConceptArt_02.jpg",
+    "World/Dead Galaxy.md",
+    "Characters/Quartz.md",
+    "World/Immortal Manor.md",
+    "Snapchat-129422598.jpg",
+    "P_20250528_142436.jpg",
     "Quest The Missing Children.md",
-    "Game Design Document/In-Game Content Creation Tool Suite.md",
-    "World/Materials.md",
+    "Civilization Progression Tree.md",
+    "Proficiency Trees.md",
     "World/Magic.md",
-    "Creatures/Creatures.md",
-    "World/World.md",
-    "World/Weather.md",
+    "World/Dungeons.md",
+    "World/Desert Ecology.md",
+    "World/Center Region.md",
+    "World/Materials.md",
     "World/Monster Region.md",
+    "World/Star Destroyer.md",
+    "World/The Great Divide.md",
+    "World/Volcano Castle.md",
+    "World/Weather.md",
+    "World/World.md",
+    "Img/Yase_ConceptArt_01.jpg",
+    "Img/Sarena_ConceptArt_02.jpg",
+    "Img/Sarena_ConceptArt_01.jpg",
+    "Img/Sanctuary_ConceptArt_01.jpg",
+    "Img/Safire_ConceptArt_01.jpg",
+    "Img/Quartz_ConceptArt_08.jpg",
+    "Game Design Document/Main Documentation Page.md",
+    "Game Design Document/In-Game Content Creation Tool Suite.md",
+    "Creatures/Creatures.md",
     "Creatures/Watt Chimera.md",
     "Creatures/Wolf.md",
     "Game Design Document/Rarity.md",
     "Game Design Document/Plot.md",
     "Game Design Document/Monetization.md",
-    "World/Grassland Ecology.md",
-    "World/Dungeons.md",
-    "World/Dead Galaxy.md",
-    "World/Center Region.md",
-    "World/Star Destroyer.md",
-    "Creatures/Quail.md",
-    "Creatures/Bear.md",
-    "Characters/Yase.md",
     "Creatures",
     "World",
-    "Characters/Safire.md",
-    "Characters/Quartz.md",
-    "Characters/Mudskipper.md",
     "Characters",
-    "Img/Mady_ConceptArt_01.jpg",
-    "Img/Autumn_ConceptArt_01.jpg",
-    "Img/Beth_ConceptArt_01.jpg",
-    "Img/Biggs_MonsterRegion.jpg",
-    "Img/Elijah_ConceptArt_01.jpg",
-    "Img/Elijah_ConceptArt_02.jpg",
-    "Img/Exelese_ConceptArt_01.jpg",
-    "Img/Halios_ConceptArt_01.jpg",
-    "Img/Halios_ConceptArt_02.jpg",
-    "Img/Halios_ConceptArt_03.jpg",
     "Game Design Document",
     "Img"
   ]

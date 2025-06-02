@@ -132,7 +132,7 @@ ___
 
 # Concept Statement
 ___
-Skyrim meets Sid Myers: Civilization. First-Person Dwarf Fortress. Players get to interact, influence, and exist in a world that is out of their control.
+Skyrim meets Sid Myer's: Civilization. First-Person Dwarf Fortress. Players get to interact, influence, and exist in a world that is out of their control.
 # Genre
 ___
 ## FRPS: Fantasy Role Playing Simulator
@@ -162,7 +162,7 @@ ___
 ___
 <span style="font-style: italic; color: grey;">Who is the player in the game?</span>
 
-The player is an entity of a Civilization, with all the functions and capability of any other civilization entity. For all intents and purposes, anything an NPC can do a player can do, and vise versa. There should be nothing to differentiate between them aside from motivations.
+The player is an entity of a Civilization, with all the functions and capability of any other civilization entity. For all intents and purposes, anything an NPC can do, a player can do, and vise versa. There should be nothing to differentiate between them aside from motivations.
 
 <span style="font-style: italic; color: grey;">What is the setting?</span>
 
@@ -283,6 +283,7 @@ showing the player’s flow through all aspects of the game.
 - [[In-Game Content Creation Tool Suite]]
 - [[Rarity]]
 - [[Proficiency Trees]]
+- [[Civilization Progression Tree]]
 
 • All major features such as character creation, crafting, combat, dialog, etc., including
 areas for monetization (if any), and specific puzzles or similar

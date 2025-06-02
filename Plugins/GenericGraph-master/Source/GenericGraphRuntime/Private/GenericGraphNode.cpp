@@ -1,5 +1,9 @@
+// Includes
+
 #include "GenericGraphNode.h"
 #include "GenericGraph.h"
+#include "GenericGraphNodeComponent.h"
+
 
 #define LOCTEXT_NAMESPACE "GenericGraphNode"
 
@@ -24,6 +28,30 @@ UGenericGraphEdge* UGenericGraphNode::GetEdge(UGenericGraphNode* ChildNode)
 FText UGenericGraphNode::GetDescription_Implementation() const
 {
 	return LOCTEXT("NodeDesc", "Generic Graph Node");
+}
+
+UGenericGraphNodeComponent* UGenericGraphNode::GetComponentByClass(TSubclassOf<UGenericGraphNodeComponent> ComponentClass) const
+{
+	return FindComponentByClass(ComponentClass);
+}
+
+UGenericGraphNodeComponent* UGenericGraphNode::FindComponentByClass(const TSubclassOf<UGenericGraphNodeComponent> ComponentClass) const
+{
+	UGenericGraphNodeComponent* FoundComponent = nullptr;
+
+	if (UClass* TargetClass = ComponentClass.Get())
+	{
+		for (UGenericGraphNodeComponent* Component : OwnedComponents)
+		{
+			if (Component && Component->IsA(TargetClass))
+			{
+				FoundComponent = Component;
+				break;
+			}
+		}
+	}
+
+	return FoundComponent;
 }
 
 #if WITH_EDITOR

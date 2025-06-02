@@ -72,7 +72,7 @@ This section details the concept art and implementation of the world. The game t
 	5. The farthest city in culture from all others. It is filled with criminals and dark plots. Deprived Gym.
 	6. A lumbar harvesting city, that is steeped into electricity. Wood/Watt Gym.
 	7. The starting town; it is the main receiving port from the twin island, and it houses the last gym after all others have been beaten. Mud Gym.
-![[Biggs_MonsterRegion.jpg]]
+![[MonsterRegion_ConceptArt_01.jpg]]
 
 - [[Watt Forest]] —
 	- An electrified forest, where the inhabitants are uniquely symbiotic with electricity.

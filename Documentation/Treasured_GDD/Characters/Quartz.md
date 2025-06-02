@@ -33,6 +33,7 @@ Growing artificial clones using DNA doesn’t transfer the memories of the origi
 # How does it end?
 
 # Concept Art
+![[Quartz_ConceptArt_08.jpg]]
 ![[Quartz_ConceptArt_07.jpg]]
 
 ![[Quartz_ConceptArt_05.jpg]]

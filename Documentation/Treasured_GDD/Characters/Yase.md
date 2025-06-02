@@ -21,5 +21,8 @@ She takes command of a Star Destroyer and directs it overhead of the ice planet 
 # How does it end?
 
 # Concept Art
+
+![[Yase_ConceptArt_03.jpg]]
+
 ![[Yase_ConceptArt_02.jpg]]
 ![[Yase_ConceptArt_01.jpg]]
