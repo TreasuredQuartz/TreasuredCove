@@ -409,7 +409,17 @@ void FGenericNodeComponentTypeRegistryData::ForceRefreshComponentList()
 
 			if (!bOutOfDateClass && !bBlueprintSkeletonClass)
 			{
-				if (FKismetEditorUtilities::IsClassABlueprintSpawnableComponent(Class))
+				auto IsClassABlueprintSpawnableComponent = [](UClass* Class)
+				{
+					// @fixme: Cooked packages don't have any metadata (yet; they might become available via the sidecar editor data)
+					// However, all uncooked BPs that derive from ActorComponent have the BlueprintSpawnableComponent metadata set on them
+					// (see FBlueprintEditorUtils::RecreateClassMetaData), so include any ActorComponent BP that comes from a cooked package
+					return (!Class->HasAnyClassFlags(CLASS_Abstract) &&
+						Class->IsChildOf<UGenericGraphNodeComponent>() &&
+						(Class->HasMetaData(FBlueprintMetadata::MD_BlueprintSpawnableComponent) || Class->GetPackage()->bIsCookedForEditor));
+				};
+
+				if (IsClassABlueprintSpawnableComponent(Class))
 				{
 					TArray<FString> ClassGroupNames;
 					Class->GetClassGroupNames(ClassGroupNames);

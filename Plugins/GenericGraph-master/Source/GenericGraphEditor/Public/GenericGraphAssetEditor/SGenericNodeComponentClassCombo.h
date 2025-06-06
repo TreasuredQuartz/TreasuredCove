@@ -8,13 +8,41 @@
 #include "GenericGraphNodeComponent.h"
 
 class UGenericGraphNodeComponent;
+struct FGenericSubobjectDataHandle;
 
-struct FSubobjectDataHandle;
+DECLARE_DELEGATE_OneParam(FOnGenericSubobjectCreated, FGenericSubobjectDataHandle);
+DECLARE_DELEGATE_RetVal_ThreeParams(UGenericGraphNodeComponent*, FGenericNodeComponentClassSelected, TSubclassOf<UGenericGraphNodeComponent>, EComponentCreateAction::Type, UObject*);
+DECLARE_DELEGATE_RetVal_ThreeParams(FGenericSubobjectDataHandle, FGenericNodeSubobjectClassSelected, TSubclassOf<UGenericGraphNodeComponent>, EComponentCreateAction::Type, UObject*);
+
+struct FGenericComponentEntryCustomizationArgs
+{
+	/** Specific asset to use instead of the selected asset in the content browser */
+	TWeakObjectPtr<UObject> AssetOverride;
+	/** Custom name to display */
+	FString ComponentNameOverride;
+
+	/** Callback when a new subobject is created */
+	FOnGenericSubobjectCreated OnSubobjectCreated;
+	/** Brush icon to use instead of the class icon */
+	FName IconOverrideBrushName;
+	/** Custom sort priority to use (smaller means sorted first) */
+	int32 SortPriority;
+
+	FGenericComponentEntryCustomizationArgs()
+		: AssetOverride(nullptr)
+		, ComponentNameOverride()
+		, IconOverrideBrushName(NAME_None)
+		, SortPriority(0)
+	{
+
+	}
+};
+
 typedef TSharedPtr<class FGenericNodeComponentClassComboEntry> FGenericNodeComponentClassComboEntryPtr;
 class FGenericNodeComponentClassComboEntry : public TSharedFromThis<FGenericNodeComponentClassComboEntry>
 {
 public:
-	FGenericNodeComponentClassComboEntry(const FString& InHeadingText, TSubclassOf<UActorComponent> InComponentClass, bool InIncludedInFilter, EComponentCreateAction::Type InComponentCreateAction, FComponentEntryCustomizationArgs InCustomizationArgs = FComponentEntryCustomizationArgs())
+	FGenericNodeComponentClassComboEntry(const FString& InHeadingText, TSubclassOf<UGenericGraphNodeComponent> InComponentClass, bool InIncludedInFilter, EComponentCreateAction::Type InComponentCreateAction, FGenericComponentEntryCustomizationArgs InCustomizationArgs = FGenericComponentEntryCustomizationArgs())
 		: ComponentClass(InComponentClass)
 		, IconClass(InComponentClass)
 		, ComponentName()
@@ -80,7 +108,7 @@ public:
 	{
 		return ComponentCreateAction;
 	}
-	FOnSubobjectCreated& GetOnSubobjectCreated()
+	FOnGenericSubobjectCreated& GetOnSubobjectCreated()
 	{
 		return CustomizationArgs.OnSubobjectCreated;
 	}
@@ -117,12 +145,10 @@ private:
 	FString HeadingText;
 	bool bIncludedInFilter;
 	EComponentCreateAction::Type ComponentCreateAction;
-	FComponentEntryCustomizationArgs CustomizationArgs;
+	FGenericComponentEntryCustomizationArgs CustomizationArgs;
 	TSharedPtr<IUnloadedBlueprintData> UnloadedBlueprintData;
 };
 
-DECLARE_DELEGATE_RetVal_ThreeParams(UGenericGraphNodeComponent*, FGenericNodeComponentClassSelected, TSubclassOf<UGenericGraphNodeComponent>, EComponentCreateAction::Type, UObject*);
-DECLARE_DELEGATE_RetVal_ThreeParams(FSubobjectDataHandle, FGenericNodeSubobjectClassSelected, TSubclassOf<UGenericGraphNodeComponent>, EComponentCreateAction::Type, UObject*);
 
 /**
  * 

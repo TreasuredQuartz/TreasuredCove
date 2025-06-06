@@ -284,6 +284,7 @@ showing the player’s flow through all aspects of the game.
 - [[Rarity]]
 - [[Proficiency Trees]]
 - [[Civilization Progression Tree]]
+- [[Combat System]]
 
 • All major features such as character creation, crafting, combat, dialog, etc., including
 areas for monetization (if any), and specific puzzles or similar

@@ -3,6 +3,8 @@
 
 #include "GenericGraphAssetEditor/SGenericNodeComponentClassCombo.h"
 #include "GenericNodeComponentTypeRegistry.h"
+#include "GenericSubobjectDataHandle.h"
+
 #include "ClassViewerModule.h"
 #include "ClassViewerFilter.h"
 #include "Selection.h"
@@ -263,24 +265,6 @@ void SGenericNodeComponentClassCombo::UpdateComponentClassList()
 	}
 }
 
-static UClass* GetAuthoritativeBlueprintClass(UBlueprint const* const Blueprint)
-{
-	UClass* BpClass = (Blueprint->SkeletonGeneratedClass != nullptr) ? Blueprint->SkeletonGeneratedClass :
-		Blueprint->GeneratedClass;
-
-	if (BpClass == nullptr)
-	{
-		BpClass = Blueprint->ParentClass;
-	}
-
-	UClass* AuthoritativeClass = BpClass;
-	if (BpClass != nullptr)
-	{
-		AuthoritativeClass = BpClass->GetAuthoritativeClass();
-	}
-	return AuthoritativeClass;
-}
-
 void SGenericNodeComponentClassCombo::OnAddComponentSelectionChanged(FGenericNodeComponentClassComboEntryPtr InItem, ESelectInfo::Type SelectInfo)
 {
 	if (InItem.IsValid() && InItem->IsClass() && SelectInfo != ESelectInfo::OnNavigation)
@@ -307,15 +291,15 @@ void SGenericNodeComponentClassCombo::OnAddComponentSelectionChanged(FGenericNod
 						}
 						else if (UBlueprint* LoadedBP = Cast<UBlueprint>(LoadedObject))
 						{
-							ComponentClass = GetAuthoritativeBlueprintClass(LoadedBP);
+							// ComponentClass = GetAuthoritativeBlueprintClass(LoadedBP);
 						}
 					}
 				}
 
-				FSubobjectDataHandle NewActorCompHandle =
+				FGenericSubobjectDataHandle NewActorCompHandle =
 					OnSubobjectClassSelected.IsBound() ?
 					OnSubobjectClassSelected.Execute(ComponentClass, InItem->GetComponentCreateAction(), InItem->GetAssetOverride())
-					: FSubobjectDataHandle::InvalidHandle;
+					: FGenericSubobjectDataHandle::InvalidHandle;
 
 				if (NewActorCompHandle.IsValid())
 				{

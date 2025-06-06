@@ -40,6 +40,7 @@ public class GenericGraphEditor : ModuleRules
                 "SubobjectDataInterface",
                 "SubobjectEditor",
                 "GameProjectGeneration",
+				"BlueprintGraph",
                 "ToolWidgets",
                 "AssetTools",
                 "Slate",

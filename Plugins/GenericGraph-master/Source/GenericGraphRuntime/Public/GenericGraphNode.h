@@ -57,6 +57,9 @@ public:
 	FText GetDescription() const;
 	virtual FText GetDescription_Implementation() const;
 
+	void AddInstanceComponent(UGenericGraphNodeComponent* Component);
+	void RemoveOwnedComponent(UGenericGraphNodeComponent* Component);
+
 	/**
 	 * UGenericGraphNodeComponent specialization of GetComponents() to avoid unnecessary casts.
 	 * It's recommended to use TArrays with a TInlineAllocator to potentially avoid memory allocation costs.
