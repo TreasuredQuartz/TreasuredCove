@@ -4,6 +4,15 @@
 #include "GenericGraphAssetEditor/AssetGraphSchema_GenericGraph.h"
 #include "GenericGraphAssetEditor/EditorCommands_GenericGraph.h"
 #include "GenericGraphAssetEditor/EdGraph_GenericGraph.h"
+#include "GenericGraphAssetEditor/EdGraph_GenericGraph.h"
+#include "GenericGraphAssetEditor/EdNode_GenericGraphNode.h"
+#include "GenericGraphAssetEditor/SEdNode_GenericGraphNode.h"
+#include "GenericGraphAssetEditor/EdNode_GenericGraphEdge.h"
+
+#include "GenericGraphAssetEditor/SGenericComponentList.h"
+#include "GenericSubobjectEditor/GenericSubobjectData.h"
+#include "GenericSubobjectEditor/GenericSubobjectDataSubsystem.h"
+
 #include "AssetToolsModule.h"
 #include "HAL/PlatformApplicationMisc.h"
 #include "Framework/Commands/GenericCommands.h"
@@ -13,11 +22,9 @@
 #include "Editor/UnrealEd/Public/Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "EdGraphUtilities.h"
-#include "GenericGraphAssetEditor/EdGraph_GenericGraph.h"
-#include "GenericGraphAssetEditor/EdNode_GenericGraphNode.h"
-#include "GenericGraphAssetEditor/EdNode_GenericGraphEdge.h"
 #include "AutoLayout/TreeLayoutStrategy.h"
 #include "AutoLayout/ForceDirectedLayoutStrategy.h"
+#include "SKismetInspector.h"
 
 #define LOCTEXT_NAMESPACE "AssetEditor_GenericGraph"
 
@@ -26,24 +33,43 @@ const FName GenericGraphEditorAppName = FName(TEXT("GenericGraphEditorApp"));
 struct FGenericGraphAssetEditorTabs
 {
 	// Tab identifiers
-	static const FName GenericGraphPropertyID;
+	static const FName DetailsID;
 	static const FName ViewportID;
 	static const FName GenericGraphEditorSettingsID;
 };
 
+struct FGenericGraphUISelectionState
+{
+	// State Identifiers
+	static const FName SelectionState_MyBlueprint;
+	static const FName SelectionState_Components;
+	static const FName SelectionState_Graph;
+	static const FName SelectionState_ClassSettings;
+	static const FName SelectionState_ClassDefaults;
+};
+
 //////////////////////////////////////////////////////////////////////////
 
-const FName FGenericGraphAssetEditorTabs::GenericGraphPropertyID(TEXT("GenericGraphProperty"));
+const FName FGenericGraphAssetEditorTabs::DetailsID(TEXT("Details"));
 const FName FGenericGraphAssetEditorTabs::ViewportID(TEXT("Viewport"));
 const FName FGenericGraphAssetEditorTabs::GenericGraphEditorSettingsID(TEXT("GenericGraphEditorSettings"));
+
+const FName FGenericGraphUISelectionState::SelectionState_MyBlueprint(TEXT("MyBlueprint"));
+const FName FGenericGraphUISelectionState::SelectionState_Components(TEXT("Components"));
+const FName FGenericGraphUISelectionState::SelectionState_Graph(TEXT("Graph"));
+const FName FGenericGraphUISelectionState::SelectionState_ClassSettings(TEXT("ClassSettings"));
+const FName FGenericGraphUISelectionState::SelectionState_ClassDefaults(TEXT("ClassDefaults"));
 
 //////////////////////////////////////////////////////////////////////////
 
 FAssetEditor_GenericGraph::FAssetEditor_GenericGraph()
+	: bFlash(true)
 {
 	EditingGraph = nullptr;
 
 	GenricGraphEditorSettings = NewObject<UGenericGraphEditorSettings>(UGenericGraphEditorSettings::StaticClass());
+
+	DocumentManager = MakeShareable(new FDocumentTracker);
 
 #if ENGINE_MAJOR_VERSION < 5
 	OnPackageSavedDelegateHandle = UPackage::PackageSavedEvent.AddRaw(this, &FAssetEditor_GenericGraph::OnPackageSaved);
@@ -65,6 +91,8 @@ void FAssetEditor_GenericGraph::InitGenericGraphAssetEditor(const EToolkitMode::
 {
 	EditingGraph = Graph;
 	CreateEdGraph();
+	UGenericSubobjectDataSubsystem* System = UGenericSubobjectDataSubsystem::Get(); 
+	System->OnSubobjectSelectedDelegate.BindSP(this, &FAssetEditor_GenericGraph::OnSelectionUpdated);
 
 	FGenericCommands::Register();
 	FGraphEditorCommands::Register();
@@ -112,7 +140,7 @@ void FAssetEditor_GenericGraph::InitGenericGraphAssetEditor(const EToolkitMode::
 					(
 						FTabManager::NewStack()
 						->SetSizeCoefficient(0.7f)
-						->AddTab(FGenericGraphAssetEditorTabs::GenericGraphPropertyID, ETabState::OpenedTab)->SetHideTabWell(true)
+						->AddTab(FGenericGraphAssetEditorTabs::DetailsID, ETabState::OpenedTab)->SetHideTabWell(true)
 					)
 					->Split
 					(
@@ -133,6 +161,9 @@ void FAssetEditor_GenericGraph::InitGenericGraphAssetEditor(const EToolkitMode::
 
 void FAssetEditor_GenericGraph::RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager)
 {
+	//@TODO: Can't we do this sooner?
+	DocumentManager->SetTabManager(InTabManager);
+
 	WorkspaceMenuCategory = InTabManager->AddLocalWorkspaceMenuCategory(LOCTEXT("WorkspaceMenu_GenericGraphEditor", "Generic Graph Editor"));
 	auto WorkspaceMenuCategoryRef = WorkspaceMenuCategory.ToSharedRef();
 
@@ -143,7 +174,7 @@ void FAssetEditor_GenericGraph::RegisterTabSpawners(const TSharedRef<FTabManager
 		.SetGroup(WorkspaceMenuCategoryRef)
 		.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "GraphEditor.EventGraph_16x"));
 
-	InTabManager->RegisterTabSpawner(FGenericGraphAssetEditorTabs::GenericGraphPropertyID, FOnSpawnTab::CreateSP(this, &FAssetEditor_GenericGraph::SpawnTab_Details))
+	InTabManager->RegisterTabSpawner(FGenericGraphAssetEditorTabs::DetailsID, FOnSpawnTab::CreateSP(this, &FAssetEditor_GenericGraph::SpawnTab_Details))
 		.SetDisplayName(LOCTEXT("DetailsTab", "Property"))
 		.SetGroup(WorkspaceMenuCategoryRef)
 		.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
@@ -152,6 +183,8 @@ void FAssetEditor_GenericGraph::RegisterTabSpawners(const TSharedRef<FTabManager
 		.SetDisplayName(LOCTEXT("EditorSettingsTab", "Generic Graph Editor Setttings"))
 		.SetGroup(WorkspaceMenuCategoryRef)
 		.SetIcon(FSlateIcon(FAppStyle::GetAppStyleSetName(), "LevelEditor.Tabs.Details"));
+
+	FAssetEditorToolkit::RegisterTabSpawners(InTabManager);
 }
 
 void FAssetEditor_GenericGraph::UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager)
@@ -159,7 +192,7 @@ void FAssetEditor_GenericGraph::UnregisterTabSpawners(const TSharedRef<FTabManag
 	FAssetEditorToolkit::UnregisterTabSpawners(InTabManager);
 
 	InTabManager->UnregisterTabSpawner(FGenericGraphAssetEditorTabs::ViewportID);
-	InTabManager->UnregisterTabSpawner(FGenericGraphAssetEditorTabs::GenericGraphPropertyID);
+	InTabManager->UnregisterTabSpawner(FGenericGraphAssetEditorTabs::DetailsID);
 	InTabManager->UnregisterTabSpawner(FGenericGraphAssetEditorTabs::GenericGraphEditorSettingsID);
 }
 
@@ -241,7 +274,7 @@ TSharedRef<SDockTab> FAssetEditor_GenericGraph::SpawnTab_Viewport(const FSpawnTa
 
 TSharedRef<SDockTab> FAssetEditor_GenericGraph::SpawnTab_Details(const FSpawnTabArgs& Args)
 {
-	check(Args.GetTabId() == FGenericGraphAssetEditorTabs::GenericGraphPropertyID);
+	check(Args.GetTabId() == FGenericGraphAssetEditorTabs::DetailsID);
 
 	return SNew(SDockTab)
 #if ENGINE_MAJOR_VERSION < 5
@@ -265,6 +298,38 @@ TSharedRef<SDockTab> FAssetEditor_GenericGraph::SpawnTab_EditorSettings(const FS
 		[
 			EditorSettingsWidget.ToSharedRef()
 		];
+}
+
+void FAssetEditor_GenericGraph::TryInvokingDetailsTab()
+{
+	if (TabManager->HasTabSpawner(FGenericGraphAssetEditorTabs::DetailsID))
+	{
+		TSharedPtr<SDockTab> BlueprintTab = FGlobalTabmanager::Get()->GetMajorTabForTabManager(TabManager.ToSharedRef());
+
+		// We don't want to force this tab into existence when the blueprint editor isn't in the foreground and actively
+		// being interacted with.  So we make sure the window it's in is focused and the tab is in the foreground.
+		if (BlueprintTab.IsValid() && BlueprintTab->IsForeground())
+		{
+			TSharedPtr<SWindow> ParentWindow = BlueprintTab->GetParentWindow();
+			if (ParentWindow.IsValid() && ParentWindow->HasFocusedDescendants())
+			{
+				if (!Inspector.IsValid() || !Inspector->GetOwnerTab().IsValid() || Inspector->GetOwnerTab()->GetDockArea().IsValid())
+				{
+					// Show the details panel if it doesn't exist.
+					TabManager->TryInvokeTab(FGenericGraphAssetEditorTabs::DetailsID);
+
+					if (bFlash)
+					{
+						TSharedPtr<SDockTab> OwnerTab = Inspector->GetOwnerTab();
+						if (OwnerTab.IsValid())
+						{
+							OwnerTab->FlashTab();
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void FAssetEditor_GenericGraph::CreateInternalWidgets()
@@ -305,6 +370,53 @@ TSharedRef<SGraphEditor> FAssetEditor_GenericGraph::CreateViewportWidget()
 		.ShowGraphStateOverlay(false);
 }
 
+void FAssetEditor_GenericGraph::CreateEdGraph()
+{
+	if (EditingGraph->EdGraph == nullptr)
+	{
+		UEdGraph_GenericGraph* EdGraph = CastChecked<UEdGraph_GenericGraph>(FBlueprintEditorUtils::CreateNewGraph(EditingGraph, NAME_None, UEdGraph_GenericGraph::StaticClass(), UAssetGraphSchema_GenericGraph::StaticClass()));
+		EdGraph->bAllowDeletion = false;
+		EditingGraph->EdGraph = EdGraph;
+
+		// Give the schema a chance to fill out any required nodes (like the results node)
+		const UEdGraphSchema* Schema = EditingGraph->EdGraph->GetSchema();
+		Schema->CreateDefaultNodesForGraph(*EditingGraph->EdGraph);
+	}
+}
+
+TSharedPtr<SGraphEditor> FAssetEditor_GenericGraph::GetCurrGraphEditor() const
+{
+	return ViewportWidget;
+}
+
+FGraphPanelSelectionSet FAssetEditor_GenericGraph::GetSelectedNodes() const
+{
+	FGraphPanelSelectionSet CurrentSelection;
+	TSharedPtr<SGraphEditor> FocusedGraphEd = GetCurrGraphEditor();
+	if (FocusedGraphEd.IsValid())
+	{
+		CurrentSelection = FocusedGraphEd->GetSelectedNodes();
+	}
+
+	return CurrentSelection;
+}
+
+void FAssetEditor_GenericGraph::RebuildGenericGraph()
+{
+	if (EditingGraph == nullptr)
+	{
+		LOG_WARNING(TEXT("FGenericGraphAssetEditor::RebuildGenericGraph EditingGraph is nullptr"));
+		return;
+	}
+
+	UEdGraph_GenericGraph* EdGraph = Cast<UEdGraph_GenericGraph>(EditingGraph->EdGraph);
+	check(EdGraph != nullptr);
+
+	EdGraph->RebuildGenericGraph();
+}
+
+/////////////////////////// Begin Command Events ///////////////////////////
+
 void FAssetEditor_GenericGraph::BindCommands()
 {
 	ToolkitCommands->MapAction(FEditorCommands_GenericGraph::Get().GraphSettings,
@@ -316,19 +428,6 @@ void FAssetEditor_GenericGraph::BindCommands()
 		FExecuteAction::CreateSP(this, &FAssetEditor_GenericGraph::AutoArrange),
 		FCanExecuteAction::CreateSP(this, &FAssetEditor_GenericGraph::CanAutoArrange)
 	);
-}
-
-void FAssetEditor_GenericGraph::CreateEdGraph()
-{
-	if (EditingGraph->EdGraph == nullptr)
-	{
-		EditingGraph->EdGraph = CastChecked<UEdGraph_GenericGraph>(FBlueprintEditorUtils::CreateNewGraph(EditingGraph, NAME_None, UEdGraph_GenericGraph::StaticClass(), UAssetGraphSchema_GenericGraph::StaticClass()));
-		EditingGraph->EdGraph->bAllowDeletion = false;
-
-		// Give the schema a chance to fill out any required nodes (like the results node)
-		const UEdGraphSchema* Schema = EditingGraph->EdGraph->GetSchema();
-		Schema->CreateDefaultNodesForGraph(*EditingGraph->EdGraph);
-	}
 }
 
 void FAssetEditor_GenericGraph::CreateCommandList()
@@ -352,6 +451,7 @@ void FAssetEditor_GenericGraph::CreateCommandList()
 		FExecuteAction::CreateRaw(this, &FAssetEditor_GenericGraph::AutoArrange),
 		FCanExecuteAction::CreateRaw(this, &FAssetEditor_GenericGraph::CanAutoArrange));
 
+	// Editing commands
 	GraphEditorCommands->MapAction(FGenericCommands::Get().SelectAll,
 		FExecuteAction::CreateRaw(this, &FAssetEditor_GenericGraph::SelectAllNodes),
 		FCanExecuteAction::CreateRaw(this, &FAssetEditor_GenericGraph::CanSelectAllNodes)
@@ -386,37 +486,6 @@ void FAssetEditor_GenericGraph::CreateCommandList()
 		FExecuteAction::CreateSP(this, &FAssetEditor_GenericGraph::OnRenameNode),
 		FCanExecuteAction::CreateSP(this, &FAssetEditor_GenericGraph::CanRenameNodes)
 	);
-}
-
-TSharedPtr<SGraphEditor> FAssetEditor_GenericGraph::GetCurrGraphEditor() const
-{
-	return ViewportWidget;
-}
-
-FGraphPanelSelectionSet FAssetEditor_GenericGraph::GetSelectedNodes() const
-{
-	FGraphPanelSelectionSet CurrentSelection;
-	TSharedPtr<SGraphEditor> FocusedGraphEd = GetCurrGraphEditor();
-	if (FocusedGraphEd.IsValid())
-	{
-		CurrentSelection = FocusedGraphEd->GetSelectedNodes();
-	}
-
-	return CurrentSelection;
-}
-
-void FAssetEditor_GenericGraph::RebuildGenericGraph()
-{
-	if (EditingGraph == nullptr)
-	{
-		LOG_WARNING(TEXT("FGenericGraphAssetEditor::RebuildGenericGraph EditingGraph is nullptr"));
-		return;
-	}
-
-	UEdGraph_GenericGraph* EdGraph = Cast<UEdGraph_GenericGraph>(EditingGraph->EdGraph);
-	check(EdGraph != nullptr);
-
-	EdGraph->RebuildGenericGraph();
 }
 
 void FAssetEditor_GenericGraph::SelectAllNodes()
@@ -764,6 +833,48 @@ bool FAssetEditor_GenericGraph::CanRenameNodes() const
 	return Graph->bCanRenameNode && GetSelectedNodes().Num() == 1;
 }
 
+/////////////////////////// End Command Events ///////////////////////////
+
+void FAssetEditor_GenericGraph::SetUISelectionState(FName SelectionOwner)
+{
+	if (SelectionOwner != CurrentUISelection)
+	{
+		ClearSelectionStateFor(CurrentUISelection);
+
+		CurrentUISelection = SelectionOwner;
+	}
+}
+
+void FAssetEditor_GenericGraph::ClearSelectionStateFor(FName SelectionOwner)
+{
+	if (SelectionOwner == FGenericGraphUISelectionState::SelectionState_Graph)
+	{
+		TArray< TSharedPtr<SDockTab> > GraphEditorTabs;
+		DocumentManager->FindAllTabsForFactory(GraphEditorTabFactoryPtr, /*out*/ GraphEditorTabs);
+
+		for (TSharedPtr<SDockTab>& GraphEditorTab : GraphEditorTabs)
+		{
+			TSharedRef<SGraphEditor> Editor = StaticCastSharedRef<SGraphEditor>((GraphEditorTab)->GetContent());
+
+			Editor->ClearSelectionSet();
+		}
+	}
+	else if (SelectionOwner == FGenericGraphUISelectionState::SelectionState_Components)
+	{
+		/*if (SubobjectEditor.IsValid())
+		{
+			SubobjectEditor->ClearSelection();
+		}*/
+	}
+	else if (SelectionOwner == FGenericGraphUISelectionState::SelectionState_MyBlueprint)
+	{
+		/*if (MyBlueprintWidget.IsValid())
+		{
+			MyBlueprintWidget->ClearGraphActionMenuSelection();
+		}*/
+	}
+}
+
 void FAssetEditor_GenericGraph::OnSelectedNodesChanged(const TSet<class UObject*>& NewSelection)
 {
 	TArray<UObject*> Selection;
@@ -782,6 +893,98 @@ void FAssetEditor_GenericGraph::OnSelectedNodesChanged(const TSet<class UObject*
 	{
 		PropertyWidget->SetObjects(Selection);
 	}
+
+	/////////////////////////// BlueprintEditor::OnSelectedNodesChanged ///////////////////////////
+
+	if (NewSelection.Num() > 0)
+	{
+		SetUISelectionState(FGenericGraphUISelectionState::SelectionState_Graph);
+	}
+
+	/* SKismetInspector::FShowDetailsOptions DetailsOptions;
+	DetailsOptions.bForceRefresh = true;
+	Inspector->ShowDetailsForObjects(NewSelection.Array(), DetailsOptions);
+
+	bSelectRegularNode = false;
+	for (FGraphPanelSelectionSet::TConstIterator It(NewSelection); It; ++It)
+	{
+		UEdGraphNode_Comment* SeqNode = Cast<UEdGraphNode_Comment>(*It);
+		if (!SeqNode)
+		{
+			bSelectRegularNode = true;
+			break;
+		}
+	}
+
+	if (bHideUnrelatedNodes && !bLockNodeFadeState)
+	{
+		ResetAllNodesUnrelatedStates();
+
+		if (bSelectRegularNode)
+		{
+			HideUnrelatedNodes();
+		}
+	} */
+}
+
+void FAssetEditor_GenericGraph::OnSelectionUpdated(const TArray<FGenericSubobjectDataHandle>& SelectedNodes)
+{
+	/*if (SubobjectViewport.IsValid())
+	{
+		SubobjectViewport->OnComponentSelectionChanged();
+	}*/
+
+	LOG_INFO(TEXT("Asset Editor: Recieved Component Selected!"));
+
+	if (PropertyWidget.IsValid())
+	{
+		// Clear the my blueprints selection
+		if (SelectedNodes.Num() > 0)
+		{
+			SetUISelectionState(FGenericGraphUISelectionState::SelectionState_Components);
+		}
+
+		// Convert the selection set to an array of UObject* pointers
+		FText InspectorTitle = FText::GetEmpty();
+		TArray<UObject*> InspectorObjects;
+		bool bShowComponents = true;
+		InspectorObjects.Empty(SelectedNodes.Num());
+		for (FGenericSubobjectDataHandle NodePtr : SelectedNodes)
+		{
+			const FGenericSubobjectData* NodeData = NodePtr.IsValid() ? NodePtr.GetSharedDataPtr().Get() : nullptr;
+			if (NodeData)
+			{
+				/*if (const AActor* Actor = NodeData->GetObject<AActor>())
+				{
+					if (const AActor* DefaultActor = NodeData->GetObjectForBlueprint<AActor>(GetBlueprintObj()))
+					{
+						InspectorObjects.Add(const_cast<AActor*>(DefaultActor));
+
+						FString Title;
+						DefaultActor->GetName(Title);
+						InspectorTitle = FText::FromString(Title);
+						bShowComponents = false;
+
+						TryInvokingDetailsTab();
+					}
+				}
+				else
+				{*/
+					const UGenericGraphNodeComponent* EditableComponent = NodeData->GetObject<UGenericGraphNodeComponent>(true);
+					if (EditableComponent)
+					{
+						InspectorTitle = FText::FromString(NodeData->GetDisplayString());
+						InspectorObjects.Add(const_cast<UGenericGraphNodeComponent*>(EditableComponent));
+					}
+				// }
+			}
+		}
+
+		// Update the details panel
+		SKismetInspector::FShowDetailsOptions Options(InspectorTitle, true);
+		Options.bShowComponents = bShowComponents;
+		PropertyWidget->SetObjects(InspectorObjects);
+	} // */
 }
 
 void FAssetEditor_GenericGraph::OnNodeDoubleClicked(UEdGraphNode* Node)
@@ -795,6 +998,71 @@ void FAssetEditor_GenericGraph::OnFinishedChangingProperties(const FPropertyChan
 		return;
 
 	EditingGraph->EdGraph->GetSchema()->ForceVisualizationCacheClear();
+}
+
+void FAssetEditor_GenericGraph::RefreshEditors()
+{
+	bool bForceFocusOnSelectedNodes = false;
+
+	if (CurrentUISelection == FGenericGraphUISelectionState::SelectionState_MyBlueprint)
+	{
+		// Handled below, here to avoid tripping the ensure
+	}
+	else if (CurrentUISelection == FGenericGraphUISelectionState::SelectionState_Components)
+	{
+		/*if (SubobjectEditor.IsValid())
+		{
+			SubobjectEditor->RefreshSelectionDetails();
+		}*/
+	}
+	else if (CurrentUISelection == FGenericGraphUISelectionState::SelectionState_Graph)
+	{
+		bForceFocusOnSelectedNodes = true;
+	}
+	else if (CurrentUISelection == FGenericGraphUISelectionState::SelectionState_ClassSettings)
+	{
+		// No need for a refresh, the Blueprint object didn't change
+	}
+	else if (CurrentUISelection == FGenericGraphUISelectionState::SelectionState_ClassDefaults)
+	{
+		// StartEditingDefaults(/*bAutoFocus=*/ false, true);
+	}
+
+	// Remove any tabs are that are pending kill or otherwise invalid UObject pointers.
+	DocumentManager->CleanInvalidTabs();
+
+	//@TODO: Should determine when we need to do the invalid/refresh business and if the graph node selection change
+	// under non-compiles is necessary (except when the selection mode is appropriate, as already detected above)
+	//if (Reason != ERefreshBlueprintEditorReason::BlueprintCompiled)
+	//{
+	//	DocumentManager->RefreshAllTabs();
+
+	//	bForceFocusOnSelectedNodes = true;
+	//}
+
+	//if (bForceFocusOnSelectedNodes)
+	//{
+	//	FocusInspectorOnGraphSelection(GetSelectedNodes(), /*bForceRefresh=*/ true);
+	//}
+
+	//if (ReplaceReferencesWidget.IsValid())
+	//{
+	//	ReplaceReferencesWidget->Refresh();
+	//}
+
+	//if (MyBlueprintWidget.IsValid())
+	//{
+	//	MyBlueprintWidget->Refresh();
+	//}
+
+	//if (SubobjectEditor.IsValid())
+	//{
+	//	SubobjectEditor->RefreshComponentTypesList();
+	//	SubobjectEditor->UpdateTree();
+
+	//	// Note: Don't pass 'true' here because we don't want the preview actor to be reconstructed until after Blueprint modification is complete.
+	//	UpdateSubobjectPreview();
+	//}
 }
 
 #if ENGINE_MAJOR_VERSION < 5

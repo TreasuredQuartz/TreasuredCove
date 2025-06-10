@@ -25,7 +25,7 @@ public:
 	GENERATED_BODY()
 
 	FGenericSubobjectData();
-	FGenericSubobjectData(UObject* ContextObject, const FGenericSubobjectDataHandle& ParentHandle, const bool bIsInheritedSCS);
+	FGenericSubobjectData(UObject* ContextObject, const FGenericSubobjectDataHandle& ParentHandle);
 
 	/** True if this subobject's handle is valid */
 	bool IsValid() const { return Handle.IsValid(); }

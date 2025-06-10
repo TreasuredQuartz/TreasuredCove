@@ -1,8 +1,8 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "GenericSubobjectData.h"
-#include "GenericSubobjectDataHandle.h"
+#include "GenericSubobjectEditor/GenericSubobjectData.h"
+#include "GenericSubobjectEditor/GenericSubobjectDataHandle.h"
 #include "GenericGraphNode.h"
 #include "GenericGraphNodeComponent.h"
 
@@ -18,16 +18,16 @@ FGenericSubobjectData::FGenericSubobjectData()
 	// be generated if we are given an object.
 }
 
-FGenericSubobjectData::FGenericSubobjectData(UObject* ContextObject, const FGenericSubobjectDataHandle& InParentHandle, const bool bInIsInheritedSCS)
+FGenericSubobjectData::FGenericSubobjectData(UObject* ContextObject, const FGenericSubobjectDataHandle& InParentHandle)
 	: WeakObjectPtr(ContextObject)
 	, ParentObjectHandle(InParentHandle)
 {
 	if (UGenericGraphNodeComponent* Component = Cast<UGenericGraphNodeComponent>(ContextObject))
 	{
 		// Create an inherited subobject data
-		if (bInIsInheritedSCS || Component->CreationMethod != EComponentCreationMethod::Instance)
+		// if (bInIsInheritedSCS || Component->CreationMethod != EComponentCreationMethod::Instance)
 		{
-			bIsInheritedSubobject = true;
+			bIsInheritedSubobject = false; // Nodes are never inherited from each other.
 		}
 	}
 }
@@ -710,3 +710,5 @@ bool FGenericSubobjectData::RemoveChildHandleOnly(const FGenericSubobjectDataHan
 {
 	return false;
 }
+
+#undef LOCTEXT_NAMESPACE

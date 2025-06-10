@@ -71,6 +71,11 @@ UGenericGraphNodeComponent* UGenericGraphNode::FindComponentByClass(const TSubcl
 }
 
 #if WITH_EDITOR
+FName UGenericGraphNode::GetCustomIconName() const
+{
+	return IconName;
+}
+
 bool UGenericGraphNode::IsNameEditable() const
 {
 	return true;

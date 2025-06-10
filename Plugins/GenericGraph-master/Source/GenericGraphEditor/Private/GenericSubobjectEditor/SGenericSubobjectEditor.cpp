@@ -1,17 +1,17 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "GenericGraphAssetEditor/SGenericSubobjectEditor.h"
-#include "GenericGraphAssetEditor/GenericGraphNodeSEEC.h"
+#include "GenericSubobjectEditor/SGenericSubobjectEditor.h"
+#include "GenericSubobjectEditor/GenericGraphNodeSEEC.h"
+#include "GenericSubobjectEditor/GenericSubobjectData.h"
+#include "GenericSubobjectEditor/GenericSubobjectDataHandle.h"
+#include "GenericSubobjectEditor/GenericSubobjectDataSubsystem.h"
 #include "GenericGraphAssetEditor/SGenericNodeComponentClassCombo.h"
-#include "GenericSubobjectDataSubsystem.h"
-#include "GenericSubobjectData.h"
-#include "GenericSubobjectDataHandle.h"
 #include "GenericGraphNodeComponent.h"
 #include "GenericGraphNode.h"
 
-#include "GenericComponentAssetBroker.h"
-#include "GenericSubobjectDataHandle.h"
+#include "GenericSubobjectEditor/GenericComponentAssetBroker.h"
+#include "GenericSubobjectEditor/GenericSubobjectDataHandle.h"
 
 #include "IDocumentation.h"
 #include "TutorialMetaData.h"
@@ -1378,8 +1378,6 @@ void SGenericSubobjectEditor::Construct(const FArguments& InArgs)
 
 	// Build the tree widget
 	FSlateBrush const* MobilityHeaderBrush = FAppStyle::GetBrush(TEXT("ClassIcon.ComponentMobilityHeaderIcon"));
-
-	ConstructTreeWidget();
 
 	// Should only be true when used in the blueprints details panel
 	const bool bInlineSearchBarWithButtons = ShowInlineSearchWithButtons();

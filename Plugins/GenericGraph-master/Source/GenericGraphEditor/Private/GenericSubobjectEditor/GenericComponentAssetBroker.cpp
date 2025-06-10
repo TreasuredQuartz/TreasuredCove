@@ -1,7 +1,7 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "GenericComponentAssetBroker.h"
+#include "GenericSubobjectEditor/GenericComponentAssetBroker.h"
 
 //////////////////////////////////////////////////////////////////////////
 // FGenericComponentAssetBrokerageage statics

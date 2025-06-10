@@ -1,7 +1,7 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "GenericNodeComponentTypeRegistry.h"
+#include "GenericSubobjectEditor/GenericNodeComponentTypeRegistry.h"
 #include "GenericGraphAssetEditor/SGenericNodeComponentClassCombo.h"
 
 #include "Kismet2/KismetEditorUtilities.h"

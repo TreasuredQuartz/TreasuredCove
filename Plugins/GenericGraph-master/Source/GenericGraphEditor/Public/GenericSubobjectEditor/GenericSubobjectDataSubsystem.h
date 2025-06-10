@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/EngineSubsystem.h"
-#include "GenericSubobjectDataHandle.h"
+#include "GenericSubobjectEditor/GenericSubobjectDataHandle.h"
 #include "GenericSubobjectDataSubsystem.generated.h"
 
 struct FGenericSubobjectData;
@@ -42,7 +42,21 @@ class GENERICGRAPHEDITOR_API UGenericSubobjectDataSubsystem : public UEngineSubs
 {
 	GENERATED_BODY()
 
+	DECLARE_DELEGATE_OneParam(FOnSubobjectSelected, const TArray<FGenericSubobjectDataHandle>&);
+
 public:
+	/** Implement this for initialization of instances of the system */
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+	/** Implement this for deinitialization of instances of the system */
+	virtual void Deinitialize() override;
+
+	/**
+	* Static wrapper for getting this engine subsystem. Will return nullptr
+	* if the SubobjectDataInterface module has not been loaded yet.
+	*/
+	static UGenericSubobjectDataSubsystem* Get();
+
 	/**
 	* Gather all subobjects that the given UObject context has. Populates an array of
 	* handles that will have the given context and all it's subobjects.
@@ -102,6 +116,31 @@ public:
 	int32 DeleteSubobjects(const FGenericSubobjectDataHandle& ContextHandle, const TArray<FGenericSubobjectDataHandle>& SubobjectsToDelete);
 
 	/**
+	 * Returns true if the given new text is a valid option to rename the
+	 * subobject with the given handle. Populates the OutErrorMessage if
+	 * it is not valid.
+	 *
+	 * @param Handle			Handle to the subobject that is being checked
+	 * @param InNewText			The new name that is desired
+	 * @param OutErrorMessage	The reasoning for an invalid name
+	 *
+	 * @return True if the rename is valid
+	 */
+	UFUNCTION(BlueprintCallable, Category = "SubobjectDataSubsystem")
+	bool IsValidRename(const FGenericSubobjectDataHandle& Handle, const FText& InNewName, FText& OutErrorMessage) const;
+
+	/**
+	* Attempts to rename the given subobject to the new name.
+	*
+	* @param Handle			Handle to the subobject to rename
+	* @param InNewName		The new name that is desired for the given subobject
+	*
+	* @return True if the rename was successful, false otherwise.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "SubobjectDataSubsystem")
+	bool RenameSubobject(const FGenericSubobjectDataHandle& Handle, const FText& InNewName);
+
+	/**
 	 * Returns true if the given array of handles represents subobjects that
 	 * can be copied.
 	 */
@@ -125,4 +164,24 @@ public:
 	 * @param OutNewSubobjects	Array that will be populated with any newly created subobjects
 	 */
 	void DuplicateSubobjects(const FGenericSubobjectDataHandle& Context, const TArray<FGenericSubobjectDataHandle>& SubobjectsToDup, TArray<FGenericSubobjectDataHandle>& OutNewSubobjects);
+
+	/**
+	 * Gets a ref to subobject data that has been initialized with the given context.
+	 * It will have a unique ID, but may be reused from the FreeData array.
+	 */
+	FGenericSubobjectDataHandle CreateSubobjectData(UObject* Context, const FGenericSubobjectDataHandle& ParentHandle = FGenericSubobjectDataHandle::InvalidHandle);
+
+	/**
+	 * Get a handle to the subobject with the given context with a specific parent.
+	 * If the context is already a known child of the parent, then it will return an existing subobject handle.
+	 */
+	FGenericSubobjectDataHandle FactoryCreateSubobjectDataWithParent(UObject* Context, const FGenericSubobjectDataHandle& ParentHandle);
+
+	/**
+	 * Broadcasts a delegate with the given parameter information.
+	 */
+	void SelectSubobjects(const TArray<FGenericSubobjectDataHandle>& SelectedSubobjects) const;
+
+public:
+	FOnSubobjectSelected OnSubobjectSelectedDelegate;
 };

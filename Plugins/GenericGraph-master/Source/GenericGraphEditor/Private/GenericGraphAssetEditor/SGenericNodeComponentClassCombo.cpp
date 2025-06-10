@@ -2,8 +2,8 @@
 
 
 #include "GenericGraphAssetEditor/SGenericNodeComponentClassCombo.h"
-#include "GenericNodeComponentTypeRegistry.h"
-#include "GenericSubobjectDataHandle.h"
+#include "GenericSubobjectEditor/GenericNodeComponentTypeRegistry.h"
+#include "GenericSubobjectEditor/GenericSubobjectDataHandle.h"
 
 #include "ClassViewerModule.h"
 #include "ClassViewerFilter.h"

@@ -8,6 +8,7 @@
 #include "GenericGraphNodeComponent.h"
 
 class UGenericGraphNodeComponent;
+class FComponentClassComboEntry;
 struct FGenericSubobjectDataHandle;
 
 DECLARE_DELEGATE_OneParam(FOnGenericSubobjectCreated, FGenericSubobjectDataHandle);

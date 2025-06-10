@@ -51,6 +51,7 @@ struct GENERICGRAPHEDITOR_API FGenericSubobjectDataHandle
 	/** Returns a pointer to the subobject data that this is a handle for */
 	inline TSharedPtr<FGenericSubobjectData> GetSharedDataPtr() const { return DataPtr; }
 	inline FGenericSubobjectData* GetData() const { return DataPtr.IsValid() ? DataPtr.Get() : nullptr; }
+	// void SetData(TSharedPtr<FGenericSubobjectData> NewData) { DataPtr = NewData; }
 
 	/**
 	* A static representation of an invalid handle. Mostly used as a return

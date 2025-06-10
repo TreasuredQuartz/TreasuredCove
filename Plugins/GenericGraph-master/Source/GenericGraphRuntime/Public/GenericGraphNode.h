@@ -134,6 +134,9 @@ private:
 public:
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor")
+	FName IconName;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor")
 	FText NodeTitle;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "GenericGraphNode_Editor")
@@ -159,6 +162,8 @@ public:
 #endif
 
 #if WITH_EDITOR
+	FName GetCustomIconName() const;
+
 	virtual bool IsNameEditable() const;
 
 	virtual FLinearColor GetBackgroundColor() const;
