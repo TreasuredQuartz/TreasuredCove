@@ -61,6 +61,8 @@ FGenericSubobjectDataHandle UGenericSubobjectDataSubsystem::FindHandleForObject(
 	{
 		if (const UGenericGraphNodeComponent* ComponentToFind = Cast<UGenericGraphNodeComponent>(ObjectToFind))
 		{
+			// Get the component owner's class object
+			check(ComponentToFind->GetOwner() != nullptr);
 			UClass* OwnerClass = ComponentToFind->GetOwner()->GetClass();
 
 			// Get the class default object

@@ -40,6 +40,7 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SGenericComponentList::Construct(const FArguments& InArgs, UGenericGraphNode* InNode)
 {
 	GenericGraphNode = InNode;
+	AllowEditing = InArgs._AllowEditing;
 	OnSelectionUpdated = InArgs._OnSelectionUpdated;
 	HideComponentClassCombo = InArgs._HideComponentClassCombo;
 
@@ -667,6 +668,15 @@ TArray<FGenericSubobjectDataHandle> SGenericComponentList::GetSelectedHandles() 
 	return OutHandles;
 }
 
+FReply SGenericComponentList::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent)
+{
+	if (CommandList->ProcessCommandBindings(InKeyEvent))
+	{
+		return FReply::Handled();
+	}
+	return FReply::Unhandled();
+}
+
 void SGenericComponentList::RestoreSelectionState(const TArray<FGenericComponentListNodePtrType>& SelectedListNodes, bool bFallBackToVariableName)
 {
 	if (SelectedListNodes.Num() > 0)
@@ -721,6 +731,7 @@ void SGenericComponentList::ClearSelection()
 
 void SGenericComponentList::CreateCommandList()
 {
+	
 	CommandList = MakeShareable(new FUICommandList);
 
 	CommandList->MapAction(FGenericCommands::Get().Cut,
@@ -881,6 +892,8 @@ void SGenericComponentList::PasteNodes()
 
 bool SGenericComponentList::CanDeleteNodes() const
 {
+	LOG_WARNING(TEXT("Check can delete..."));
+
 	if (!IsEditingAllowed())
 	{
 		return false;
@@ -900,6 +913,8 @@ bool SGenericComponentList::CanDeleteNodes() const
 
 void SGenericComponentList::OnDeleteNodes()
 {
+	LOG_WARNING(TEXT("Delete Components..."));
+
 	// Gather the handles of the components that we want to delete
 	TArray<FGenericSubobjectDataHandle> HandlesToDelete;
 	TArray<FGenericComponentListNodePtrType> SelectedNodes = GetSelectedNodes();

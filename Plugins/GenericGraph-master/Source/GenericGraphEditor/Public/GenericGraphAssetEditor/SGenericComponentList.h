@@ -115,9 +115,11 @@ public:
 
 public:
 	SLATE_BEGIN_ARGS(SGenericComponentList)
-		: _HideComponentClassCombo(false) 
+		: _AllowEditing(true)
+		, _HideComponentClassCombo(false) 
 		{}
 
+		SLATE_ATTRIBUTE(bool, AllowEditing)
 		SLATE_ATTRIBUTE(bool, HideComponentClassCombo)
 		SLATE_EVENT(FOnSelectionUpdated, OnSelectionUpdated)
 	SLATE_END_ARGS()
@@ -189,6 +191,9 @@ public:
 
 	////////////////// Commands //////////////////
 public:
+	/** SWidget interface */
+	FReply OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& InKeyEvent) override;
+
 	/** Select the given tree node */
 	void SelectNode(FGenericComponentListNodePtrType InNodeToSelect, bool bIsCntrlDown);
 

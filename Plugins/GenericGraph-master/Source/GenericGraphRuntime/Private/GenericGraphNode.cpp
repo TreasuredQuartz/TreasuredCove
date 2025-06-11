@@ -33,6 +33,7 @@ FText UGenericGraphNode::GetDescription_Implementation() const
 void UGenericGraphNode::AddInstanceComponent(UGenericGraphNodeComponent* Component)
 {
 	Component->CreationMethod = EComponentCreationMethod::Instance;
+	Component->SetOwner(this);
 	OwnedComponents.AddUnique(Component);
 }
 

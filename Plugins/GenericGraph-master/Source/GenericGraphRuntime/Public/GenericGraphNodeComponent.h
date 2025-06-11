@@ -41,6 +41,7 @@ protected:
 #endif
 
 public:
+	void SetOwner(UGenericGraphNode* NewOwner) { Owner = NewOwner; };
 	UGenericGraphNode* GetOwner() const { return Owner; };
 	GENERICGRAPHRUNTIME_API bool IsEditableWhenInherited() const;
 	EComponentCreationMethod CreationMethod;
@@ -52,7 +53,7 @@ public:
 	FString GetReadableName() const { return ""; };
 
 	bool IsRegistered() const { return bRegistered; }
-
+	
 	GENERICGRAPHRUNTIME_API void OnComponentCreated();
 	GENERICGRAPHRUNTIME_API void RegisterComponent();
 
