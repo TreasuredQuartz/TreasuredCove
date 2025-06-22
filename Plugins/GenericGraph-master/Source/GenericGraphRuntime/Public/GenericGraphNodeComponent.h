@@ -101,17 +101,3 @@ private:
 	FText DisplayName;
 
 };
-
-/**
- *
- */
-UCLASS(ClassGroup = (Common), meta = (BlueprintSpawnableComponent))
-class GENERICGRAPHRUNTIME_API UNodeAbilityComponent : public UGenericGraphNodeComponent
-{
-	GENERATED_BODY()
-
-private:
-	// UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	// TSubclassOf<class UGameplayAbility> Ability;
-
-};

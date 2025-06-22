@@ -3,6 +3,8 @@
 #include "Modules/ModuleManager.h"
 #include "Global/Actors/Items/ItemDatabase.h"
 #include "Global/Actors/Items/ItemDatabaseCustomization.h"
+#include "Global/Structs/CustomUnits.h"
+#include "Global/Structs/CustomUnitsCustomization.h"
 #include "Global/Components/ProgressionManagerComponent.h"
 
 #include "DetailLayoutBuilder.h"
@@ -25,6 +27,19 @@ void FTreasuredCoveEditorModule::StartupModule()
 		// this is where our MakeInstance() method is usefull
 		FOnGetDetailCustomizationInstance::CreateStatic(&FItemDatabaseCustomization::MakeInstance)
 	);
+	// register out custom struct
+	PropertyModule.RegisterCustomPropertyTypeLayout(
+		FGrains::StaticStruct()->GetFName(),
+		//
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FGrainsCustomization::MakeInstance)
+	);
+	// register out custom struct
+	PropertyModule.RegisterCustomPropertyTypeLayout(
+		FRPM::StaticStruct()->GetFName(),
+		//
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FRPMCustomization::MakeInstance)
+	);
+
 	// PropertyModule.Register
 	PropertyModule.NotifyCustomizationModuleChanged();
 }
@@ -36,6 +51,8 @@ void FTreasuredCoveEditorModule::ShutdownModule()
 		// unregister properties when the module is shutdown
 		FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		PropertyModule.UnregisterCustomClassLayout(UItemDatabase::StaticClass()->GetFName());
+		PropertyModule.UnregisterCustomPropertyTypeLayout(FGrains::StaticStruct()->GetFName());
+		PropertyModule.UnregisterCustomPropertyTypeLayout(FRPM::StaticStruct()->GetFName());
 
 		PropertyModule.NotifyCustomizationModuleChanged();
 	}

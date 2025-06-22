@@ -34,12 +34,19 @@ This section details the concept art and implementation of the world. The game t
 ![[IcePalace_ConceptArt_01.jpg]]
 
 - [[Center Region]] —
+	- [[Aurifer Caelus]]
 	- Volcanic Mountain
 	- Grassland Hills and Valleys
 	- Rivers flow outward
+
+![[MainIsland_ConceptArt_12.jpg]]
+
+![[MainIsland_ConceptArt_11.jpg]]
+
 ![[MainIsland_ConceptArt_10.jpg]]
 
 - [[The Great Divide]] —
+	- [[Cataracta Burgus]]
 	- Gateway between volcanic region and monster region
 	- Massive Continent-Wide Waterfall
 	- Largest body of water in Upper Region.

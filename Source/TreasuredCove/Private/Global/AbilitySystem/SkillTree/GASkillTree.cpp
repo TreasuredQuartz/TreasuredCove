@@ -26,7 +26,7 @@ void UGASkillTree::BindOnSkillAquired(UGASkillTreeNode* InNode)
 {
 	FScriptDelegate Del = FScriptDelegate();
 	Del.BindUFunction(this, FName("OnSkillAquired"));
-	InNode->OnRequestAquire.Add(Del);
+	InNode->AquiredStatus->OnRequestAquire.Add(Del);
 }
 
 void UGASkillTree::OnSkillAquired(FString Category, UGASkillTreeNode* Node, uint8 SkillIndex)
@@ -34,8 +34,8 @@ void UGASkillTree::OnSkillAquired(FString Category, UGASkillTreeNode* Node, uint
 	if (Points > 0)
 	{
 		--Points;
-		Node->Aquired();
-		OnAquired.Broadcast(SkillTable->FindRow<FSkillInfoRow>(Node->GetAbilityName(SkillIndex), "Aquiring Skill!")->Class);
+		Node->AquiredStatus->Aquired();
+		OnAquired.Broadcast(Node->Skill->GetAbilityClass());
 	}
 }
 

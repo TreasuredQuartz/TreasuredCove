@@ -30,36 +30,50 @@ Skill Tree:
 
 ```mermaid
 graph TD;
+%% Fingers
 	id1((1)) --> id2((2));
 	id2((2)) --> id5((5));
 	
 	id3((3)) --> id4((4));
 	id4((4)) --> id5((5));
 
-	id6((6)) --> id9((9));
+	id6((6)) --> id7((7));
 	id7((7)) --> id10((10));
-	id8((8));
 	
-	id9((9)) --> id11((11));
-	id10((10)) --> id11((11));
+	id8((8)) --> id9((9));
+	id9((9)) --> id10((10));
+	
+	id11((11)) --> id12((12));
+	id12((12)) --> id13((13));
+	
+%% Palm
+    id5((5)) --> id14((14));
+    id10((10)) --> id14((14));
+    
+    id14((14)) --> id15((15));
+    id13((13)) --> id15((15));
+
 ```
 
 Skills:
 
-| Skill                                             | Description                                                                                                    |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| (1) ***Exploding Palm***                          | Active Skill: Inflict Exploding Palm onto the target, causing the target to explode on death.                  |
-| (2) ***Chain-Explosion***                         | Passive: Exploding Palm's on-death explosion applies Exploding Palm.                                           |
-| (3) ***Seven-Sided Strike***                      | Active Skill: Deal 7 strikes at once against any nearby enemies.                                               |
-| (4) ***Lion Fist***                               | Passive: Seven-Sided Strike performs an additional 7 strikes.                                                  |
-| (5) ***Seven-Sided Explosion***                   | Passive: A strike from Seven-Sided Strike detonates Exploding Palm if the target is inflicted with the effect. |
-| (6) ***Gentle Fist***                             | Active Skill: Parries an enemy's attack, and if successful, briefly disable target's bodily functions.         |
-| (7) ***Fist of Flowing Water and Crushing Rock*** | Active Skill: Parries an enemy's attack, and if successful, briefly increase damage of a counter-attack.       |
-| (8) ***Formless Fist***                           | Passive Skill: Increases the window to parry, and decreases the length of stuns.                               |
-| (9) ***Quaking Fist***                            | Passive: Targets affected by Gentle Fist rapidly lose Stamina.                                                 |
-| (10) ***Flowmotion***                             | Passive: Consecutive attacks increase damage and parry window.                                                 |
-| (11) ***Deflect Missile***                        | Passive: Allows large ranged projectiles to be deflected.                                                      |
-|                                                   |                                                                                                                |
+| Skill                           | Description                                                                                                    |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| (1) ***Exploding Palm***        | Active: Inflict Exploding Palm onto the target, causing the target to explode on death.                        |
+| (2) ***Chain-Explosion***       | Passive: Exploding Palm's on-death explosion applies Exploding Palm.                                           |
+| (3) ***Seven-Sided Strike***    | Active: Deal 7 strikes at once against any nearby enemies.                                                     |
+| (4) ***Lion Fist***             | Passive: Seven-Sided Strike performs an additional 7 strikes.                                                  |
+| (5) ***Seven-Sided Explosion*** | Passive: A strike from Seven-Sided Strike detonates Exploding Palm if the target is inflicted with the effect. |
+| (6) ***Gentle Fist***           | Active: Parries an enemy's attack, and if successful, briefly disable target's bodily functions.               |
+| (7) ***Quaking Fist***          | Passive: Targets affected by Gentle Fist rapidly lose Stamina.                                                 |
+| (8) ***Fist of Flowing Water*** | Active: Parries an enemy's attack, and if successful, gain advantage against them.                             |
+| (9) ***Fist of Crushing Rock*** | Passive: Half of the parried attack's damage is added to the next attack.                                      |
+| (10) ***Flowmotion***           | Passive: Consecutive unique attacks increase damage and parry window.                                          |
+| (11) ***Dashing Strike***       | Active: Perform a quick dash maneuver.                                                                         |
+| (12) ***Formless Fist***        | Passive: Well-timed melee strikes can deflect incoming melee strikes.                                          |
+| (13) ***Deflect Missile***      | Passive: Allows large ranged projectiles to be deflected.                                                      |
+| (14) ***Instinct***             | Passive: Immediately counter parried attacks using full damage.                                                |
+| (15) ***Ultra Instinct***       | Passive: Your dash skill has greatly reduced distance, cost and greatly increased invulnerability window.      |
 
 ### Blades (Swordsmanship)
 
@@ -78,12 +92,14 @@ Examples:
 
 Skills:
 
-| Skill           | Description |
-| --------------- | ----------- |
-| Warrior Stance  |             |
-| Drunken Stance  |             |
-| Ultimate Stance |             |
-| Mage Stance     |             |
+| Skill           | Description                                                    |
+| --------------- | -------------------------------------------------------------- |
+| Warrior Stance  |                                                                |
+| Drunken Stance  |                                                                |
+| Ultimate Stance | Combo finisher damage is increased by the length of the combo. |
+| Mage Stance     |                                                                |
+| Drunken Stupor  | Combos continue endlessly without performing finishers.        |
+| Riposte         | Parry an armed strike, and if successful, disarm them.         |
 
 ### Blunts (Bludgeoner)
 

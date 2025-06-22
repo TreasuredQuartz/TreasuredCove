@@ -2,7 +2,9 @@
 
 
 #include "Global/Components/Items/ShooterComponent.h"
-#include "Global/Components/Items/ShooterAttatchment.h"
+#include "Global/Components/Shooter/ShooterAttatchment.h"
+#include "Global/Components/Shooter/BodyAttatchment.h"
+#include "Global/Components/Shooter/SightAttatchment.h"
 #include "Global/Components/Items/EquipmentComponent.h"
 #include "Global/Components/Items/InventoryComponent.h"
 #include "Global/Components/Items/GAProjectileMovementComponent.h"
@@ -17,19 +19,26 @@
 
 // Sets default values for this component's properties
 UShooterComponent::UShooterComponent()
+	: bTriggerPulled(false)
+	, bAutomatic(false)
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
-	Magazine =
-		CreateDefaultSubobject<UMagazineAttatchment>(TEXT("Magazine"));
-	Barrel =
-		CreateDefaultSubobject<UBarrelAttatchment>(TEXT("Barrel"));
+}
 
-	Attatchments.Add(Magazine);
-	Attatchments.Add(Barrel);
+void UShooterComponent::BeginPlay()
+{
+	for (UShooterAttatchment* Attatchment : Attatchments)
+	{
+		if (Attatchment->IsA(UBarrelAttatchment::StaticClass()))
+		{
+			Barrel = Cast<UBarrelAttatchment>(Attatchment);
+			break;
+		}
+	}
 }
 
 void UShooterComponent::FireAtTarget(AActor* TargetActor, float Accuracy)
@@ -97,6 +106,13 @@ FVector UShooterComponent::GetFinalLocation(const FVector& TargetLocation)
 
 	return TargetLocation +
 		CurrentVarience;
+}
+
+//////////////////////////////////////////////////////
+
+void UShooterComponent::AddShooterAttatchment(UShooterAttatchment* NewAttatchment)
+{
+	Attatchments.Add(NewAttatchment);
 }
 
 //////////////////////////////////////////////////////

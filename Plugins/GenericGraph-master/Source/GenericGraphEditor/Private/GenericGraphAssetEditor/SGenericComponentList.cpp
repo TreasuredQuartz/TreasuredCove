@@ -200,78 +200,77 @@ void SGenericComponentList::UpdateTree(bool bRegenerateNodes)
 
 	if (bRegenerateNodes)
 	{
+		// Obtain the list of selected items
+		TArray<FGenericComponentListNodePtrType> SelectedTreeNodes = GetSelectedNodes();
 
-	}
-	// Obtain the list of selected items
-	TArray<FGenericComponentListNodePtrType> SelectedTreeNodes = GetSelectedNodes();
-	
-	// Clear the current tree
-	if (SelectedTreeNodes.Num() != 0)
-	{
-		ListWidget->ClearSelection();
-	}
-	NodeList.Empty();
-
-	if (GenericGraphNode)
-	{
-		UGenericSubobjectDataSubsystem* DataSubsystem = UGenericSubobjectDataSubsystem::Get();
-
-		TArray<FGenericSubobjectDataHandle> SubobjectData;
-		DataSubsystem->GatherGenericSubobjectData(GenericGraphNode, SubobjectData);
-
-		FGenericComponentListNodePtrType SeperatorNode;
-		TMap<FGenericSubobjectDataHandle, FGenericComponentListNodePtrType> AddedNodes;
-
-		// Create slate nodes for each subobject
-		for (FGenericSubobjectDataHandle& Handle : SubobjectData)
+		// Clear the current tree
+		if (SelectedTreeNodes.Num() != 0)
 		{
-			// Do we have a slate node for this handle already? If not, then we need to make one
-			FGenericComponentListNodePtrType NewNode = SGenericComponentList::FindOrCreateSlateNodeForHandle(Handle, AddedNodes);
-
-			NodeList.Add(NewNode);
-
-			/* There are no parents or children nodes.
-			// const FSubobjectDataHandle& ParentHandle = Data->GetParentHandle();
-			
-			// Have parent? 
-			if (ParentHandle.IsValid())
-			{
-				// Get the parent node for this subobject
-				FSubobjectEditorTreeNodePtrType ParentNode = SSubobjectEditor::FindOrCreateSlateNodeForHandle(ParentHandle, AddedNodes);
-
-				check(ParentNode);
-				ParentNode->AddChild(NewNode);
-				TreeWidget->SetItemExpansion(ParentNode, true);
-
-				const bool bFilteredOut = RefreshFilteredState(NewNode, false);
-
-				// Add a separator after the default scene root, but only it is not filtered out and if there are more items below it
-				if (!bFilteredOut &&
-					Data->IsDefaultSceneRoot() &&
-					Data->IsInheritedComponent() &&
-					SubobjectData.Find(Handle) < SubobjectData.Num() - 1)
-				{
-					SeperatorNode = MakeShareable<FSubobjectEditorTreeNode>(
-						new FSubobjectEditorTreeNode(FSubobjectDataHandle::InvalidHandle, /** bIsSeperator true));
-					AddedNodes.Add(SeperatorNode->GetDataHandle(), SeperatorNode);
-					ParentNode->AddChild(SeperatorNode);
-				}
-
-			} */
-			
-			// Only for tree views
-			// TreeWidget->SetItemExpansion(NewNode, true);
+			ListWidget->ClearSelection();
 		}
+		NodeList.Empty();
 
-		RestoreSelectionState(SelectedTreeNodes);
-
-		// If we have a pending deferred rename request, redirect it to the new tree node
-		if (DeferredRenameRequest.IsValid())
+		if (GenericGraphNode)
 		{
-			FGenericComponentListNodePtrType NodeToRenamePtr = FindSlateNodeForHandle(DeferredRenameRequest);
-			if (NodeToRenamePtr.IsValid())
+			UGenericSubobjectDataSubsystem* DataSubsystem = UGenericSubobjectDataSubsystem::Get();
+
+			TArray<FGenericSubobjectDataHandle> SubobjectData;
+			DataSubsystem->GatherGenericSubobjectData(GenericGraphNode, SubobjectData);
+
+			FGenericComponentListNodePtrType SeperatorNode;
+			TMap<FGenericSubobjectDataHandle, FGenericComponentListNodePtrType> AddedNodes;
+
+			// Create slate nodes for each subobject
+			for (FGenericSubobjectDataHandle& Handle : SubobjectData)
 			{
-				ListWidget->RequestScrollIntoView(NodeToRenamePtr);
+				// Do we have a slate node for this handle already? If not, then we need to make one
+				FGenericComponentListNodePtrType NewNode = SGenericComponentList::FindOrCreateSlateNodeForHandle(Handle, AddedNodes);
+
+				NodeList.Add(NewNode);
+
+				/* There are no parents or children nodes.
+				// const FSubobjectDataHandle& ParentHandle = Data->GetParentHandle();
+
+				// Have parent?
+				if (ParentHandle.IsValid())
+				{
+					// Get the parent node for this subobject
+					FSubobjectEditorTreeNodePtrType ParentNode = SSubobjectEditor::FindOrCreateSlateNodeForHandle(ParentHandle, AddedNodes);
+
+					check(ParentNode);
+					ParentNode->AddChild(NewNode);
+					TreeWidget->SetItemExpansion(ParentNode, true);
+
+					const bool bFilteredOut = RefreshFilteredState(NewNode, false);
+
+					// Add a separator after the default scene root, but only it is not filtered out and if there are more items below it
+					if (!bFilteredOut &&
+						Data->IsDefaultSceneRoot() &&
+						Data->IsInheritedComponent() &&
+						SubobjectData.Find(Handle) < SubobjectData.Num() - 1)
+					{
+						SeperatorNode = MakeShareable<FSubobjectEditorTreeNode>(
+							new FSubobjectEditorTreeNode(FSubobjectDataHandle::InvalidHandle, /** bIsSeperator true));
+						AddedNodes.Add(SeperatorNode->GetDataHandle(), SeperatorNode);
+						ParentNode->AddChild(SeperatorNode);
+					}
+
+				} */
+
+				// Only for tree views
+				// TreeWidget->SetItemExpansion(NewNode, true);
+			}
+
+			RestoreSelectionState(SelectedTreeNodes);
+
+			// If we have a pending deferred rename request, redirect it to the new tree node
+			if (DeferredRenameRequest.IsValid())
+			{
+				FGenericComponentListNodePtrType NodeToRenamePtr = FindSlateNodeForHandle(DeferredRenameRequest);
+				if (NodeToRenamePtr.IsValid())
+				{
+					ListWidget->RequestScrollIntoView(NodeToRenamePtr);
+				}
 			}
 		}
 	}

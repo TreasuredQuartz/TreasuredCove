@@ -32,7 +32,7 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, Category = "GenericGraphNode")
 	UGenericGraph* Graph;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = "GenericGraphNode")
+	UPROPERTY()
 	TArray<UGenericGraphNodeComponent*> OwnedComponents;
 
 	UPROPERTY(BlueprintReadOnly, Category = "GenericGraphNode")

@@ -260,7 +260,7 @@ Dungeons should generally be a new unique experience dependent on the order in w
 
 Backstory overview – important elements of the world fiction that set the stage for the
 game, but do not directly affect the gameplay.
-[[World]]
+[[World Design Document]]
 	o Link to full world fiction
 • World organization: MVP levels, locations, zones, chapters – including introductory or
 tutorial areas

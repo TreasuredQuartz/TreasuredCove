@@ -6,6 +6,23 @@
 #include "Components/ActorComponent.h"
 #include "RarityComponent.generated.h"
 
+UENUM(BlueprintType)
+enum class ERarityType : uint8
+{
+	Common,
+	Uncommon,
+	Unusual,
+	Scarce,
+	Rare,
+	Epic,
+	Mythic,
+	Legendary,
+	Relic,
+	Artifact,
+	Unique,
+	MAX
+};
+
 USTRUCT(BlueprintType)
 struct FRarityDatabaseRow
 {
@@ -20,7 +37,6 @@ public:
 
 /** A Container intended to be instanced and filled with data
 *	partaining to common rarity indicators.
-*
 */
 UCLASS(Blueprintable)
 class TREASUREDCOVE_API URarityDatabase : public UDataAsset
@@ -41,7 +57,16 @@ public:
 	FLinearColor GetRarityColor(uint8 InRarity) { return !Rows.IsEmpty() && Rows.IsValidIndex(InRarity) ? Rows[InRarity].Color : INVALID_COLOR; };
 };
 
-
+/** A Component used to hold a value that represents the "rarity"
+* of the actor (usually an item). 
+* 
+* Rarity has an associated name and color for User Experience 
+* purposes.
+* 
+* This attribute normally affects other aspects, such as:
+* - spawn rate
+* - crafting difficulty
+*/
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TREASUREDCOVE_API URarityComponent : public UActorComponent
 {
@@ -52,7 +77,7 @@ public:
 	URarityComponent();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Rarity", Meta = (AllowPrivateAccess = "true"))
-	uint8 Rarity = 0;
+	ERarityType Rarity = ERarityType::Common;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|Rarity", Meta = (AllowPrivateAccess = "true"))
 	URarityDatabase* Database;
 

@@ -41,21 +41,26 @@ enum class EBulletSize : uint8
 UENUM(BlueprintType)
 enum class EBulletJacket : uint8
 {
-	UnJacketed,
-	Frangible,
-	Bonded,
-	Partitioned,
-	Solid,
-	FullMetalJacket,
+	UnJacketed,			// No jacket: simple.
+	Plated,				// Weaker jacket essentially.
+	Polycoated,			// Polymer coated, reduceed residue.
+	SemiJacketed,		// Partially coated with a harder metal.
+	FullMetalJacket,	// FMJ: Fully encased with a harder metal.
+	TotalMetalJacket,	// TMJ: Negligable benefits, reduces lead particles.
 };
 
 UENUM(BlueprintType)
 enum class EBulletHead : uint8
 {
+	Solid,
+	SoftPoint,
+	HollowPoint,
+	PolymerTipped,
+	WadCutter,
+	Frangible,
+	Bonded,
+	Partitioned,
 	ShotShellCartridge,
-	HardHead,
-	SoftHead,
-	HollowPoint
 };
 
 USTRUCT(BlueprintType)

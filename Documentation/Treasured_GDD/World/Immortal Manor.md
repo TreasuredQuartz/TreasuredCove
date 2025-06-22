@@ -30,7 +30,7 @@ Eliminated zombies may drop special pick-ups with various effects.
 5. Bonus Points: Gives all players 1250 points.
 6. Fire Sale: Temporarily spawns a Mystery Box at every location and reduces the cost to 10 points.
 7. Death Machine: Temporarily gives all players a Mini-Gun.
-8. Free Perk: Gives all players a random unique perk.
+8. Random Perk: Gives all players a random unique perk.
 9. Infinite Ammo: Temporarily allows weapons to be fired without expending ammo.
 10. Bon Fire Sale: Activates a fire sale, all Wall Buys are reduced to 10 points, Pack-A-Punch and all perk machines are reduced to 1000 points, and all pathways to Pack-A-Punch are opened up.
 
@@ -268,96 +268,40 @@ Perks are special abilities that make the player stronger. It is expected for th
 	51. ***Soda Fountain***
 	*Auto Activates when buying a perk (5x)*
 	Perk purchase limit is ignored. Every perk you buy, a random perk is awarded along with the perk you bought.
-	52. ***Ctrl-Z***
-	*Instant Activation (Lasts 30 seconds)*
-	Turns zombies near you into allies. (Max 2)
-	53. ***Licensed Contractor***
-	*Instant Activation*
-	Spawns a Carpenter power-up.
-	54. ***Phantom Reload***
-	*Instant Activation (Lasts 4 minutes)*
-	Reloading has a 30% chance to fill the magazine without using up stock ammo.
-***Rare***
-	55. ***Alchemical Antithesis***
-	*Instant Activation (Lasts 1 minute)*
-	Every 10 points earned is instead awarded 1 ammo in the stock of the current weapon.
-	56. ***Blood Debt***
-	*Instant Activation (Last 1 minute)*
-	Instead of losing health, you lose points. Amount lost increases each time you are hit until max amount is hit. If you have 0 points, Blood Debt ends.
-	57. ***Extra Credit***
-	*Instant Activation*
-	Spawns a personal 1250 point power-up.
-	58. ***Immolation Liquidation***
-	*Instant Activation*
-	Spawns a Fire Sale power-up.
-	59. ***Shields Up***
-	*Instant Activation*
-	Gives a new shield.
-	60. ***Talkin' Bout Regeneration***
-	*Instant Activation (Lasts 4 minutes)*
-	Your health constantly regenerates while moving.
-
 ***Epic***
-	33. ***Shopping Free***
-	*Activates Immediately (Lasts 1 minute)*
-	All purchases are free.
-	34. ***Head Drama***
-	*Activates Immediately (Lasts 5 minutes)*
+	52. ***Killing Time***
+	*Activated*
+	All zombies freeze in place for 20 seconds. If they are shot, they will be annihilated when the time is up.
+	53. ***Perkaholic***
+	*Instant Activation*
+	Gives the player all Perk-a-Colas available on the map.
+	54. ***Head Drama***
+	*Instant Activation (Lasts until round ends)*
 	Any bullet which hits a zombie will damage its head.
-	35. ***Secret Shopper***
-	*Activates Immediately (Lasts 10 minutes)*
-	Any gun wall-buy can be used to buy ammo for any gun at reduced cost.
-	36. ***Reign Drops***
+	55. ***Secret Shopper***
+	*Instant Activation (Lasts 10 minutes)*
+	Any gun wall-buy can be used to buy ammo for any gun.
+	56. ***Shopping Free***
+	*Instant Activation (Lasts 1 minutes)*
+	All purchases are free.
+	57. ***Near Death Experience***
+	*Instant Activation (Lasts 3 rounds)*
+	Revive, or be revived simply by being near other players. Revived players keep all their perks.
+	58. ***Profit Sharing***
+	*Instant Activation (Lasts 10 minutes)*
+	Points you earn are also received by nearby players and vice versa.
+	59. ***Round Robbin***
 	*Instant Activation*
-	Spawns one of each of the nine core power ups.
-	37. ***Power Vacuum***
-	*Instant Activation (Lasts 5 minutes)*
-	Power ups drop chance is increased, round cap is ignored.
-	38. ***Near Death Experience***
-	*Activates Immediately (Lasts 10 minutes or 5 revives)*
-	Revive, or be revived, simply by being near other players. Revived players keep all Loadout Perks after being revived.
-	39. ***Phoenix Up***
+	Ends the current round. All players gain 1600 points.
+	60. ***Self-Medication***
+	*Auto Activates when getting a kill while downed. (3x)*
+	Self-revive; keep all the Perks including Quick Revive
+	61. ***Power Vacuum***
+	*Instant Activation (Lasts 4 rounds)*
+	Power-Ups spawn more often. The drop chance is greatly increased, the normal cap of only 4 drops per round is ignored.
+	62. ***Reign Drops***
 	*Instant Activation*
-	Revives all teammates. Teammates keep all Loadout Perks after being revived.
-	40. ***Conflagration Liquidation***
-	*Instant Activation*
-	Spawns a Bonfire Sale power-up.
-	41. ***Join the Party***
-	*Instant Activation*
-	All players in spectate will spawn in immediately and all downed players will be immediately revived. Will not restore lost Perks.
-	42. ***Perkaholic***
-	*Activates Immediately*
-	Receive all Loadout Perks and six random, extra perks that are not in your loadout. Will not stack with itself.
-	43. ***Refresh Mint***
-	*Instant Activation*
-	Refreshes cooldowns on Equipment, Special Weapons and Perks for all players.
-	44. ***Suit Up***
-	*Instant Activation*
-	You and nearby players get full Armor which lasts until destroyed.
-
-***Legendary***
-	46. ***Dividend Yield***
-	*Instant Activation (Lasts 5 minutes)*
-	Some of the points you earn create additional bonus points for you and all other nearby players.
-	47. ***Free Fire***
-	*Instant Activation (Lasts 30 seconds)*
-	Fire weapons without using up bullets.
-	48. ***Perk Up***
-	*Instant Activation*
-	Receive four random, extra Perks that are not in your loadout. Will not stack with itself.
-	49. ***Power Keg***
-	*Instant Activation*
-	Spawns a Full Power power-up.
-	50. ***Wall to Wall Clearance***
-	*Instant Activation (Lasts 30 seconds)*
-	Wall buy Fire Sale.
-	51. ***Undead Man Walking***
-	*Instant Activation (Lasts 1 minute)*
-	Slows down all zombies to shambling speed.
-
-
-***Syrups:***
-
+	Spawns all the core Power-Ups at once.
 #### Elixirs
 
 Overview
@@ -531,7 +475,27 @@ Elixirs are primarily divided into two primary styles, ones earnt via levelling 
 
 #### Crafting System
 
+6 Groups.
+
 Element 115
+
+
+Eggs/Berries/Potatoes/Grain
+Milk/Water
+New/Fermented
+Normal/Carbonized
+
+Gin uses grains and juniper berries
+Whiskey uses malted grains
+Brandy uses fermented fruit juice
+Vodka uses potatoes, or sometimes grains or beets
+Tequila and mezcal both use the blue agave and other agave varieties
+Rum uses sugarcane juice or molasses
+Absinthe uses medicinal herbs and plants, including anise and fennel
+
+Madeira, a Portuguese white wine
+Sherry, a Spanish white wine that is often used in cooking
+Vermouth, a white or red wine flavored with aromatic herbs and typically used in martinis
 
 A mineral that is solid at the temperature and pressure of Earth's surface, embedded within it's mantle. Color changes from red, to green, to blue.
 
@@ -543,6 +507,8 @@ A mineral that is solid at the temperature and pressure of Earth's surface, embe
 
 Mix 2 parts sugar and Liquid Divinium over high heat until sugar is dissolved to make a simple syrup. Combine simple syrup with an ingredient to make a specific perk-a-cola syrup.
 
+***Syrups:***
+
 Carbonization:
 - Soda - water
 - Cola - non-water
@@ -550,7 +516,7 @@ Straight:
 - Brew - fermented
 - Tonic - immediate
 
-Mixing a syrup with anything and carbonizing it results in a Soda or a Cola, otherwise, using a New syrup results in a Tonic and using an old (fermented) syrup results in a Brew.
+Mixing a syrup with anything and carbonizing it results in a Soda or a Cola, otherwise, using a New syrup results in a Tonic and using an Old (fermented) syrup results in a Brew.
 
 Examples:
 - New syrup = Tonic

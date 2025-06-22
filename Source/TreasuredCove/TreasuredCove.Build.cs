@@ -30,6 +30,7 @@ public class TreasuredCove : ModuleRules
 			"Core", 
 			"CoreUObject",
             "ChaosVehicles",
+			"EditorStyle",
             "Engine",
             "EnhancedInput",
             "InputCore", 

@@ -7,8 +7,14 @@
 #include "ShooterComponent.generated.h"
 
 class UShooterAttatchment;
+class UAccessoryAttatchment;
 class UMagazineAttatchment;
 class UBarrelAttatchment;
+class UBodyAttatchment;
+class UGripAttatchment;
+class USightAttatchment;
+class UStockAttatchment;
+
 class UBulletCartridgeData;
 class UBulletData;
 class ABulletProjectile;
@@ -36,6 +42,9 @@ public:
 	// Sets default values for this component's properties
 	UShooterComponent();
 
+	// Called when created during play.
+	virtual void BeginPlay() override;
+
 	//
 	UFUNCTION(BlueprintCallable, Category = "Shooter")
 	void FireAtTarget(AActor* TargetActor, float Accuracy);
@@ -43,14 +52,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Shooter")
 	void PullTrigger();
 
-	UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite, Category = "Shooter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
 	TArray<UShooterAttatchment*> Attatchments;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Shooter")
-	UMagazineAttatchment* Magazine;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Shooter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
 	UBarrelAttatchment* Barrel;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shooter")
+	UMagazineAttatchment* Magazine;
 
 private:
 	FTransform GetProjectileSpawnTransform() { return FTransform(); };
@@ -61,6 +70,8 @@ private:
 	FVector GetFinalLocation(const FVector& TargetLocation);
 
 public:
+	void AddShooterAttatchment(UShooterAttatchment* NewAttatchment);
+
 	bool CanReloadMagazine();
 	void CommitReload();
 	void StartReload();
