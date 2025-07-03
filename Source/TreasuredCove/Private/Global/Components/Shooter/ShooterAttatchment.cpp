@@ -1,5 +1,5 @@
 // Copyright 2018 - 2023 B. M. Biggs. All Rights Reserved.
 
 
-#include "Global/Components/Shooter/ShooterAttatchment.h"
+#include "Global/Components/Shooter/ShooterAttachment.h"
 

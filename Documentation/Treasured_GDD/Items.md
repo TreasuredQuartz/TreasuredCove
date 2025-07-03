@@ -114,19 +114,22 @@ M1911
 - Effective Range: 50 m
 - Muzzle Velocity: 253 m/s
 - Feed-System: 7, 8, 9, 10 or 12 round capacity.
+
 Glock
 
 #### Light Machine Guns
 
 Diablo
+- Flamethrower model
 
 Nirvana
+- High pressure water gun
 
 #### Shotguns
 
 Cartridge: 12 gauge buckshot
 
-Olympus
+Hercules
 - Action 2000 rpm
 	- Break Action
 - Barrel
@@ -152,6 +155,8 @@ Gatsby
 #### Sniper Rifles
 
 CS5
+
+Springfield
 
 #### Sub Machine Guns
 

@@ -6,6 +6,7 @@
 #include "Global/Actors/GACharacter.h"
 #include "Global/Components/Characters/GACharacterMovementComponent.h"
 #include "Global/Components/Items/AimOffsetComponent.h"
+#include "Global/Components/FirstPersonComponent.h"
 #include "Global/Enumerations/CustomMovementMode.h"
 
 #include "Components/CapsuleComponent.h"
@@ -52,10 +53,16 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 
 	// Camera mode
 	bFirstPerson = false;
-		// Character->IsLocallyControlled() ? Character->bFirstPerson : false;
+	if (Character->IsLocallyControlled())
+	{
+		if (UFirstPersonComponent* FirstPersonComp = Character->GetComponentByClass<UFirstPersonComponent>())
+		{
+			bFirstPerson = FirstPersonComp->IsFirstPerson();
+		}
+	}
 
 	// Multiply by weapon's Twist/Turn multiplier
-	if (bFirstPerson && false)
+	if (bFirstPerson)
 	{
 		DominantHandTwist = FMath::RInterpTo(DominantHandTwist
 			, (ControlDirection - Character->GetControlRotation())
@@ -109,10 +116,10 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		CalcDirection(Character->GetVelocity(), Character->GetActorRotation());
 
 	// 
-	if (!bFirstPerson) FRotator MeshDirection = 
-		(ControlDirection - Character->GetActorRotation()).GetNormalized();
+	FRotator MeshDirection = FRotator();
+	if (!bFirstPerson) MeshDirection = (ControlDirection - Character->GetActorRotation()).GetNormalized();
 
-	/*FRotator TempRotator =
+	FRotator TempRotator =
 		FMath::RInterpTo(FRotator(-AimPitch, AimYaw, 0)
 			, MeshDirection
 			, DeltaTime
@@ -122,7 +129,7 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 		FMath::Clamp(TempRotator.Yaw, -90, 90);
 
 	AimPitch =
-		FMath::Clamp(TempRotator.Pitch, -90, 90);*/
+		FMath::Clamp(TempRotator.Pitch, -90, 90); // */
 
 	bCrouching =
 		Character->bIsCrouched;
@@ -165,7 +172,7 @@ void UGAAnimInstance::UpdateAnimationProperties(float DeltaTime)
 	{
 		AimOffsetAlpha = 1 - ItemAimOffsetComponent->GetAlpha();
 		AimOffsetAlphaLerp = FMath::Lerp(0.3, 1.f, AimOffsetAlpha);
-		AimOffset = ItemAimOffsetComponent->GetAimOffset();
+		AimOffset = FMath::Lerp(ItemAimOffsetComponent->GetAimOffset(), ItemAimOffsetComponent->GetNeutralOffset(), AimOffsetAlpha);
 	}
 }
 
@@ -272,8 +279,8 @@ void UGAAnimInstance::ResetArmIK()
 	HandRotation = ControlDirection;
 	HandRotation.Yaw += 180;
 	HandRotation.Pitch *= -1;
-	LeftHandEffectorLocation = FVector::ZeroVector;
-	RightHandEffectorLocation = FVector::ZeroVector;
+	LeftHandEffectorTransform = FTransform::Identity;
+	RightHandEffectorTransform = FTransform::Identity;
 }
 
 void UGAAnimInstance::ResetLegIK()
@@ -431,16 +438,18 @@ void UGAAnimInstance::IKPlacements_Hanging(float DeltaTime)
 
 void UGAAnimInstance::IKPlacements_AimItem(float DeltaTime)
 {
-	if (!CharacterItem || !bFirstPerson || true)
+	if (!CharacterItem || !bFirstPerson)
 	{
 		ResetArmIK();
-		RightHandEffectorLocation = AimOffset;
-		LeftHandEffectorLocation = AimOffset + ControlDirection.Vector() * 20;
+		RightHandEffectorTransform.SetLocation(AimOffset + ControlDirection.Vector() * 20);
+		RightHandEffectorTransform.SetRotation(FRotator(0, 0, -90).Quaternion());
+		LeftHandEffectorTransform.SetLocation(AimOffset + ControlDirection.Vector() * 20);
+		LeftHandEffectorTransform.SetRotation(FRotator(180, 0, 90).Quaternion());
 		return;
 	}
 
-	const FVector& Grip_r = GetSkelMeshComponent()->GetSocketLocation(FName("grip_r"));
-	const FVector& Grip_l = GetSkelMeshComponent()->GetSocketLocation(FName("grip_l"));
+	const FVector& Grip_r = GetSkelMeshComponent()->GetSocketLocation(FName("hand_r"));
+	const FVector& Grip_l = GetSkelMeshComponent()->GetSocketLocation(FName("hand_l"));
 
 	FHitResult Hit;
 	const FVector& Start = GetSkelMeshComponent()->GetSocketLocation(FName("sight"));
@@ -454,13 +463,13 @@ void UGAAnimInstance::IKPlacements_AimItem(float DeltaTime)
 	const FRotator& LookAtRotation_l = (UKismetMathLibrary::FindLookAtRotation(Grip_l, Hit.bBlockingHit ? Hit.Location : End));
 
 	// Rotation issues.
-	// -- Pitch is inverted
+	// -- Pitch is inverted+
 	// -- Yaw is turned around
 	// I think they stem from DominantHandTwist (Difference between last ControlDirection and current ControlDirection)
 	// -- This value is in world space and overrides the base rotation of the hand.
-	LookAtRotation_r.Pitch *= -1;
-	LookAtRotation_r.Yaw += 180;
-	LookAtRotation_r += DominantHandTwist;
+	// LookAtRotation_r.Pitch *= -1;
+	// LookAtRotation_r.Yaw += 180;
+	// LookAtRotation_r += DominantHandTwist;
 
 	// Use Interp to reduce snapping between far and close objects
 	HandRotation = FMath::RInterpTo(HandRotation
@@ -468,11 +477,36 @@ void UGAAnimInstance::IKPlacements_AimItem(float DeltaTime)
 		, DeltaTime
 		, 20.f);
 
-	FRotator OutRotation;
-	FVector OutLocation;
+	const FVector ArmOffset = ControlDirection.RotateVector(AimOffset); // + Character->GetActorLocation() + FVector(0, 0, 65) + (Character->GetActorForwardVector() * 20);
+	{
+		FRotator OutRotation;
+		FVector OutLocation;
 
-	// GetSkelMeshComponent()->TransformToBoneSpace(FName("grip_l"), CharacterItem->GetSupportingHandOffset().GetLocation(), GetSkelMeshComponent()->GetSocketRotation(FName("grip_l")), LeftHandEffectorLocation, OutRotation);
-	// RightHandEffectorLocation = CharacterItem->GetHeldHandOffset().GetLocation();
+		FName hl = FName("hand_l");
+		const FVector HandOffset = ArmOffset + GetSkelMeshComponent()->GetSocketLocation(hl);
+		const FRotator HandRotationOffset = FRotator(0, 0, 0); // GetSkelMeshComponent()->GetSocketRotation(hl);
+
+		GetSkelMeshComponent()->TransformToBoneSpace(hl, HandOffset, HandRotationOffset, OutLocation, OutRotation);
+		LeftHandEffectorTransform.SetLocation(OutLocation);
+		// OutRotation.Pitch *= -1;
+		// OutRotation.Yaw += 180;
+		LeftHandEffectorTransform.SetRotation(OutRotation.Quaternion());
+	}
+
+	{
+		FRotator OutRotation;
+		FVector OutLocation;
+
+		FName hr = FName("hand_r");
+		const FVector HandOffset = ArmOffset + GetSkelMeshComponent()->GetSocketLocation(hr);
+		const FRotator HandRotationOffset = FRotator(0, 0, 0); // GetSkelMeshComponent()->GetSocketRotation(hr);
+
+		GetSkelMeshComponent()->TransformToBoneSpace(hr, HandOffset, HandRotationOffset, OutLocation, OutRotation);
+		RightHandEffectorTransform.SetLocation(OutLocation);
+		// OutRotation.Pitch *= -1;
+		// OutRotation.Yaw += 180;
+		RightHandEffectorTransform.SetRotation(OutRotation.Quaternion());
+	}
 }
 
 bool UGAAnimInstance::CanJump(bool bShouldJump)
@@ -487,14 +521,14 @@ void UGAAnimInstance::AnimNotify_Jump()
 		Character->Jump();
 	}
 }
-/*
-void UGAAnimInstance::AnimNotify_IdleStart()
+
+/* void UGAAnimInstance::AnimNotify_IdleStart()
 {
 	bJumping = false;
 
 	Character->bPressedJump = false;
-}
-*/
+} // */
+
 void UGAAnimInstance::AnimNotify_JogStart()
 {
 	// bJumping = false;

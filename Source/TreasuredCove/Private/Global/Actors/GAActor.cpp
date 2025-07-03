@@ -45,28 +45,18 @@ AGAActor::AGAActor()
 	Root =
 		CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(Root);
-
-	// Animation Offset
-	DominantHandOffset =
-		CreateDefaultSubobject<UBillboardComponent>(TEXT("DominantHandOffset"));
-	DominantHandOffset->SetupAttachment(Root);
-
-	// Animation Offset
-	SupportingHandOffset =
-		CreateDefaultSubobject<UBillboardComponent>(TEXT("SupportingHandOffset"));
-	SupportingHandOffset->SetupAttachment(Root);
 }
 
 UAbilitySystemComponent* AGAActor::GetAbilitySystemComponent() const { return AbilitySystem; }
 
 FTransform AGAActor::GetHeldHandOffset() const
 {
-	return DominantHandOffset ? DominantHandOffset->GetComponentTransform() : FTransform();
+	return DominantHandOffset;
 }
 
 FTransform AGAActor::GetSupportingHandOffset() const
 {
-	return DominantHandOffset ? SupportingHandOffset->GetComponentTransform() : FTransform();
+	return SupportingHandOffset;
 }
 
 // Called when the game starts or when spawned

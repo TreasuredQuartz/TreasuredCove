@@ -3,10 +3,10 @@
 
 #include "Global/Framework/RandomGunGenerator.h"
 #include "Global/Components/Items/ShooterComponent.h"
-#include "Global/Components/Shooter/ShooterAttatchment.h"
-#include "Global/Components/Shooter/BodyAttatchment.h"
-#include "Global/Components/Shooter/AccessoryAttatchment.h"
-#include "Global/Components/Shooter/SightAttatchment.h"
+#include "Global/Components/Shooter/ShooterAttachment.h"
+// #include "Global/Components/Shooter/BodyAttachment.h"
+#include "Global/Components/Shooter/AccessoryAttachment.h"
+#include "Global/Components/Shooter/SightAttachment.h"
 
 #include "Global/Components/Items/RarityComponent.h"
 #include "Global/Components/Items/ProficiencyComponent.h"
@@ -34,59 +34,59 @@ void URandomGunGenerator::GenerateNewGun(AActor* InGun)
 
 	Rarity->Rarity		= (ERarityType)GenerateNewRarity();
 
-	UBodyAttatchment* Body				= GenerateNewBody();
-	UGripAttatchment* Grip				= GenerateNewGrip();
-	UBarrelAttatchment* Barrel			= GenerateNewBarrel();
-	UMagazineAttatchment* Magazine		= GenerateNewMagazine();
-	UAccessoryAttatchment* Accessory	= GenerateNewAccessory();
-	USightAttatchment* Sight			= GenerateNewSight();
-	UStockAttatchment* Stock			= GenerateNewStock();
+	// UBodyAttachment* Body				= GenerateNewBody();
+	UGripAttachment* Grip				= GenerateNewGrip();
+	UBarrelAttachment* Barrel			= GenerateNewBarrel();
+	UMagazineAttachment* Magazine		= GenerateNewMagazine();
+	UAccessoryAttachment* Accessory	= GenerateNewAccessory();
+	USightAttachment* Sight			= GenerateNewSight();
+	UStockAttachment* Stock			= GenerateNewStock();
 
 	Shooter->Barrel		= Barrel;
 	Shooter->Magazine	= Magazine;
 
-	Shooter->AddShooterAttatchment(Barrel);
-	Shooter->AddShooterAttatchment(Magazine);
-	Shooter->AddShooterAttatchment(Body);
-	Shooter->AddShooterAttatchment(Grip);
-	Shooter->AddShooterAttatchment(Accessory);
-	Shooter->AddShooterAttatchment(Sight);
-	Shooter->AddShooterAttatchment(Stock);
+	Shooter->AddShooterAttachment(Barrel);
+	Shooter->AddShooterAttachment(Magazine);
+	// Shooter->AddShooterAttachment(Body);
+	Shooter->AddShooterAttachment(Grip);
+	Shooter->AddShooterAttachment(Accessory);
+	Shooter->AddShooterAttachment(Sight);
+	Shooter->AddShooterAttachment(Stock);
 }
 
-UBodyAttatchment* URandomGunGenerator::GenerateNewBody() const
+//UBodyAttachment* URandomGunGenerator::GenerateNewBody() const
+//{
+//	return NewObject<UBodyAttachment>();
+//}
+
+UGripAttachment* URandomGunGenerator::GenerateNewGrip() const
 {
-	return NewObject<UBodyAttatchment>();
+	return NewObject<UGripAttachment>();
 }
 
-UGripAttatchment* URandomGunGenerator::GenerateNewGrip() const
+UBarrelAttachment* URandomGunGenerator::GenerateNewBarrel() const
 {
-	return NewObject<UGripAttatchment>();
+	return NewObject<UBarrelAttachment>();
 }
 
-UBarrelAttatchment* URandomGunGenerator::GenerateNewBarrel() const
+UMagazineAttachment* URandomGunGenerator::GenerateNewMagazine() const
 {
-	return NewObject<UBarrelAttatchment>();
+	return NewObject<UMagazineAttachment>();
 }
 
-UMagazineAttatchment* URandomGunGenerator::GenerateNewMagazine() const
+UAccessoryAttachment* URandomGunGenerator::GenerateNewAccessory() const
 {
-	return NewObject<UMagazineAttatchment>();
+	return NewObject<UAccessoryAttachment>();
 }
 
-UAccessoryAttatchment* URandomGunGenerator::GenerateNewAccessory() const
+USightAttachment* URandomGunGenerator::GenerateNewSight() const
 {
-	return NewObject<UAccessoryAttatchment>();
+	return NewObject<USightAttachment>();
 }
 
-USightAttatchment* URandomGunGenerator::GenerateNewSight() const
+UStockAttachment* URandomGunGenerator::GenerateNewStock() const
 {
-	return NewObject<USightAttatchment>();
-}
-
-UStockAttatchment* URandomGunGenerator::GenerateNewStock() const
-{
-	UStockAttatchment* Stock = GetAttatchment<UStockAttatchment>();
+	UStockAttachment* Stock = GetAttachment<UStockAttachment>();
 
 
 

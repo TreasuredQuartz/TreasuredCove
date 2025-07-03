@@ -35,6 +35,7 @@ This section details the concept art and implementation of the world. The game t
 
 - [[Center Region]] —
 	- [[Aurifer Caelus]]
+	- [[Infimus Caelus]]
 	- Volcanic Mountain
 	- Grassland Hills and Valleys
 	- Rivers flow outward

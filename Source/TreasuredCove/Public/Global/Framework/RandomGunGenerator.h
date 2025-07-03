@@ -6,15 +6,15 @@
 #include "Global/Components/WeaponGeneratorComponent.h"
 #include "RandomGunGenerator.generated.h"
 
-class UShooterAttatchmentDatabase;
-class UShooterAttatchment;
-class UAccessoryAttatchment;
-class UMagazineAttatchment;
-class UBarrelAttatchment;
-class UBodyAttatchment;
-class UGripAttatchment;
-class USightAttatchment;
-class UStockAttatchment;
+class UShooterAttachmentDatabase;
+class UShooterAttachment;
+class UAccessoryAttachment;
+class UMagazineAttachment;
+class UBarrelAttachment;
+// class UBodyAttachment;
+class UGripAttachment;
+class USightAttachment;
+class UStockAttachment;
 
 /**
  * 
@@ -30,31 +30,31 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void GenerateNewGun(class AActor* InGun);
 
-	UBodyAttatchment* GenerateNewBody() const;
+	// UBodyAttachment* GenerateNewBody() const;
 
-	UGripAttatchment* GenerateNewGrip() const;
+	UGripAttachment* GenerateNewGrip() const;
 
-	UBarrelAttatchment* GenerateNewBarrel() const;
+	UBarrelAttachment* GenerateNewBarrel() const;
 
-	UMagazineAttatchment* GenerateNewMagazine() const;
+	UMagazineAttachment* GenerateNewMagazine() const;
 
-	UAccessoryAttatchment* GenerateNewAccessory() const;
+	UAccessoryAttachment* GenerateNewAccessory() const;
 
-	USightAttatchment* GenerateNewSight() const;
+	USightAttachment* GenerateNewSight() const;
 
-	UStockAttatchment* GenerateNewStock() const;
+	UStockAttachment* GenerateNewStock() const;
 
 	uint8 GenerateNewRarity() const;
 
 	template<class T>
-	T* GetAttatchment() const;
+	T* GetAttachment() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun Database")
-	UShooterAttatchmentDatabase* Database;
+	UShooterAttachmentDatabase* Database;
 };
 
 template<class T>
-inline T* URandomGunGenerator::GetAttatchment() const
+inline T* URandomGunGenerator::GetAttachment() const
 {
 	return nullptr;
 }

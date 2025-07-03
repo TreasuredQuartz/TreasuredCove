@@ -529,14 +529,21 @@ ___
 ### Power Switch
 First: The map must be opened up to the extent of reaching the Power Switch; preferably every room has been opened.
 
-### Perk Machines
-Second: Perk Machines require being refilled, otherwise they become inactive after their first purchase.
+### Refill Perk Machines
+Perks maybe obtained from perk machines after power has been restored.
 
-### Teleporters
+#### Perk distillery
+Perk Machines require being refilled after their first purchase.
+
+The process involved can apply new augments to every perk.
+
+### Activate Pack-A-Punch
+
+##### Teleporters
 Third: Teleporters require being linked to their pads.
 
-### Pack-A-Punch
-Fourth: Pack-A-Punch needs to be unlocked next.
+Using every teleporter will unlock Pack-A-Punch.
+
 
 ## Rewards
 ___
