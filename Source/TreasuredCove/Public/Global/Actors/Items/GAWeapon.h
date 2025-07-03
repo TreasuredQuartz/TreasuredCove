@@ -40,8 +40,6 @@ protected:
 	bool bBeingPickedUp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
-	uint8 Rarity;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	FName Name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item|UI")
 	UTexture2D* Texture;

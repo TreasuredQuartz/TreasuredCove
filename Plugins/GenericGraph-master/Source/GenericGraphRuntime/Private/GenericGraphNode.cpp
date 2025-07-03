@@ -1,5 +1,9 @@
+// Includes
+
 #include "GenericGraphNode.h"
 #include "GenericGraph.h"
+#include "GenericGraphNodeComponent.h"
+
 
 #define LOCTEXT_NAMESPACE "GenericGraphNode"
 
@@ -26,7 +30,53 @@ FText UGenericGraphNode::GetDescription_Implementation() const
 	return LOCTEXT("NodeDesc", "Generic Graph Node");
 }
 
+void UGenericGraphNode::AddInstanceComponent(UGenericGraphNodeComponent* Component)
+{
+	Component->CreationMethod = EComponentCreationMethod::Instance;
+	Component->SetOwner(this);
+	OwnedComponents.AddUnique(Component);
+}
+
+void UGenericGraphNode::RemoveOwnedComponent(UGenericGraphNodeComponent* Component)
+{
+	// Note: we do not mark dirty here because this can be called as part of component duplication when reinstancing components during blueprint compilation
+	// if a component is removed during this time it should not dirty.  Higher level code in the editor should always dirty the package anyway.
+	const bool bMarkDirty = false;
+	Modify(bMarkDirty);
+
+	OwnedComponents.Remove(Component);
+}
+
+UGenericGraphNodeComponent* UGenericGraphNode::GetComponentByClass(TSubclassOf<UGenericGraphNodeComponent> ComponentClass) const
+{
+	return FindComponentByClass(ComponentClass);
+}
+
+UGenericGraphNodeComponent* UGenericGraphNode::FindComponentByClass(const TSubclassOf<UGenericGraphNodeComponent> ComponentClass) const
+{
+	UGenericGraphNodeComponent* FoundComponent = nullptr;
+
+	if (UClass* TargetClass = ComponentClass.Get())
+	{
+		for (UGenericGraphNodeComponent* Component : OwnedComponents)
+		{
+			if (Component && Component->IsA(TargetClass))
+			{
+				FoundComponent = Component;
+				break;
+			}
+		}
+	}
+
+	return FoundComponent;
+}
+
 #if WITH_EDITOR
+FName UGenericGraphNode::GetCustomIconName() const
+{
+	return IconName;
+}
+
 bool UGenericGraphNode::IsNameEditable() const
 {
 	return true;

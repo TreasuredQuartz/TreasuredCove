@@ -40,6 +40,11 @@ protected:
 	EWeaponType HeldWeaponType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FTransform RightHandEffectorTransform;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FTransform LeftHandEffectorTransform;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator ControlDirection;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator HandRotation;
@@ -52,10 +57,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector MeshSpaceVelocity;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FVector RightHandEffectorLocation;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FVector LeftHandEffectorLocation;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FVector RightFootEffectorLocation;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

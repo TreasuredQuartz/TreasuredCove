@@ -1,0 +1,1 @@
+A cold pine tree forest that remains snowy and cold even during the summer season.

@@ -29,9 +29,6 @@ public:
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UDataTable* SkillTable;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UGASkillTreeWidget> Widget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -43,8 +40,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int Level;
 
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	// struct FGASkillTreeStyleStruct Style;
 public:
 	void AddPoint()
 	{

@@ -48,17 +48,18 @@ void UFirstPersonComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 		if (!LocalMove) return;
 
 		// Movement has to be on the ground.
-		if (!LocalMove->IsMovingOnGround()) return;
+		// if (!LocalMove->IsMovingOnGround()) return;
 
 		USkeletalMeshComponent* MeshComp = LocalOwner->GetComponentByClass<USkeletalMeshComponent>();
 		CheckCrouching(LocalMove, MeshComp);
+		// if (!bDetectedCrouch) return;
 
 		// We have to be moving.
-		FVector LocalVelocity = LocalOwner->GetVelocity();
-		if (LocalVelocity.Size() <= 0) return;
+		// FVector LocalVelocity = LocalOwner->GetVelocity();
+		// if (LocalVelocity.Size() <= 0) return;
 
 		// We have to be moving forward.
-		if (LocalVelocity.ForwardVector.X < 0) return;
+		// if (LocalVelocity.ForwardVector.X > 0) return;
 
 		// 
 		LocalOwner->bUseControllerRotationYaw = true;
@@ -98,8 +99,8 @@ void UFirstPersonComponent::ChangeViewpoint(bool bInFirstPerson)
 			bFirstPerson ? FirstPersonMesh : ThirdPersonMesh
 		);
 
-		/* OwnerMeshComponent->SetRelativeRotation(
-			bFirstPerson ? FRotator(0, -90, 0) : FRotator::ZeroRotator
+		OwnerMeshComponent->SetRelativeRotation(
+			bFirstPerson ? FRotator::ZeroRotator : FRotator(0, -90, 0)
 		); // */
 
 		SpringArmComponent->TargetArmLength = 
@@ -120,7 +121,7 @@ void UFirstPersonComponent::CheckCrouching(const UPawnMovementComponent* InMoveC
 		if (!bDetectedCrouch)
 		{
 			FVector MeshRelativeLocation = InMeshComp->GetRelativeLocation();
-			MeshRelativeLocation.Z -= 90;
+			MeshRelativeLocation.Z -= 45;
 			InMeshComp->SetRelativeLocation(MeshRelativeLocation);
 		}
 

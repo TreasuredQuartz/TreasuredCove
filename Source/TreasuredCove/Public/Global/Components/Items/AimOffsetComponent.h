@@ -26,6 +26,8 @@ private:
 	float Speed;
 
 	UPROPERTY(EditDefaultsOnly)
+	FVector NeutralOffset;
+	UPROPERTY(EditDefaultsOnly, Meta = (MakeEditWidget = true))
 	FVector AimOffset;
 
 public:
@@ -36,6 +38,8 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	float GetVignette() const { return Vignette; };
 
+	UFUNCTION(BlueprintPure, BlueprintCallable)
+	FVector GetNeutralOffset() const { return NeutralOffset; };
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	FVector GetAimOffset() const { return AimOffset; };
 

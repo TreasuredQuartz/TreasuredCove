@@ -1,14 +1,18 @@
 #include "GenericGraphAssetEditor/SEdNode_GenericGraphNode.h"
-#include "GenericGraphEditorPCH.h"
 #include "GenericGraphAssetEditor/Colors_GenericGraph.h"
-#include "SLevelOfDetailBranchNode.h"
+#include "GenericGraphAssetEditor/EdGraph_GenericGraph.h"
+#include "GenericGraphAssetEditor/EdNode_GenericGraphNode.h"
+#include "GenericGraphAssetEditor/GenericGraphDragConnection.h"
+#include "GenericGraphAssetEditor/SGenericComponentList.h"
+#include "GenericSubobjectEditor/SGenericSubobjectEditor.h"
+#include "GenericGraphEditorPCH.h"
+
 #include "Widgets/Text/SInlineEditableTextBlock.h"
+// #include "SLevelOfDetailBranchNode.h"
 #include "SCommentBubble.h"
 #include "SlateOptMacros.h"
 #include "SGraphPin.h"
 #include "GraphEditorSettings.h"
-#include "GenericGraphAssetEditor/EdNode_GenericGraphNode.h"
-#include "GenericGraphAssetEditor/GenericGraphDragConnection.h"
 
 #define LOCTEXT_NAMESPACE "EdNode_GenericGraph"
 
@@ -73,21 +77,23 @@ protected:
 
 };
 
-
 //////////////////////////////////////////////////////////////////////////
 void SEdNode_GenericGraphNode::Construct(const FArguments& InArgs, UEdNode_GenericGraphNode* InNode)
 {
 	GraphNode = InNode;
+
 	UpdateGraphNode();
+
 	InNode->SEdNode = this;
 }
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
+
 void SEdNode_GenericGraphNode::UpdateGraphNode()
 {
 	const FMargin NodePadding = FMargin(5);
 	const FMargin NamePadding = FMargin(2);
-
+	
 	InputPins.Empty();
 	OutputPins.Empty();
 
@@ -95,12 +101,14 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 	RightNodeBox.Reset();
 	LeftNodeBox.Reset();
 
-	const FSlateBrush *NodeTypeIcon = GetNameIcon();
+	const FSlateBrush* NodeTypeIcon = GetNameIcon();
 
 	FLinearColor TitleShadowColor(0.6f, 0.6f, 0.6f);
 	TSharedPtr<SErrorText> ErrorText;
 	TSharedPtr<SVerticalBox> NodeBody;
 	TSharedPtr<SNodeTitle> NodeTitle = SNew(SNodeTitle, GraphNode);
+	UEdNode_GenericGraphNode* EdNode = Cast<UEdNode_GenericGraphNode>(GraphNode);
+	UGenericGraphNode* GenericGraphNode = EdNode->GenericGraphNode ? EdNode->GenericGraphNode : nullptr;
 
 	this->ContentScale.Bind(this, &SGraphNode::GetContentScale);
 	this->GetOrAddSlot(ENodeZone::Center)
@@ -172,11 +180,12 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 							[
 								SNew(SImage)
 								.Image(NodeTypeIcon)
-							]
+							] 
 										
 							// Node Title
 							+ SHorizontalBox::Slot()
 							.Padding(FMargin(4.0f, 0.0f, 4.0f, 0.0f))
+							.FillWidth(1.0)
 							[
 								SNew(SVerticalBox)
 								+ SVerticalBox::Slot()
@@ -195,7 +204,6 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 								[
 									NodeTitle.ToSharedRef()
 								]
-
 							]
 						]
 
@@ -203,11 +211,7 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 						+ SVerticalBox::Slot()
 						.AutoHeight()
 						[
-							SAssignNew(ListViewWidget, SListView<TSharedPtr<FSlateBrush>>)
-							.ItemHeight(24)
-							.Orientation(EOrientation::Orient_Horizontal)
-							.ListItemsSource(&Cast<UEdNode_GenericGraphNode>(GraphNode)->GenericGraphNode->GetItems()) //The Items array is the source of this listview
-							.OnGenerateRow(this, &SEdNode_GenericGraphNode::OnGenerateRowForList)
+							SNew(SGenericComponentList, GenericGraphNode)
 						]
 					]
 				]
@@ -240,7 +244,6 @@ void SEdNode_GenericGraphNode::UpdateGraphNode()
 
 	ErrorReporting = ErrorText;
 	ErrorReporting->SetError(ErrorMsg);
-	ListViewWidget->RequestListRefresh();
 	CreatePinWidgets();
 }
 
@@ -296,15 +299,95 @@ void SEdNode_GenericGraphNode::AddPin(const TSharedRef<SGraphPin>& PinToAdd)
 	}
 }
 
-TSharedRef<ITableRow> SEdNode_GenericGraphNode::OnGenerateRowForList(TSharedPtr<FSlateBrush> Item, const TSharedRef<STableViewBase>& OwnerTable)
+TSharedRef<SWidget> SEdNode_GenericGraphNode::GenerateComponentPicker()
 {
-	//Create the row
+	// FOnClassPicked OnPicked(FOnClassPicked::CreateSP(this, &SEdNode_GenericGraphNode::OnComponentPicked));
+
+	return SNew(SBox);
+		/* .WidthOverride(280.0f)
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.MaxHeight(500.0f)
+			[
+				FModuleManager::LoadModuleChecked<FClassViewerModule>("ClassViewer").CreateClassViewer(ComponentClassViewerOptions, OnPicked)
+			]
+		]; // */
+}
+
+void SEdNode_GenericGraphNode::SendToObjects(const FString& NewValue)
+{
+	if (PropertyEditor.IsValid())
+	{
+		// const TSharedRef<IPropertyHandle> PropertyHandle = PropertyEditor->GetPropertyHandle();
+		// PropertyHandle->SetValueFromFormattedString(NewValue);
+	}
+	else if (!NewValue.IsEmpty() && NewValue != TEXT("None"))
+	{
+		auto FindOrLoadClass = [](const FString& ClassName) {
+			UClass* Class = UClass::TryFindTypeSlow<UClass>(ClassName, EFindFirstObjectOptions::EnsureIfAmbiguous);
+
+			if (!Class)
+			{
+				Class = LoadObject<UClass>(nullptr, *ClassName);
+			}
+
+			return Class;
+		};
+
+		const UClass* NewClass = FindOrLoadClass(NewValue);
+		OnSetClass.Execute(NewClass);
+	}
+	else
+	{
+		OnSetClass.Execute(nullptr);
+	}
+}
+
+void SEdNode_GenericGraphNode::CreateClassFilterObtions()
+{
+	/*ComponentClassViewerOptions.bShowBackgroundBorder = false;
+	ComponentClassViewerOptions.bShowUnloadedBlueprints = true;
+
+	const bool bAllowNone = false;
+	const bool bIsBlueprintBaseOnly = false;
+	const bool bAllowOnlyPlaceable = false;
+	const bool bShowDisplayNames = false;
+	const bool bShowTree = false;
+	const bool bShowViewOptions = false;
+	TArray<TSharedRef<IClassViewerFilter>> InClassFilters;
+	InClassFilters.Add(MakeShared<FClassViewerFilter>(FClassViewerInitializationOptions()));
+
+	ComponentClassViewerOptions.bShowNoneOption = bAllowNone;
+	ComponentClassViewerOptions.bIsBlueprintBaseOnly = bIsBlueprintBaseOnly;
+	ComponentClassViewerOptions.bIsPlaceableOnly = bAllowOnlyPlaceable;
+	ComponentClassViewerOptions.NameTypeToDisplay = (bShowDisplayNames ? EClassViewerNameTypeToDisplay::DisplayName : EClassViewerNameTypeToDisplay::ClassName);
+	ComponentClassViewerOptions.DisplayMode = bShowTree ? EClassViewerDisplayMode::TreeView : EClassViewerDisplayMode::ListView;
+	ComponentClassViewerOptions.bAllowViewOptions = bShowViewOptions;
+	ComponentClassViewerOptions.ClassFilters.Append(InClassFilters);*/
+
+	/*TSharedRef<FPropertyEditorClassFilter> PropEdClassFilter = MakeShared<FPropertyEditorClassFilter>();
+	PropEdClassFilter->ClassPropertyMetaClass = MetaClass;
+	PropEdClassFilter->InterfaceThatMustBeImplemented = RequiredInterface;
+	PropEdClassFilter->bAllowAbstract = bAllowAbstract;
+	PropEdClassFilter->AllowedClassFilters = AllowedClassFilters;
+	PropEdClassFilter->DisallowedClassFilters = DisallowedClassFilters;
+
+	ComponentClassViewerOptions.ClassFilters.Add(PropEdClassFilter);*/
+}
+
+TSharedRef<ITableRow> SEdNode_GenericGraphNode::OnGenerateRowForList(TSharedPtr<FText> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	// Create the row
+	if (!Item.IsValid()) return SNew(STableRow< TSharedPtr<FText> >, OwnerTable);
+
 	return
-		SNew(STableRow< TSharedPtr<FSlateBrush> >, OwnerTable)
+		SNew(STableRow< TSharedPtr<FText> >, OwnerTable)
 		.Padding(2.0f)
 		[
-			SNew(SImage)
-			.Image(Item.Get())
+			SNew(STextBlock)
+			.Text(*Item.Get())
 		];
 }
 
@@ -356,6 +439,23 @@ EVisibility SEdNode_GenericGraphNode::GetDragOverMarkerVisibility() const
 const FSlateBrush* SEdNode_GenericGraphNode::GetNameIcon() const
 {
 	return FAppStyle::GetBrush(TEXT("BTEditor.Graph.BTNode.Icon"));
+}
+
+const TArray<TSharedPtr<FText>>* SEdNode_GenericGraphNode::GetComponentItems()
+{
+	UEdNode_GenericGraphNode* MyNode = CastChecked<UEdNode_GenericGraphNode>(GraphNode);
+	if (MyNode != nullptr && MyNode->GenericGraphNode != nullptr)
+	{
+		TArray<UGenericGraphNodeComponent*> Components = MyNode->GenericGraphNode->OwnedComponents;
+		for (UGenericGraphNodeComponent* Component : Components)
+		{
+			FString StringName;
+			Component->GetName(StringName);
+			ListItems.Add(MakeShared<FText>(FText::FromString(StringName)));
+		}
+	}
+
+	return &ListItems;
 }
 
 #undef LOCTEXT_NAMESPACE

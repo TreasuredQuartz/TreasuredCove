@@ -3,12 +3,15 @@
 #include "CoreMinimal.h"
 #include "Settings_GenericGraphEditor.h"
 #include "GenericGraph.h"
+#include "GenericGraphAssetEditor/SGenericComponentList.h"
+#include "WorkflowOrientedApp/WorkflowTabManager.h"
 
 #if ENGINE_MAJOR_VERSION == 5
 #include "UObject/ObjectSaveContext.h"
 #endif // #if ENGINE_MAJOR_VERSION == 5
 
 class FGGAssetEditorToolbar;
+class FGenericComponentListNode;
 
 class GENERICGRAPHEDITOR_API FAssetEditor_GenericGraph : public FAssetEditorToolkit, public FNotifyHook, public FGCObject
 {
@@ -60,9 +63,10 @@ protected:
 	TSharedRef<SDockTab> SpawnTab_Details(const FSpawnTabArgs& Args);
 	TSharedRef<SDockTab> SpawnTab_EditorSettings(const FSpawnTabArgs& Args);
 
+	void TryInvokingDetailsTab();
+
 	void CreateInternalWidgets();
 	TSharedRef<SGraphEditor> CreateViewportWidget();
-
 
 	void BindCommands();
 
@@ -91,6 +95,7 @@ protected:
 	bool CanPasteNodes();
 	void DuplicateNodes();
 	bool CanDuplicateNodes();
+	// End Graph Editor Commands
 
 	void GraphSettings();
 	bool CanGraphSettings() const;
@@ -103,19 +108,38 @@ protected:
 
 	//////////////////////////////////////////////////////////////////////////
 	// graph editor event
+
+	void SetUISelectionState(FName SelectionOwner);
+
+	void ClearSelectionStateFor(FName SelectionOwner);
+
 	void OnSelectedNodesChanged(const TSet<class UObject*>& NewSelection);
+
+	void OnSelectionUpdated(const TArray<FGenericSubobjectDataHandle>& SelectedNodes);
 
 	void OnNodeDoubleClicked(UEdGraphNode* Node);
 
 	void OnFinishedChangingProperties(const FPropertyChangedEvent& PropertyChangedEvent);
+
+	void RefreshEditors();
 
 #if ENGINE_MAJOR_VERSION < 5
 	void OnPackageSaved(const FString& PackageFileName, UObject* Outer);
 #else // #if ENGINE_MAJOR_VERSION < 5
 	void OnPackageSavedWithContext(const FString& PackageFileName, UPackage* Package, FObjectPostSaveContext ObjectSaveContext);
 #endif // #else // #if ENGINE_MAJOR_VERSION < 5
+	
+public:
+	/** Manages the multiple different documents that may be brought up. */
+	TSharedPtr<FDocumentTracker> DocumentManager;
+
+	/** Factory that spawns graph editors; used to look up all tabs spawned by it. */
+	TWeakPtr<FDocumentTabFactory> GraphEditorTabFactoryPtr;
 
 protected:
+	/** The current UI selection state of this editor */
+	FName CurrentUISelection;
+
 	UGenericGraphEditorSettings* GenricGraphEditorSettings;
 
 	TObjectPtr<UGenericGraph> EditingGraph;
@@ -130,8 +154,14 @@ protected:
 	TSharedPtr<class IDetailsView> PropertyWidget;
 	TSharedPtr<class IDetailsView> EditorSettingsWidget;
 
+	/** Node inspector widget */
+	TSharedPtr<class SKismetInspector> Inspector;
+
 	/** The command list for this editor */
 	TSharedPtr<FUICommandList> GraphEditorCommands;
+
+	/** Whether the details panel should flash when updated. */
+	uint8 bFlash : 1;
 };
 
 

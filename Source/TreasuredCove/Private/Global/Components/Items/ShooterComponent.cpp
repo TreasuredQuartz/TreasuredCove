@@ -2,13 +2,14 @@
 
 
 #include "Global/Components/Items/ShooterComponent.h"
-#include "Global/Components/Items/ShooterAttatchment.h"
+#include "Global/Components/Shooter/ShooterAttachment.h"
+#include "Global/Components/Shooter/SightAttachment.h"
 #include "Global/Components/Items/EquipmentComponent.h"
 #include "Global/Components/Items/InventoryComponent.h"
 #include "Global/Components/Items/GAProjectileMovementComponent.h"
 
 #include "Global/Actors/Items/BulletProjectile.h"
-#include "Global/Actors/Items/MagazineHolder.h"
+#include "Global/Actors/Items/MagazineHolderComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -17,19 +18,88 @@
 
 // Sets default values for this component's properties
 UShooterComponent::UShooterComponent()
+	: bTriggerPulled(false)
+	, bAutomatic(false)
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
-	Magazine =
-		CreateDefaultSubobject<UMagazineAttatchment>(TEXT("Magazine"));
-	Barrel =
-		CreateDefaultSubobject<UBarrelAttatchment>(TEXT("Barrel"));
+}
 
-	Attatchments.Add(Magazine);
-	Attatchments.Add(Barrel);
+void UShooterComponent::BeginPlay()
+{
+
+}
+
+void UShooterComponent::OnComponentCreated()
+{
+	Super::OnComponentCreated();
+
+	if (Frame)
+	{
+		SkeletalMeshComponent =
+			Cast<USkeletalMeshComponent>(GetOwner()->AddComponentByClass(USkeletalMeshComponent::StaticClass(), false, FTransform::Identity, false));
+		SkeletalMeshComponent->SetSkeletalMesh(Frame->FrameMesh);
+		SkeletalMeshComponent->SetMaterial(0, Frame->FrameMaterial);
+		SkeletalMeshComponent->SetAnimClass(MeshAnimationBlueprint);
+		SkeletalMeshComponent->RegisterComponent();
+	}
+
+	for (UShooterAttachment* Attachment : Attachments)
+	{
+		if (!Attachment) continue;
+
+		if (Attachment->IsA(UBarrelAttachment::StaticClass()))
+		{
+			Barrel = Cast<UBarrelAttachment>(Attachment);
+		}
+		else if (Attachment->IsA(UMagazineAttachment::StaticClass()))
+		{
+			Magazine = Cast<UMagazineAttachment>(Attachment);
+		}
+
+		FString AttachmentName;
+		Attachment->GetName(AttachmentName);
+		FName AttatchmentCompName = FName(TEXT("[" + AttachmentName + "] Skeletal Mesh Component"));
+		USkeletalMeshComponent* AttachmentMeshComp =
+			Cast<USkeletalMeshComponent>(GetOwner()->AddComponentByClass(USkeletalMeshComponent::StaticClass(), false, FTransform::Identity, false));
+		AttachmentMeshComp->SetSkeletalMesh(Attachment->Mesh);
+		AttachmentMeshComp->SetMaterial(0, Attachment->Material);
+		AttachmentSkeletalMeshComponents.Add(AttachmentMeshComp);
+
+		if (SkeletalMeshComponent)
+		{
+			FAttachmentTransformRules AttachmentRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, true);
+			AttachmentMeshComp->AttachToComponent(SkeletalMeshComponent, AttachmentRules);
+			AttachmentMeshComp->SetLeaderPoseComponent(SkeletalMeshComponent);
+			AttachmentMeshComp->RegisterComponent();
+		}
+	}
+}
+
+void UShooterComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
+{
+	if (!AttachmentSkeletalMeshComponents.IsEmpty())
+	{
+		for (USkeletalMeshComponent* ChildMesh : AttachmentSkeletalMeshComponents)
+		{
+			if (ChildMesh)
+			{
+				ChildMesh->UnregisterComponent();
+			}
+		}
+	}
+
+	if (SkeletalMeshComponent)
+	{
+		AttachmentSkeletalMeshComponents.Empty();
+		SkeletalMeshComponent->UnregisterComponent();
+		SkeletalMeshComponent = nullptr;
+	}
+
+	Super::OnComponentDestroyed(bDestroyingHierarchy);
 }
 
 void UShooterComponent::FireAtTarget(AActor* TargetActor, float Accuracy)
@@ -101,6 +171,13 @@ FVector UShooterComponent::GetFinalLocation(const FVector& TargetLocation)
 
 //////////////////////////////////////////////////////
 
+void UShooterComponent::AddShooterAttachment(UShooterAttachment* NewAttachment)
+{
+	Attachments.Add(NewAttachment);
+}
+
+//////////////////////////////////////////////////////
+
 bool UShooterComponent::CanReloadMagazine()
 {
 	// Check if our owner has any equipped ammo stashes that we can reload from
@@ -119,7 +196,10 @@ bool UShooterComponent::CanReloadMagazine()
 		uint8 j = 0;
 		for (j; j < EquippedItemInventory->GetInventorySize(); ++j) 
 		{
-			if (AMagazineHolder* OwnerMagazine = Cast<AMagazineHolder>(EquippedItemInventory->GetItem(j)))
+			AActor* ItemActor = EquippedItemInventory->GetItem(j);
+			if (!ItemActor) continue;
+
+			if (UMagazineHolderComponent* OwnerMagazine = ItemActor->GetComponentByClass<UMagazineHolderComponent>())
 			{
 				if (!OwnerMagazine->Magazines.IsEmpty())
 				{
@@ -140,7 +220,7 @@ void UShooterComponent::CommitReload()
 	{
 		if (!OwnerAmmoHolder.IsValidIndex(i)) continue;
 
-		if (UMagazineAttatchment* OwnerMagazine = OwnerAmmoHolder[i])
+		if (UMagazineAttachment* OwnerMagazine = OwnerAmmoHolder[i])
 		{
 			Magazine = OwnerMagazine;
 			OwnerAmmoHolder.RemoveAtSwap(i);

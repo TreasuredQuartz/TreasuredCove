@@ -37,16 +37,16 @@ class TREASUREDCOVE_API AGAActor :
 {
 	GENERATED_BODY()
 	
-private:
+public:
 	// These are the handles to the actual abilities 
 	// that will be given to us by the ability system
 	TArray< uint32 > CurrentActiveAbilityHandles;
 	//
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAActor|Animation", meta = (AllowPrivateAccess = true))
-	UBillboardComponent* DominantHandOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAActor", meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	FTransform DominantHandOffset;
 	//
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAActor|Animation", meta = (AllowPrivateAccess = true))
-	UBillboardComponent* SupportingHandOffset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAActor", meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	FTransform SupportingHandOffset;
 
 public:	
 	// Sets default values for this actor's properties
@@ -123,14 +123,14 @@ public:
 	/** End Item Interface */
 public:
 	// The array of abilities that we currently can use
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAActor|Abilities")
 	class UAbilitySet* Abilities;
 
 	// The Datatable to initialize our attribute sets from
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAActor|Abilities")
 	UDataTable* InitialStatsTable;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAActor|Abilities")
 	class UAbilityInputConfigData* InputAbilityActions;
 
 public:
@@ -143,7 +143,7 @@ public:
 	UGASystemComponent* AbilitySystem;
 
 	// Attribute Set Component
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAActor|Abilities")
 	TArray<TSubclassOf<UAttributeSet>> AttributeSetClasses;
 
 	// Item Movement Component

@@ -1,9 +1,9 @@
 #include "GenericGraphAssetEditor/EdGraph_GenericGraph.h"
-#include "GenericGraphEditorPCH.h"
-#include "GenericGraph.h"
 #include "GenericGraphAssetEditor/EdNode_GenericGraphNode.h"
 #include "GenericGraphAssetEditor/EdNode_GenericGraphEdge.h"
 #include "GenericGraphAssetEditor/SEdNode_GenericGraphNode.h"
+#include "GenericGraphAssetEditor/SGenericComponentList.h"
+#include "GenericGraphEditorPCH.h"
 
 UEdGraph_GenericGraph::UEdGraph_GenericGraph()
 {
