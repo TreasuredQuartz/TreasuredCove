@@ -50,6 +50,12 @@ bool UEquipmentComponent::EquipItem(AActor* Item, const FString& SlotName)
 		}
 
 		Item->SetOwner(GetOwner());
+
+		if (UEquippableComponent* Equippable = Item->GetComponentByClass<UEquippableComponent>())
+		{
+			Equippable->Equipped(SlotName);
+		}
+
 		OnItemEquipped.Broadcast(SlotName, Item);
 		return true;
 	}

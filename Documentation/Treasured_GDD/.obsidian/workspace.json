@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Items.md",
+                "file": "Game_Design_Document/Design Pillars.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Items"
+              "title": "Design Pillars"
             }
           },
           {
@@ -177,8 +177,8 @@
   },
   "active": "c395353ed63c58f0",
   "lastOpenFiles": [
-    "Game Design Document/Rarity.md",
     "Items.md",
+    "Game Design Document/Rarity.md",
     "World/World Design Document.md",
     "World/Sahra' Ramil.md",
     "Img/MainIsland_ConceptArt_12.jpg",

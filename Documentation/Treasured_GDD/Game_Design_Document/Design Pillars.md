@@ -12,5 +12,8 @@ While the first two pillars may seem like the very definition of a game itself, 
 These pillars describe the fundamental rules that Treasured follows; all systems, decisions, and further designs should stem from the core pillars.
 1. Evolving world — The game world should change over time.
 2. Player freedom — Allowing players to craft a unique experience is essential.
-3. Artistic Ascetic — The art direction is explicitly against realism.
+3. Artistic Ascetic — The art direction is explicitly against photo-realism.
 4. Limitations are fun — Players need to be challenged to feel like they are learning.
+5. Gamified Item Management — Inventory management should be considered its own game.
+6. Intuitive Controls — Controls should be simplified for usage.
+7. Complex Inputs — Combining inputs should have different actions.
