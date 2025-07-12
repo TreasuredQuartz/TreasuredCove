@@ -1,6 +1,6 @@
 ### **Elevator Pitch**
 
-*<span style="color: grey; font-style: italic">A quick 2-3 sentence overview of your game. Include a hook, genre of your game, and a few gameplay actions.</span>
+<span style="color: grey; font-style: italic">A quick 2-3 sentence overview of your game. Include a hook, genre of your game, and a few gameplay actions.</span>
 
 A world of living progression; based on the old PlayStation Magazine demo series— this game strives to provide a open world play space that connects unique separate games together.
 

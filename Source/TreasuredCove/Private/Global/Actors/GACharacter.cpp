@@ -2292,7 +2292,6 @@ void AGACharacter::EquipItem(AActor* Item)
 		{
 			FString SlotName = "HeldItem";
 			Equipment->EquipItem(Item, SlotName);
-			Equippable->Equipped(SlotName);
 		}
 	}
 }

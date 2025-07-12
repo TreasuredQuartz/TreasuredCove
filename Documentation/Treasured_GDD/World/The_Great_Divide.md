@@ -1,0 +1,1 @@
+A great waterfall and cliffside that creates 2 distinct halves of the floating island: Upper and Lower region.

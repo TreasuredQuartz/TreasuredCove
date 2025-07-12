@@ -7,6 +7,7 @@
 #include "MapMakerAssetEditor/MapMakerDragConnection.h"
 #include "MapMakerAssetEditor/SResizeableBox.h"
 #include "MapMakerAssetEditor/SMapMakerAsset.h"
+#include "MapMakerAssetEditor/SRoomPreview_AssetEditor.h"
 #include "MapMakerStyle.h"
 
 #include "MapMakerEditorPCH.h"
@@ -17,7 +18,6 @@
 #include "SlateOptMacros.h"
 #include "SGraphPin.h"
 #include "SGraphPanel.h"
-
 
 #define LOCTEXT_NAMESPACE "EdNode_MapMaker"
 
@@ -223,27 +223,7 @@ void SEdNode_MapMakerNode::UpdateGraphNode()
 										+ SVerticalBox::Slot()
 										.AutoHeight()
 										[
-											SNew(SResizeableBox)
-												.IsEnabled(true)
-												.OnResized(this, &SEdNode_MapMakerNode::OnResized)
-												.Size(this, &SEdNode_MapMakerNode::GetSize)
-												.Visibility(EVisibility::Visible)
-												[
-													SAssignNew(AssetCanvas, SCanvas)
-														.Visibility(EVisibility::Visible)
-
-														+ SCanvas::Slot()
-														.HAlign(HAlign_Fill)
-														.VAlign(VAlign_Fill)
-														[
-															SNew(SImage)
-																.Image(this, &SEdNode_MapMakerNode::GetRoomBrush)
-																.ColorAndOpacity(FSlateColor(FLinearColor(0.2, 0.2, 0.2, 0.2)))
-																.Cursor(EMouseCursor::GrabHand)
-																.Visibility(EVisibility::Visible)
-																.OnMouseButtonDown(this, &SEdNode_MapMakerNode::OnMouseButtonDown)
-														]
-												]
+											SNew(SRoomPreview_AssetEditor, GraphNode)
 										]
 								]
 						]
@@ -276,7 +256,6 @@ void SEdNode_MapMakerNode::UpdateGraphNode()
 
 	ErrorReporting = ErrorText;
 	ErrorReporting->SetError(ErrorMsg);
-	CreateAssetWidgets();
 	CreatePinWidgets();
 }
 
@@ -332,45 +311,6 @@ void SEdNode_MapMakerNode::AddPin(const TSharedRef<SGraphPin>& PinToAdd)
 	}
 }
 
-void SEdNode_MapMakerNode::CreateAssetWidgets()
-{
-	UEdNode_MapMakerNode* StateNode = CastChecked<UEdNode_MapMakerNode>(GraphNode);
-
-	for (int32 AssetIdx = 0; AssetIdx < StateNode->MapMakerNode->Assets.Num(); AssetIdx++)
-	{
-		UMapMakerAsset* MyAsset = StateNode->MapMakerNode->Assets[AssetIdx];
-		if (MyAsset)
-		{
-			TSharedPtr<SMapMakerAsset> NewAsset = SNew(SMapMakerAsset, MyAsset);
-
-			AddAsset(NewAsset.ToSharedRef());
-		}
-	}
-}
-
-void SEdNode_MapMakerNode::AddAsset(const TSharedRef<SMapMakerAsset>& AssetToAdd)
-{
-	// AssetToAdd->SetOwner(AsShared(this));
-
-	if (AssetCanvas)
-	{
-		FVector AssetLocation = FVector::ZeroVector;
-		FVector2D AssetSize = FVector2D::ZeroVector;
-		if (AssetToAdd->Asset) 
-		{
-			AssetLocation = AssetToAdd->Asset->AssetTransform.GetLocation();
-			FVector Scale3D = AssetToAdd->Asset->AssetTransform.GetScale3D();
-			AssetSize = FVector2D(Scale3D.X, Scale3D.Y);
-		}
-		SCanvas::FSlot::FSlotArguments& TMP_SLOT = AssetCanvas->AddSlot()
-			.Size(AssetSize)
-			.Position(FVector2D(AssetLocation.X, AssetLocation.Y))
-			[
-				(AssetToAdd)
-			];
-	}
-}
-
 bool SEdNode_MapMakerNode::IsNameReadOnly() const
 {
 	UEdNode_MapMakerNode* EdNode_Node = Cast<UEdNode_MapMakerNode>(GraphNode);
@@ -398,47 +338,6 @@ void SEdNode_MapMakerNode::OnNameTextCommited(const FText& InText, ETextCommit::
 		MyNode->MapMakerNode->SetNodeTitle(InText);
 		UpdateGraphNode();
 	}
-}
-
-void SEdNode_MapMakerNode::OnResized(const FVector2D& Delta)
-{
-	UEdNode_MapMakerNode* MyNode = CastChecked<UEdNode_MapMakerNode>(GraphNode);
-
-	if (MyNode != nullptr && MyNode->MapMakerNode != nullptr)
-	{
-		const FScopedTransaction Transaction(LOCTEXT("MapMakerEditorResized", "Map Maker Editor: Resized Node"));
-		MyNode->Modify();
-		MyNode->MapMakerNode->Modify();
-		TSharedPtr<SGraphPanel> OwnerCanvas = OwnerGraphPanelPtr.Pin();
-		if (!OwnerCanvas.IsValid()) return;
-
-		//@TODO: NodeSpaceCoordinate != PanelCoordinate
-		FVector2D GraphCoordToPanelCoord = (GetPosition() - OwnerCanvas->GetViewOffset()) * OwnerCanvas->GetZoomAmount();
-		
-		MyNode->MapMakerNode->SetNodeSize(Delta);
-
-		UpdateGraphNode();
-	}
-}
-
-FReply SEdNode_MapMakerNode::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
-{
-	FKey MouseButton = MouseEvent.GetEffectingButton();
-	if (MouseButton == EKeys::LeftMouseButton)
-	{
-		bBrushActivated = true;
-		return FReply::Handled();
-	}
-	
-
-	return FReply::Unhandled();
-}
-
-FReply SEdNode_MapMakerNode::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) 
-{
-	bBrushActivated = false;
-
-	return FReply::Handled();
 }
 
 FReply SEdNode_MapMakerNode::OnClearButtonClicked()
@@ -474,42 +373,6 @@ EVisibility SEdNode_MapMakerNode::GetDragOverMarkerVisibility() const
 	return EVisibility::Visible;
 }
 
-FReply SEdNode_MapMakerNode::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
-{
-	UEdNode_MapMakerNode* MyEdNode = CastChecked<UEdNode_MapMakerNode>(GraphNode);
-	if (!MyEdNode || !MyEdNode->MapMakerNode) return FReply::Unhandled();
-
-	if (bBrushActivated) {
-		if (UMapMakerAsset* BrushAsset = GetCurrentAsset())
-		{
-			UMapMakerNode* MyNode = MyEdNode->MapMakerNode;
-			UMapMakerAsset* Asset = NewObject<UMapMakerAsset>(MyNode, FName(), RF_NoFlags, BrushAsset);
-
-			float GridCellSize = MyNode->GridCellSize;
-			const FVector2D NodeLocation = FVector2D(MyEdNode->NodePosX, MyEdNode->NodePosY);
-			const FVector2D MouseLocation = MouseEvent.GetScreenSpacePosition();
-			const FVector2D AssetGridLocation = MyGeometry.AbsoluteToLocal(MouseLocation);
-			auto SnapToGrid = [](double value, double size) { return FMath::Floor(value / size) * size; };
-			const FVector AssetLocation = FVector(SnapToGrid(AssetGridLocation.X - GridCellSize, GridCellSize / 2), SnapToGrid(AssetGridLocation.Y - GridCellSize, GridCellSize / 2), 0);
-			Asset->AssetTransform.SetLocation(AssetLocation);
-			Asset->AssetTransform.SetScale3D(FVector(GridCellSize, GridCellSize, 0));
-
-			if (MyNode->CanAddAsset(Asset))
-			{
-				const FScopedTransaction Transaction(LOCTEXT("MapMakerEditorAddAsset", "Map Maker Editor: Add Room Asset"));
-				MyEdNode->Modify();
-				MyNode->Modify();
-				MyNode->AddAsset(Asset);
-				LOG_INFO(TEXT("Asset added to node!"));
-				UpdateGraphNode();
-				return FReply::Handled();
-			}
-		}
-	}
-
-	return FReply::Unhandled();
-}
-
 const FSlateBrush* SEdNode_MapMakerNode::GetNameIcon() const
 {
 	return FAppStyle::GetBrush(TEXT("BTEditor.Graph.BTNode.Icon"));
@@ -518,26 +381,6 @@ const FSlateBrush* SEdNode_MapMakerNode::GetNameIcon() const
 const FButtonStyle* SEdNode_MapMakerNode::GetClearButtonStyle() const
 {
 	return &FMapMakerStyle::Get()->GetWidgetStyle<FButtonStyle>(TEXT("MMEditor.Graph.MMNode.Clear"));
-}
-
-FVector2D SEdNode_MapMakerNode::GetSize() const
-{
-	UEdNode_MapMakerNode* MyNode = CastChecked<UEdNode_MapMakerNode>(GraphNode);
-	return MyNode ? MyNode->GetSize() : FVector2D(100,100);
-}
-
-const FSlateBrush* SEdNode_MapMakerNode::GetRoomBrush() const
-{
-	FSlateBrush* ImageBrush = new FSlateBrush();
-	// ImageBrush->SetImageSize(GetSize());
-
-	return ImageBrush;
-}
-
-UMapMakerAsset* SEdNode_MapMakerNode::GetCurrentAsset() const
-{
-	UEdNode_MapMakerNode* MyNode = CastChecked<UEdNode_MapMakerNode>(GraphNode);
-	return MyNode ? MyNode->GetMapMakerEdGraph()->GetMapMaker()->CurrentAsset : nullptr;
 }
 
 
