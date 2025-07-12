@@ -49,10 +49,4 @@ Conversely, Civilization V (or other city builder type games), tend to not allow
 
 ![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/a6d8e8b6-bcdb-447f-8fed-005c0c617cf7/a1836c7a-99ea-48bc-8045-ef023aa7898e/image.png)
 
-_See a real example of this GDD done with my game ‘Secrets of Shadows’ through this link_
-
-[_Idea GDD Example - Secrets of Shadows One Pager_](https://docs.google.com/document/d/1S_6V6t0IiMiu6cGJpblgr4G9By8KfgqqlnXCxGCUCRw/edit?usp=sharing)
-
-_Good luck! 👍_
-
-[[Main Documentation Page]]
+[Main Documentation Page](./Main_Documentation_Page.md)
