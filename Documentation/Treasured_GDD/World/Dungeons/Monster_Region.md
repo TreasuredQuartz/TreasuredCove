@@ -1,6 +1,6 @@
 ## Character List
 
-[[Mudskipper]] — Dungeon Boss
+[Mudskipper](./Mudskipper.md) — Dungeon Boss
 
 ## Background Overview
 

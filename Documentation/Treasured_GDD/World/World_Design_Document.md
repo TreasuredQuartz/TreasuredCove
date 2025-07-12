@@ -27,15 +27,16 @@ This section details the concept art and implementation of the world. The game t
 ![[MainIsland_Inkarnete_ConceptArt_01.jpg]]
 
 ### Upper Region:
-- [[Everwinter Forest Region]] —
+- [Everwinter Forest Region](./Everwinter_Forest_Region) —
 	- Lake
-	- [[Gehennam]]
-	- Dungeon
+	- [Gehennam](./Gehennam)
+	- [Immortal Manor Dungeon](Immortal_Manor.md)
+
 ![[IcePalace_ConceptArt_01.jpg]]
 
-- [[Center Region]] —
-	- [[Aurifer Caelus]]
-	- [[Infimus Caelus]]
+- [Center Region](./Center_Region) —
+	- [Aurifer Caelus](./Cities/Aurifer_Caelus.md)
+	- [Infimus Caelus](./Cities/Infimus_Caelus)
 	- Volcanic Mountain
 	- Grassland Hills and Valleys
 	- Rivers flow outward
@@ -46,14 +47,15 @@ This section details the concept art and implementation of the world. The game t
 
 ![[MainIsland_ConceptArt_10.jpg]]
 
-- [[The Great Divide]] —
-	- [[Cataracta Burgus]]
+- [The Great Divide](./The_Great_Divide) —
+	- [Cataracta Bugus](./Cities/Cataracta_Burgus.md)
 	- Gateway between volcanic region and monster region
 	- Massive Continent-Wide Waterfall
 	- Largest body of water in Upper Region.
+
 ![[MainIsland_ConceptArt_09.jpg]]
 
-- [[Sahra' Ramil]]
+- [Sahra' Ramil](./Cities/Sahra'_Ramil.md)
 	- Desert
 	- Dangerous
 	- High temperature
@@ -62,17 +64,19 @@ This section details the concept art and implementation of the world. The game t
 	- Single Oasis
 	- Single City
 	- Lighthouse on edge
+
 ![[MainIsland_ConceptArt_05.jpg]]
 ![[MainIsland_ConceptArt_03.jpg]]
 ![[MainIsland_ConceptArt_06.jpg]]
 
-- [[Lipis Mas Equis]]
+- [Lipis Mas Equis](./Cities/Lipis_Mas_Equis.md)
 	- Major Upper Continent City
+
 ![[MainIsland_ConceptArt_07.jpg]]
 ![[MainIsland_ConceptArt_08.jpg]]
 
 ### Lower Region
-- [[Monster Region]] — 7 Gyms, Elite Four, Champion — with Mudskipper serving as it's professor. Creatures resemble the stylized features of Pokemon, but fight in an ecosystem and gameplay as from Monster Hunter.
+- [Monster Region](Monster_Region.md) — 7 Gyms, Elite Four, Champion — with Mudskipper serving as it's professor. Creatures resemble the stylized features of Pokemon, but fight in an ecosystem and gameplay as from Monster Hunter.
 	1. The town closest to the home of the Elite Four and Champion. Heavenly Gym.
 	2. An in-between town reliant on trading and tourism from their neighbors. Gem Gym.
 	3. A mining outpost that digs precious metals and makes expeditions into the dangerous unknown crags towards the nearby mountain. Volcanic Gym.
@@ -80,6 +84,7 @@ This section details the concept art and implementation of the world. The game t
 	5. The farthest city in culture from all others. It is filled with criminals and dark plots. Deprived Gym.
 	6. A lumbar harvesting city, that is steeped into electricity. Wood/Watt Gym.
 	7. The starting town; it is the main receiving port from the twin island, and it houses the last gym after all others have been beaten. Mud Gym.
+
 ![[MonsterRegion_ConceptArt_01.jpg]]
 
 - [[Watt Forest]] —
@@ -93,11 +98,11 @@ This section details the concept art and implementation of the world. The game t
 ## World States
 As the design pillars dictate, this world is not static; as such it contains certain aspects that change over time. 
 
-[[Weather]] — Dynamic temperature, humidity, and wind speeds that creates various weather patterns. The weather will change throughout the days, nights, and seasons.
+[Weather](./Weather) — Dynamic temperature, humidity, and wind speeds that creates various weather patterns. The weather will change throughout the days, nights, and seasons.
 
 [[Day/Night Cycle]] — A sun and moon revolve around the outer world, creating a clock based system. This is affected by the current season: as it may be day longer than it is night, vise versa, or perfectly half-and-half.
 
-[[Ecosystems]] — Environments are built with cohesive plant and wild life in mind.
+[Ecosystems](Ecosystems.md) — Environments are built with cohesive plant and wild life in mind.
 
 [[Seasons]] — Environments follow a cycle of seasons based on the current sun/moon rotation. The seasons can affect the length of the day/night cycle, the temperature, weather, and wildlife throughout the world. 
 
@@ -105,7 +110,7 @@ As the design pillars dictate, this world is not static; as such it contains cer
 
 [[Civilizations]] — Over a grand period of time, civilizations will develop, change, and be destroyed. This will affect the various towns, cities, and ecosystems in the world; as the values held by the Civilization will affect the customs of its people and naturally change the world around them.
 
-[[Dungeons]] — Throughout the world, there will also be various dungeons that may be accessed. They can provide resources, challenges, and advance the story or plot if you will.
+[Dungeons](Dungeons.md) — Throughout the world, there will also be various dungeons that may be accessed. They can provide resources, challenges, and advance the story or plot if you will.
 
 [[Magic]] — While not predominate, it is necessary to include that magic does exist within this world. There are specific locations that have more potential magical energy than others, as well as: items, materials, and creatures that are magical.
 ### Start State

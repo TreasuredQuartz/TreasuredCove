@@ -1,5 +1,5 @@
 
-[[Sanctuary]]
+[Sanctuary](Sanctuary.md)
 # Who is it about?
 
 The Immortal Creator — He is the brother of 3 others, and they embark on a quest together to save missing villagers in their town. They track a suspect to a cave in the cold forest, after they explore inside to discover a cursed artifact and a Lich, the four brothers are separated from life. Quartz uses the magical item to save his brethren’s lives by inflicting each one with a curse. They remain lifeless while they remain outside of their ideal fantasies, aside from Quartz who fantasizes about building each of their ideal dreams into reality.

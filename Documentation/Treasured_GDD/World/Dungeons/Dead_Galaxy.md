@@ -2,7 +2,7 @@
 ## Character List
 ___
 
-[[Light]] — Dungeon Boss
+[Light](Light.md) — Dungeon Boss
 
 ## Background Overview
 ___

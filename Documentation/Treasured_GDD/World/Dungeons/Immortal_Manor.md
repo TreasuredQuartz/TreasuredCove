@@ -1,6 +1,6 @@
 # Character List
 
-[[Quartz]] — Dungeon Boss
+[Quartz](Quartz.md) — Dungeon Boss
 
 # Background Overview
 ___

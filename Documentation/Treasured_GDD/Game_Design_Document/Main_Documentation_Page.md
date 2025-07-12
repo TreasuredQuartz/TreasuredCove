@@ -193,10 +193,10 @@ achievement, or resolution points the player experiences as part of their arc th
 1. Spawned into the first town
 	- Introduced to the citizens
 	- Introduced to the quest board
-2. [[Quest The Missing Children|The Missing Children]]
+2. [The Missing Children](../Quests/The_Missing_Children)
 	- This quest marks the end of the tutorial, as when it is completed so too is the first stage of the game.
 3. A New beginning
-	- The player meets [[The Judge]], a character intended to act as a guide for the afterlife.
+	- The player meets [The Judge](../Characters/The_Judge), a character intended to act as a guide for the afterlife.
 	- They explain that a supernatural being can make contact with a soul after they die.
 	- The Judge can send them back, but only if they agree to bring the souls of their party back to him.
 4. Off The Leash
@@ -205,10 +205,10 @@ achievement, or resolution points the player experiences as part of their arc th
 
 ___
 
-5. [[Volcano Castle|Halios Dungeon]]
-6. [[Immortal Manor|Quartz Dungeon]]
-7. [[Monster Region|Mudkip Dungeon]]
-8. [[Dead Galaxy|Light Dungeon]]
+5. [Volcano Castle](Volcano_Castle.md)
+6. [Immortal Manor](Immortal_Manor.md)
+7. [Monster Region](Monster_Region.md)
+8. [Dead_Galaxy](Dead_Galaxy.md)
 9. The Final Act
 10. Epilogue
 
@@ -222,13 +222,13 @@ Skyrim, Oblivion, Civilization VII, Dwarf Fortress.
 
 # Monetization
 ___
-[[Monetization]]
+[Monetization](./Monetization)
 
 # Links to Detailed Sections
 ___
 ## All Design Pillars
 
-[[Design Pillars]]
+[Design Pillars](./Design_Pillars)
 
 ## Player objectives and progression
 
@@ -260,7 +260,7 @@ Dungeons should generally be a new unique experience dependent on the order in w
 
 Backstory overview – important elements of the world fiction that set the stage for the
 game, but do not directly affect the gameplay.
-[[World Design Document]]
+[[World_Design_Document]]
 	o Link to full world fiction
 • World organization: MVP levels, locations, zones, chapters – including introductory or
 tutorial areas
@@ -279,12 +279,12 @@ showing the player’s flow through all aspects of the game.
 
 ## MVP Systems and Features
 
-- [[Dungeons|Procedural Dungeons]]
+- [Procedural Dungeons](Dungeons.md)
 - [[In-Game Content Creation Tool Suite]]
-- [[Rarity]]
-- [[Proficiency Trees]]
-- [[Civilization Progression Tree]]
-- [[Combat System]]
+- [Rarity](./Rarity)
+- [Proficiency Trees](./Proficiency_Trees)
+- [Civilization Progression Tree](./Civilization_Progression_Tree)
+- [Combat System](./Combat_System)
 
 • All major features such as character creation, crafting, combat, dialog, etc., including
 areas for monetization (if any), and specific puzzles or similar
@@ -310,11 +310,11 @@ areas for monetization (if any), and specific puzzles or similar
 	o Behaviors
 • Link to external spreadsheet containing each object’s data and attribute information
 
-[[Characters]]
-[[Creatures]]
-[[Monsters]]
-[[Items]]
-[[Materials]]
+[Characters](Characters.md)
+[Creatures](../World/Creatures)
+[Monsters](../World/Monsters)
+[Items](./Items)
+[Materials](../World/Materials)
 
 ## Localization
 

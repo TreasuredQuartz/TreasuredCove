@@ -1,7 +1,7 @@
 
 ## Character List
 
-[[Halios]] — Dungeon Boss
+[Halios](Halios.md) — Dungeon Boss
 
 ## Background Overview
 

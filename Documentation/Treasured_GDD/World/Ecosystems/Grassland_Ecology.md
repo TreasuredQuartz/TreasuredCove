@@ -5,10 +5,10 @@ Dependent on latitude, the annual range can be between -20°C (-4°F) to 30°C (
 Grasslands receive around 500 to 900 millimeters (20 – 35 inches) of rain per year.
 
 1. Producers:
-	- [[Grass]]
+	- [Grass](Grass.md)
 	- [[Dragon Lily]]
 2. Primary Consumers:
-	- [[Quail]]
+	- [Quail](./Quail)
 	- [[Rabbit]]
 3. Secondary Consumers:
 	- [[Foxes]]
