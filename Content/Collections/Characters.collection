@@ -4,3 +4,4 @@ Guid:0560417B-4359-81A3-1A6D-0E9BFA437A1B
 ParentGuid:00000000-0000-0000-0000-000000000000
 
 /Game/GameplayAbilities/Entities/Characters/Default/BP_PlayerCharacter.BP_PlayerCharacter
+/Game/GameplayAbilities/Entities/Characters/Goblin/Blueprints/Goblin.Goblin
