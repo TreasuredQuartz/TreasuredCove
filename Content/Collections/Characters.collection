@@ -7,3 +7,4 @@ ParentGuid:00000000-0000-0000-0000-000000000000
 /Game/GameplayAbilities/Entities/Characters/Goblin/Blueprints/Goblin.Goblin
 /Game/GameplayAbilities/Entities/Characters/Heartlesss/Shadow/Blueprints/BP_Shadow.BP_Shadow
 /Game/GameplayAbilities/Entities/Characters/Humans/Human.Human
+/Game/GameplayAbilities/Entities/Characters/UECharacter/Blueprints/UE4Character.UE4Character
