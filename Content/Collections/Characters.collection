@@ -5,3 +5,4 @@ ParentGuid:00000000-0000-0000-0000-000000000000
 
 /Game/GameplayAbilities/Entities/Characters/Default/BP_PlayerCharacter.BP_PlayerCharacter
 /Game/GameplayAbilities/Entities/Characters/Goblin/Blueprints/Goblin.Goblin
+/Game/GameplayAbilities/Entities/Characters/Heartlesss/Shadow/Blueprints/BP_Shadow.BP_Shadow
