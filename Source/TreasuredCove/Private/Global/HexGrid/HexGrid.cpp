@@ -607,12 +607,6 @@ void AHexGrid::ConstructMesh()
 		{
 			{ // Create Section
 				FRealtimeMeshStreamSet StreamSet;
-				
-				// FRealtimeMeshStream PositionStream  = FRealtimeMeshStream::Create<FVector>(FRealtimeMeshStreams::Position);
-				// FRealtimeMeshStream TangentsStream  = FRealtimeMeshStream::Create<FRealtimeMeshTangentsNormalPrecision>(FRealtimeMeshStreams::Tangents);
-				// FRealtimeMeshStream TexCoordsStream = FRealtimeMeshStream::Create<FVector2D>(FRealtimeMeshStreams::TexCoords);
-				// FRealtimeMeshStream ColorsStream    = FRealtimeMeshStream::Create<FLinearColor>(FRealtimeMeshStreams::Color);
-				// FRealtimeMeshStream TrianglesStream = FRealtimeMeshStream::Create<int32>(FRealtimeMeshStreams::Triangles);
 
 				TRealtimeMeshBuilderLocal<uint16, FPackedNormal, FVector2DHalf, 1> Builder(StreamSet);
 

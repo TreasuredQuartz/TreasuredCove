@@ -524,18 +524,30 @@ int32 UGALibrary::CreateFace(FProceduralMeshSection& MeshSection, const UGamepla
 	// const int32 Scale = FMath::Clamp<int32>(InScale, 1, InScale);
 
 	// Each triangle this face has, add the vertex indices to the mesh section
+	MeshSection.Triangles.Reserve(Faces[InIndex].Triangles.Num());
 	for (const FTriangle& Triangle : Faces[InIndex].Triangles)
 		for (int32 Index = 0; Index < 3; ++Index)
 			MeshSection.Triangles.Add(Triangle.VertIndices[Index] + CurTriangleNum + MeshSection.ElementID);
 
 	// in Index represents each face of the new voxel we are generating
+	int32 VertNum = Faces[InIndex].VerticesData.Num();
+	MeshSection.Vertices.Reserve(VertNum);
+	MeshSection.UVs.Reserve(VertNum);
+	MeshSection.Normals.Reserve(VertNum);
+	MeshSection.VertexColors.Reserve(VertNum);
+	MeshSection.Tangents.Reserve(VertNum);
 	for (const FVertexData& VertexData : Faces[InIndex].VerticesData)
 	{
 		MeshSection.Vertices.Add((VertexData.Position * InVoxelSize * InScale * 0.5) + (InLocation * InVoxelSize));
-		MeshSection.UVs.Add(VertexData.UVPosition * InScale);
+		MeshSection.UVs.Add(VertexData.UVPosition);
 		MeshSection.VertexColors.Add(VertexData.Color);
 		MeshSection.Normals.Add(VertexData.Normal);
-		// Tangents.Add(VertexData.Tangent);
+
+		FVector NormAxisA;
+		FVector NormAxisB;
+		VertexData.Normal.FindBestAxisVectors(NormAxisA, NormAxisB);
+		FVector Tangent = NormAxisA;
+		MeshSection.Tangents.Add(Tangent);
 	}
 
 	// Return Current Triangle Index count + The triangle indices we just added

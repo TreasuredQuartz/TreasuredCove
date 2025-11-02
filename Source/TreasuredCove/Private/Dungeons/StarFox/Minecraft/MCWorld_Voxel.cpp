@@ -1277,7 +1277,7 @@ void AMCWorld_Voxel::UpdateMesh()
 		return;
 	}
 
-	URealtimeMeshSimple* RTMesh = NewObject<URealtimeMeshSimple>();
+	URealtimeMeshSimple* RTMesh = Mesh->InitializeRealtimeMesh<URealtimeMeshSimple>();
 	if (!BlockDataTable)
 	{
 		// Mesh->RemoveAllSectionsForLOD(0);
@@ -1293,7 +1293,7 @@ void AMCWorld_Voxel::UpdateMesh()
 	for (UInstancedStaticMeshComponent* CustomMeshInstance : CustomMeshInstances)
 		CustomMeshInstance->ClearInstances();
 
-	BlockDataTable->GetAllRows<FDTMCBlockInfo>("", BlockData);
+	BlockDataTable->GetAllRows<FDTMCBlockInfo>("Initialize", BlockData);
 	/*Materials.Reserve(BlockData.Num());
 	for (const FDTMCBlockInfo* Block : BlockData)
 	{
@@ -1336,7 +1336,7 @@ void AMCWorld_Voxel::UpdateMesh()
 					// If mesh index is out of bounds, restart loop.
 					if (MeshIndex >= NumSections || MeshIndex < 0) continue;
 
-					FDTMCBlockInfo* Data = BlockDataTable->FindRow<FDTMCBlockInfo>(BlockDataTable->GetRowNames()[MeshIndex], "");
+					FDTMCBlockInfo* Data = BlockData[MeshIndex];
 					if (!Data || Data->BlockType < 0 || BlockTypes.IsEmpty() || !BlockTypes.IsValidIndex(Data->BlockType)) continue; // Restart loop; DO NOT EXECUTE FURTHER AFTER THIS IF TRUE
 
 					bool MeshTransparent = Data->bIsTransparent;
@@ -1420,13 +1420,13 @@ void AMCWorld_Voxel::UpdateMesh()
 
 							// CreateMeshFace(MeshSections[MeshIndex], i, FIntVector(x, y, z), Triangle_Num);
 							// const FVoxelFaceData FaceData = FVoxelFaceData(MeshData, FIntVector(x, y, z), i, Triangle_Num, VoxelSize, 1);
-							Triangle_Num = UGALibrary::CreateFace(MeshSections[MeshIndex], MeshData, FVector(x, y, z), i, Triangle_Num, VoxelSize, CurrentLOD);
+							Triangle_Num = UGALibrary::CreateFace(MeshSections[MeshIndex], MeshData, FVector(x, y, z), i, Triangle_Num, VoxelSize, 1);
 						}
 					}
 					MeshSections[MeshIndex].ElementID += Triangle_Num;
 
 					// Is Collision Enabled? Is the player close enough to warrent Collision? Is our current Mesh water?
-					MeshSections[MeshIndex].bEnableCollision = MeshIndex != WATER - 1 /*bEnableCollision &&*/ /*CurrentLOD <= 1*/;
+					MeshSections[MeshIndex].bEnableCollision = false; // MeshIndex != WATER - 1 /*bEnableCollision &&*/ /*CurrentLOD <= 1*/;
 					// MeshSections[MeshIndex].CollisionResponse =  ECR_Block : ECR_Overlap;
 				}
 				else if (MeshIndex < 0)
@@ -1440,37 +1440,72 @@ void AMCWorld_Voxel::UpdateMesh()
 	// For each MeshSection, Create a new mesh section
 	for (int i = 0; i < MeshSections.Num(); ++i)
 	{
-		if (MeshSections[i].Vertices.Num() <= 2) continue;
+		UE_LOG(LogTemp, Warning, TEXT("--[%d] Section has [%d] vertices..."), i, MeshSections[i].Vertices.Num());
+		FProceduralMeshSection& Section = MeshSections[i];
+		if (Section.Vertices.Num() <= 2) continue;
 		// 
 		{
-			// Mesh->ClearSection(0, i);
-			// Mesh->CreateSectionFromComponents(0, i, i, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Average, MeshSections[i].bEnableCollision);
-			
+			// LOD 0
+			const FRealtimeMeshSectionGroupKey GroupKey = FRealtimeMeshSectionGroupKey::Create(0, "Minecraft_Voxel_" + i);
+
+			// Now create the section key, this is a unique identifier for a section within a group
+			// The section contains the configuration for the section, like the material slot,
+			// and the draw type, as well as the range of the index/vertex buffers to use to render.
+			// Here we're using the version to create the key based on the PolyGroup index
+			const FRealtimeMeshSectionKey PolyGroupSectionKey = FRealtimeMeshSectionKey::CreateForPolyGroup(GroupKey, i);
+
 			{ // Clear Section
-				FRealtimeMeshSectionKey SectionKey;
-				FRealtimeMeshSimpleCompletionCallback CompletionCallback;
-				RTMesh->RemoveSection(SectionKey, CompletionCallback);
+				// FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+				// RTMesh->RemoveSection(PolyGroupSectionKey, CompletionCallback);
 			}
 
 			{ // Create Section
-				FRealtimeMeshSectionKey SectionKey;
-				FRealtimeMeshSectionConfig Config;
-				FRealtimeMeshStreamRange StreamRange;
-				bool bShouldCreateCollision = true;
-				FRealtimeMeshSimpleCompletionCallback CompletionCallback;
+				FRealtimeMeshStreamSet StreamSet;
 
-				// RTMesh->CreateSection(0, 0, 0, VertexBuffer.GetVertices(), VertexBuffer.GetTriangles(), VertexBuffer.GetNormals(), VertexBuffer.GetUVs(), VertexBuffer.GetColors(), VertexBuffer.GetTangents());
-				RTMesh->CreateSection(SectionKey, Config, StreamRange, bShouldCreateCollision, CompletionCallback);
+				TRealtimeMeshBuilderLocal<uint16, FPackedNormal, FVector2DHalf, 1> Builder(StreamSet);
+
+				// We can decide what vertex elements are enabled.
+				Builder.EnableTangents();
+				Builder.EnableTexCoords();
+				Builder.EnableColors();
+				Builder.EnablePolyGroups();
+
+				Builder.ReserveNumVertices(Section.Vertices.Num());
+				for (int32 j = 0; j < Section.Vertices.Num(); j++)
+				{
+					// We can add a vertex, and optionally set things like the tangents, color, texcoords.
+					// We can then get the new index from it to use later.
+					auto V = Builder.AddVertex(FVector3f(Section.Vertices[j]));
+					V.SetNormalAndTangent(FVector3f(Section.Normals[j]), FVector3f(Section.Tangents[j]));
+					V.SetColor(Section.VertexColors[j].ToFColor(false));
+					V.SetTexCoord(FVector2f(Section.UVs[j]));
+				}
+
+				for (int32 j = 0; j < Section.Triangles.Num(); j += 3)
+				{
+					// Now we can add a triangle giving it the indices of the vertices for the 3 corners, as well as optionally supplying the polygroup
+					Builder.AddTriangle(Section.Triangles[j], Section.Triangles[j + 1], Section.Triangles[j + 2], i);
+				}
+
+				RTMesh->SetupMaterialSlot(i, "Material_" + i, Section.Material);
+
+				// This will create a new section group named "TestBox" at LOD 0, with the created stream data above. This will create the sections associated with the polygroup
+				RTMesh->CreateSectionGroup(GroupKey, StreamSet, FRealtimeMeshSectionGroupConfig(ERealtimeMeshSectionDrawType::Static));
+
+				// Update the configuration of both the polygroup sections.
+				RTMesh->UpdateSectionConfig(PolyGroupSectionKey, FRealtimeMeshSectionConfig(i));
+
+				//
+				UE_LOG(LogTemp, Warning, TEXT("--[%d] Section has been built."), i);
 			}
 
-			Mesh->SetMaterial(i, MeshSections[i].Material);
+			Mesh->SetMaterial(i, Section.Material);
 
 			if (i == WATER - 1)
 			{
 				// WaterMesh->ClearSection(0, 0);
 				// WaterMesh->CreateSectionFromComponents(0, 0, 0, MeshSections[i].Vertices, MeshSections[i].Triangles, MeshSections[i].Normals, MeshSections[i].UVs, MeshSections[i].VertexColors, MeshSections[i].Tangents, ERuntimeMeshUpdateFrequency::Average, true);
-				WaterMesh->SetMaterial(0, MeshSections[i].Material);
-				
+				WaterMesh->SetMaterial(0, Section.Material);
 			}
 		}
 	}
